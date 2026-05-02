@@ -40,6 +40,7 @@ import {
   Info,
 } from "lucide-react";
 import { BUILT_IN_PRESETS, type MeetingPreset, applyPreset } from "./presets";
+import { t, type TranslationKey } from "../i18n";
 
 // STT provider options — whisper_cpp excluded (batch-only, not for live STT)
 const STT_OPTIONS: {
@@ -140,6 +141,20 @@ const EXCLUSIVE_FALLBACK_ORDER: STTProviderType[] = [
   "deepgram", "groq_whisper", "whisper_api", "azure_speech",
   "sherpa_onnx", "ort_streaming", "parakeet_tdt",
 ];
+
+const PRESET_LABEL_KEYS: Record<string, TranslationKey> = {
+  "Zero Setup": "settings.meetingAudio.presetNames.zeroSetup",
+  "Best Quality": "settings.meetingAudio.presetNames.bestQuality",
+  "Fully Offline": "settings.meetingAudio.presetNames.fullyOffline",
+  "All Cloud": "settings.meetingAudio.presetNames.allCloud",
+  "Local Only (Whisper)": "settings.meetingAudio.presetNames.localOnlyWhisper",
+  "In-Person": "settings.meetingAudio.presetNames.inPerson",
+};
+
+function getPresetLabel(name: string): string {
+  const key = PRESET_LABEL_KEYS[name];
+  return key ? t(key) : name;
+}
 
 function isExclusiveProvider(provider: string): boolean {
   return EXCLUSIVE_PROVIDERS.includes(provider as STTProviderType);
@@ -314,12 +329,12 @@ export function MeetingAudioSettings() {
     try {
       await setRecordingEnabled(enabled);
       showToast(
-        enabled ? "Audio recording enabled" : "Audio recording disabled",
+        enabled ? t("settings.meetingAudio.recording.enabled") : t("settings.meetingAudio.recording.disabled"),
         "success"
       );
     } catch (err) {
       console.error("Failed to set recording:", err);
-      showToast("Failed to toggle recording", "error");
+      showToast(t("settings.meetingAudio.recording.failed"), "error");
     }
   }
 
@@ -327,7 +342,7 @@ export function MeetingAudioSettings() {
     const allDevices = [...devices.inputs, ...devices.outputs];
     const resolved = applyPreset(preset, allDevices);
     setMeetingAudioConfig(resolved);
-    showToast(`Preset "${preset.name}" applied`, "success");
+    showToast(t("settings.meetingAudio.presetApplied", { preset: getPresetLabel(preset.name) }), "success");
   }
 
   const allDevices: { device: AudioDevice; group: string }[] = [
@@ -341,7 +356,7 @@ export function MeetingAudioSettings() {
       {/* ── Quick Presets ── */}
       <div className="flex items-center gap-2 rounded-xl border border-border/20 bg-card/40 px-4 py-2.5">
         <span className="mr-1 shrink-0 text-meta font-semibold uppercase tracking-wider text-muted-foreground/60">
-          Presets
+          {t("settings.meetingAudio.presets")}
         </span>
         {BUILT_IN_PRESETS.map((preset) => (
           <button
@@ -353,7 +368,7 @@ export function MeetingAudioSettings() {
                 : "border-border/30 text-muted-foreground/70 hover:border-border/60 hover:bg-accent/40 hover:text-foreground"
             }`}
           >
-            {preset.name}
+            {getPresetLabel(preset.name)}
           </button>
         ))}
       </div>
@@ -361,9 +376,9 @@ export function MeetingAudioSettings() {
       {/* ── Main two-panel: YOU | THEM ── */}
       <div className="grid grid-cols-2 gap-4">
         <PartyPanel
-          label="You"
-          description="Your microphone — used in online meetings"
-          badge="Online meetings only"
+          label={t("settings.meetingAudio.roles.you")}
+          description={t("settings.meetingAudio.party.youDescription")}
+          badge={t("settings.meetingAudio.party.youBadge")}
           role="you"
           icon={<Mic className="h-4 w-4" />}
           party={config.you}
@@ -375,13 +390,13 @@ export function MeetingAudioSettings() {
           activeWhisperModel={activeWhisperModel}
           localEngines={localEngines}
           otherPartyProvider={config.them.stt_provider}
-          otherPartyLabel="Them"
+          otherPartyLabel={t("settings.meetingAudio.roles.them")}
           onChange={(updates) => updateParty("you", updates)}
         />
         <PartyPanel
-          label="Them"
-          labelSuffix={<span className="text-xs font-semibold uppercase tracking-wide text-purple-400">/&nbsp;Room</span>}
-          description="Remote party (online) or room microphone (in-person)"
+          label={t("settings.meetingAudio.roles.them")}
+          labelSuffix={<span className="text-xs font-semibold uppercase tracking-wide text-purple-400">{t("settings.meetingAudio.roles.roomSuffix")}</span>}
+          description={t("settings.meetingAudio.party.themDescription")}
           role="them"
           icon={<Volume2 className="h-4 w-4" />}
           party={config.them}
@@ -393,7 +408,7 @@ export function MeetingAudioSettings() {
           activeWhisperModel={activeWhisperModel}
           localEngines={localEngines}
           otherPartyProvider={config.you.stt_provider}
-          otherPartyLabel="You"
+          otherPartyLabel={t("settings.meetingAudio.roles.you")}
           onChange={(updates) => updateParty("them", updates)}
         />
       </div>
@@ -404,21 +419,19 @@ export function MeetingAudioSettings() {
       ) && (
         <div className="flex items-center justify-between rounded-xl border border-border/20 bg-card/40 px-4 py-3">
           <div>
-            <p className="text-xs font-medium text-foreground">Speaker Diarization</p>
+            <p className="text-xs font-medium text-foreground">{t("settings.meetingAudio.diarization.title")}</p>
             <p className="mt-0.5 text-meta text-muted-foreground/70">
-              Separate speakers in in-person mode (supported by{" "}
-              {[
+              {t("settings.meetingAudio.diarization.description", { providers: [
                 config.you.stt_provider === "deepgram" || config.them.stt_provider === "deepgram" ? "Deepgram" : null,
                 config.you.stt_provider === "azure_speech" || config.them.stt_provider === "azure_speech" ? "Azure" : null,
-              ].filter(Boolean).join(" & ")}
-              )
+              ].filter(Boolean).join(" & ") })}
             </p>
           </div>
           <button
             onClick={() => setDiarizationEnabled(!diarizationEnabled)}
             role="switch"
             aria-checked={diarizationEnabled}
-            aria-label="Toggle speaker diarization"
+            aria-label={t("settings.meetingAudio.diarization.toggle")}
             className={`relative h-5 w-9 cursor-pointer rounded-full transition-all duration-200 ${
               diarizationEnabled ? "bg-primary shadow-[0_0_0_3px_hsl(var(--primary)/0.12)]" : "bg-muted"
             }`}
@@ -435,14 +448,14 @@ export function MeetingAudioSettings() {
       {/* ── Recording Toggle (full-width row) ── */}
       <div className="flex items-center justify-between rounded-xl border border-border/20 bg-card/40 px-4 py-3">
         <div>
-          <p className="text-xs font-medium text-foreground">Record to file</p>
-          <p className="mt-0.5 text-meta text-muted-foreground/70">Save meeting audio as WAV</p>
+          <p className="text-xs font-medium text-foreground">{t("settings.meetingAudio.recording.title")}</p>
+          <p className="mt-0.5 text-meta text-muted-foreground/70">{t("settings.meetingAudio.recording.description")}</p>
         </div>
         <button
           onClick={() => handleRecordingToggle(!config.recording_enabled)}
           role="switch"
           aria-checked={config.recording_enabled}
-          aria-label="Toggle recording"
+          aria-label={t("settings.meetingAudio.recording.toggle")}
           className={`relative h-5 w-9 cursor-pointer rounded-full transition-all duration-200 ${
             config.recording_enabled ? "bg-primary shadow-[0_0_0_3px_hsl(var(--primary)/0.12)]" : "bg-muted"
           }`}
@@ -462,8 +475,8 @@ export function MeetingAudioSettings() {
         <div className="flex flex-col rounded-xl border border-border/20 bg-card/40 p-4">
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-foreground">Live Monitor</span>
-              <div className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" title="Monitoring all devices" />
+              <span className="text-xs font-semibold text-foreground">{t("settings.meetingAudio.monitor.title")}</span>
+              <div className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" title={t("settings.meetingAudio.monitor.monitoringAllDevices")} />
             </div>
             <button
               onClick={loadDevices}
@@ -496,7 +509,7 @@ export function MeetingAudioSettings() {
             ))}
           </div>
           <p className="mt-2 shrink-0 text-meta text-muted-foreground/60">
-            All devices streaming live (~60 fps)
+            {t("settings.meetingAudio.monitor.streamingLive")}
           </p>
         </div>
 
@@ -506,7 +519,7 @@ export function MeetingAudioSettings() {
           {/* Audio Sessions */}
           <div className="flex flex-col rounded-xl border border-border/20 bg-card/40 p-4">
             <div className="mb-3 flex items-center justify-between">
-              <span className="text-xs font-semibold text-foreground">Audio Sessions</span>
+              <span className="text-xs font-semibold text-foreground">{t("settings.meetingAudio.sessions.title")}</span>
               <button
                 onClick={loadSessions}
                 disabled={loadingSessions}
@@ -517,7 +530,7 @@ export function MeetingAudioSettings() {
             </div>
             {sessions.length === 0 ? (
               <p className="text-xs text-muted-foreground/70">
-                {loadingSessions ? "Scanning audio sessions..." : "No active audio sessions detected"}
+                {loadingSessions ? t("settings.meetingAudio.sessions.scanning") : t("settings.meetingAudio.sessions.noneDetected")}
               </p>
             ) : (
               <div className="space-y-1">
@@ -544,9 +557,9 @@ export function MeetingAudioSettings() {
                               device_id: matchingDevice.id,
                               is_input_device: false,
                             });
-                            showToast(`"Them" source set to ${matchingDevice.name}`, "success");
+                            showToast(t("settings.meetingAudio.sessions.sourceSet", { device: matchingDevice.name }), "success");
                           } else {
-                            showToast("Could not find matching output device", "error");
+                            showToast(t("settings.meetingAudio.sessions.matchingOutputNotFound"), "error");
                           }
                         }}
                         disabled={isSelectedDevice}
@@ -556,7 +569,7 @@ export function MeetingAudioSettings() {
                             : "bg-accent text-foreground hover:bg-primary/10 hover:text-primary"
                         }`}
                       >
-                        {isSelectedDevice ? "Active" : "Use"}
+                        {isSelectedDevice ? t("settings.meetingAudio.sessions.active") : t("settings.meetingAudio.sessions.use")}
                       </button>
                     </div>
                   );
@@ -571,9 +584,10 @@ export function MeetingAudioSettings() {
       <div className="flex items-start gap-3 rounded-xl border border-border/20 bg-card/40 px-4 py-3">
         <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
         <p className="text-xs text-muted-foreground/70">
-          <span className="font-medium text-foreground">Dual-purpose audio:</span>{" "}
-          In <span className="text-sky-400 font-medium">online meetings</span>, "You" captures your mic and "Them" captures remote audio via system loopback.
-          In <span className="text-purple-400 font-medium">in-person meetings</span>, both sources share the room microphone and speaker diarization separates voices.
+          <span className="font-medium text-foreground">{t("settings.meetingAudio.info.title")}</span>{" "}
+          {t("settings.meetingAudio.info.sentenceOne", { mode: t("settings.meetingAudio.info.onlineMeetings") })}
+          {" "}
+          {t("settings.meetingAudio.info.sentenceTwo", { mode: t("settings.meetingAudio.info.inPersonMeetings") })}
         </p>
       </div>
     </div>
@@ -679,7 +693,7 @@ function PartyPanel({
           {description ? (
             <p className="mt-0.5 text-meta text-muted-foreground/60">{description}</p>
           ) : (
-            <p className="mt-0.5 text-meta text-muted-foreground/60">Audio source & recognition</p>
+            <p className="mt-0.5 text-meta text-muted-foreground/60">{t("settings.meetingAudio.party.defaultDescription")}</p>
           )}
           {badge && (
             <span className="mt-1 inline-block rounded px-1.5 py-0.5 text-[10px] font-medium bg-sky-500/10 text-sky-400 border border-sky-500/20">
@@ -707,7 +721,7 @@ function PartyPanel({
         {/* Source device */}
         <div>
           <label className="mb-1.5 block text-meta font-semibold uppercase tracking-wider text-muted-foreground/60">
-            Source
+            {t("settings.meetingAudio.party.source")}
           </label>
           <select
             value={party.device_id}
@@ -716,22 +730,22 @@ function PartyPanel({
             className="w-full cursor-pointer rounded-lg border border-border/40 bg-background/60 px-3 py-2 text-xs text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20"
           >
             <option value="default">
-              {loadingDevices ? "Loading..." : "Default"}
+              {loadingDevices ? t("settings.meetingAudio.party.loading") : t("settings.meetingAudio.party.defaultSource")}
             </option>
             {inputDevices.length > 0 && (
-              <optgroup label="Microphones">
+              <optgroup label={t("settings.meetingAudio.party.microphones")}>
                 {inputDevices.map((d) => (
                   <option key={d.device.id} value={d.device.id}>
-                    {d.device.name}{d.device.is_default ? " (Default)" : ""}
+                    {d.device.name}{d.device.is_default ? t("settings.meetingAudio.party.defaultDeviceSuffix") : ""}
                   </option>
                 ))}
               </optgroup>
             )}
             {outputDevices.length > 0 && (
-              <optgroup label="Speakers / Output">
+              <optgroup label={t("settings.meetingAudio.party.speakersOutput")}>
                 {outputDevices.map((d) => (
                   <option key={d.device.id} value={d.device.id}>
-                    {d.device.name}{d.device.is_default ? " (Default)" : ""}
+                    {d.device.name}{d.device.is_default ? t("settings.meetingAudio.party.defaultDeviceSuffix") : ""}
                   </option>
                 ))}
               </optgroup>
@@ -756,7 +770,7 @@ function PartyPanel({
         {/* STT Provider */}
         <div>
           <label className="mb-1.5 block text-meta font-semibold uppercase tracking-wider text-muted-foreground/60">
-            Speech to Text
+            {t("settings.meetingAudio.party.speechToText")}
           </label>
           <ProviderSelect
             value={party.stt_provider}
@@ -776,10 +790,10 @@ function PartyPanel({
           <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2">
             <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
             <p className="text-meta leading-relaxed text-amber-200/80">
-              <span className="font-semibold text-amber-400">Device override active.</span>{" "}
-              {party.stt_provider === "web_speech" ? "Web Speech" : "Windows Speech"} always
-              uses the system default mic. During meetings, your system default will be
-              temporarily switched to the selected device and restored when the meeting ends.
+              <span className="font-semibold text-amber-400">{t("settings.meetingAudio.party.deviceOverrideActive")}</span>{" "}
+              {t("settings.meetingAudio.party.deviceOverrideDescription", {
+                provider: party.stt_provider === "web_speech" ? "Web Speech" : "Windows Speech",
+              })}
             </p>
           </div>
         )}
@@ -870,7 +884,7 @@ function ProviderSelect({
 
     const fallback = findExclusiveFallback();
     if (!fallback) {
-      showToast("No fallback STT engine available. Configure an API key or download a local model first.", "error");
+      showToast(t("settings.meetingAudio.providerSelect.noFallback"), "error");
       setStealTarget(null);
       return;
     }
@@ -891,7 +905,12 @@ function ProviderSelect({
     const stealLabel = STT_OPTIONS.find(o => o.value === stealTarget)?.label ?? stealTarget;
     const fallbackLabel = STT_OPTIONS.find(o => o.value === fallback)?.label ?? fallback;
     showToast(
-      `${stealLabel} moved to ${thisRole === "you" ? "You" : "Them"}. ${otherRole === "you" ? "You" : "Them"} fell back to ${fallbackLabel}.`,
+      t("settings.meetingAudio.providerSelect.providerMoved", {
+        provider: stealLabel,
+        party: thisRole === "you" ? t("settings.meetingAudio.roles.you") : t("settings.meetingAudio.roles.them"),
+        otherParty: otherRole === "you" ? t("settings.meetingAudio.roles.you") : t("settings.meetingAudio.roles.them"),
+        fallback: fallbackLabel,
+      }),
       "info"
     );
 
@@ -950,7 +969,7 @@ function ProviderSelect({
               <div className="flex items-center gap-1.5 border-b border-border/20 bg-muted/30 px-3 py-1.5">
                 <HardDrive className="h-2.5 w-2.5 text-emerald-500" />
                 <span className="text-meta font-semibold uppercase tracking-wider text-muted-foreground">
-                  Local & Built-in
+                  {t("settings.meetingAudio.providerSelect.localBuiltIn")}
                 </span>
               </div>
               {localOptions.map((opt) => {
@@ -979,7 +998,7 @@ function ProviderSelect({
                     <span className="flex-1 text-left">
                       {opt.label}
                       {locked && (
-                        <span className="block text-meta text-muted-foreground/50">In use by {otherPartyLabel}</span>
+                        <span className="block text-meta text-muted-foreground/50">{t("settings.meetingAudio.providerSelect.inUseBy", { party: otherPartyLabel })}</span>
                       )}
                     </span>
                     {value === opt.value && !locked && (
@@ -996,7 +1015,7 @@ function ProviderSelect({
               <div className="flex items-center gap-1.5 border-b border-border/20 bg-muted/30 px-3 py-1.5">
                 <Cloud className="h-2.5 w-2.5 text-blue-500" />
                 <span className="text-meta font-semibold uppercase tracking-wider text-muted-foreground">
-                  Cloud
+                  {t("settings.meetingAudio.providerSelect.cloud")}
                 </span>
               </div>
               {cloudOptions.map((opt) => {
@@ -1025,7 +1044,7 @@ function ProviderSelect({
                     <span className="flex-1 text-left">
                       {opt.label}
                       {locked && (
-                        <span className="block text-meta text-muted-foreground/50">In use by {otherPartyLabel}</span>
+                        <span className="block text-meta text-muted-foreground/50">{t("settings.meetingAudio.providerSelect.inUseBy", { party: otherPartyLabel })}</span>
                       )}
                     </span>
                     {value === opt.value && !locked && (
@@ -1039,24 +1058,20 @@ function ProviderSelect({
 
           {!hasAny && (
             <p className="px-3 py-3 text-meta text-muted-foreground">
-              No providers ready — configure in STT Keys tab
+              {t("settings.meetingAudio.providerSelect.noProvidersReady")}
             </p>
           )}
 
           {stealTarget && (
             <div className="border-t border-border/20 bg-amber-500/5 px-3 py-2.5">
               <p className="text-meta leading-relaxed text-amber-200/80 mb-2">
-                <span className="font-semibold text-amber-400">
-                  {STT_OPTIONS.find(o => o.value === stealTarget)?.label}
-                </span>{" "}
-                can only run on one source at a time. Switch to this party?
-                The other party will fall back to{" "}
-                <span className="font-medium">
-                  {(() => {
+                {t("settings.meetingAudio.providerSelect.exclusivePrompt", {
+                  provider: STT_OPTIONS.find(o => o.value === stealTarget)?.label ?? stealTarget,
+                  fallback: (() => {
                     const fb = findExclusiveFallback();
-                    return fb ? (STT_OPTIONS.find(o => o.value === fb)?.label ?? fb) : "no available engine";
-                  })()}
-                </span>.
+                    return fb ? (STT_OPTIONS.find(o => o.value === fb)?.label ?? fb) : t("settings.meetingAudio.providerSelect.noAvailableEngine");
+                  })(),
+                })}
               </p>
               <div className="flex gap-2">
                 <button
@@ -1064,14 +1079,14 @@ function ProviderSelect({
                   onClick={handleStealConfirm}
                   className="rounded-lg bg-amber-500/20 border border-amber-500/30 px-3 py-1 text-meta font-semibold text-amber-400 hover:bg-amber-500/30 cursor-pointer"
                 >
-                  Switch
+                  {t("settings.meetingAudio.providerSelect.switch")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setStealTarget(null)}
                   className="rounded-lg bg-muted/30 px-3 py-1 text-meta font-medium text-muted-foreground hover:bg-muted/50 cursor-pointer"
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
               </div>
             </div>
