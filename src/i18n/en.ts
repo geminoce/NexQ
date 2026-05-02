@@ -379,6 +379,72 @@ export const en = {
         },
       },
     },
+    scenarios: {
+      fields: {
+        systemPrompt: {
+          label: "System Prompt",
+          description: "Instructions for the AI's role and behavior during the meeting",
+        },
+        summaryPrompt: {
+          label: "Summary Prompt",
+          description: "Structure and focus for post-meeting summaries",
+        },
+        questionDetection: {
+          label: "Question Detection",
+          description: "Rules for detecting and prioritizing questions from transcript",
+        },
+      },
+      badges: {
+        modified: "Modified",
+        custom: "Custom",
+      },
+      actions: {
+        resetDefault: "Reset to default",
+        editPrompt: "Edit prompt",
+        cancel: "Cancel",
+        save: "Save",
+        clone: "Clone",
+        create: "Create",
+        cloneScenario: "Clone this scenario",
+        createCustom: "Create Custom",
+        deleteCustom: "Delete this custom scenario",
+        resetOverrides: "Reset all overrides to default",
+        resetAll: "Reset all",
+      },
+      dialog: {
+        cloneAs: "Clone scenario as:",
+        newName: "New scenario name:",
+        placeholder: "e.g. Sales Call, 1:1 Meeting",
+        copySuffix: "copy",
+      },
+      selector: {
+        activeScenario: "Active Scenario",
+        description: "Shapes how the AI interprets the meeting context",
+        customSuffix: "custom",
+      },
+      promptsTitle: "Prompts",
+      defaults: {
+        customDescription: "Custom scenario",
+      },
+      builtIn: {
+        teamMeeting: {
+          name: "Team Meeting",
+          description: "Tracks decisions, action items, speaker attribution",
+        },
+        lecture: {
+          name: "Lecture",
+          description: "Key concepts, definitions, Q&A extraction",
+        },
+        interview: {
+          name: "Interview",
+          description: "Questions, responses, follow-ups",
+        },
+        webinar: {
+          name: "Webinar",
+          description: "Presentation points, audience Q&A",
+        },
+      },
+    },
     general: {
       theme: "Theme",
       themeDescription: "Choose your preferred appearance",

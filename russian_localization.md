@@ -196,7 +196,7 @@ tray.*
 5. `LLMSettings`
 6. `TranslationSettings`
 7. `ContextStrategySettings`
-8. `ScenarioSettings`
+8. `ScenarioSettings` - готово: UI-строки и встроенные prompt-тексты сценариев переведены
 9. `NoisePresetSettings`
 10. `ConfidenceSettings`
 11. `LocalModelManager`

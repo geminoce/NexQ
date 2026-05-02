@@ -15,6 +15,7 @@ import {
   Check,
   X,
 } from "lucide-react";
+import { t } from "../i18n";
 
 // ── Prompt field metadata ──
 const PROMPT_FIELDS: {
@@ -22,9 +23,9 @@ const PROMPT_FIELDS: {
   label: string;
   description: string;
 }[] = [
-  { key: "system_prompt", label: "System Prompt", description: "Instructions for the AI's role and behavior during the meeting" },
-  { key: "summary_prompt", label: "Summary Prompt", description: "Structure and focus for post-meeting summaries" },
-  { key: "question_detection_prompt", label: "Question Detection", description: "Rules for detecting and prioritizing questions from transcript" },
+  { key: "system_prompt", label: t("settings.scenarios.fields.systemPrompt.label"), description: t("settings.scenarios.fields.systemPrompt.description") },
+  { key: "summary_prompt", label: t("settings.scenarios.fields.summaryPrompt.label"), description: t("settings.scenarios.fields.summaryPrompt.description") },
+  { key: "question_detection_prompt", label: t("settings.scenarios.fields.questionDetection.label"), description: t("settings.scenarios.fields.questionDetection.description") },
 ];
 
 // ── Collapsible Prompt Card ──
@@ -88,7 +89,7 @@ function PromptCard({
               <span className="text-xs font-medium text-foreground">{label}</span>
               {isModified && (
                 <span className="rounded px-1.5 py-0.5 text-[10px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                  Modified
+                  {t("settings.scenarios.badges.modified")}
                 </span>
               )}
             </div>
@@ -99,7 +100,7 @@ function PromptCard({
           {isModified && defaultValue !== undefined && (
             <button
               onClick={handleReset}
-              title="Reset to default"
+              title={t("settings.scenarios.actions.resetDefault")}
               className="rounded p-1.5 text-muted-foreground/60 hover:text-foreground hover:bg-accent/40 transition-colors duration-150 cursor-pointer"
             >
               <RotateCcw className="h-3.5 w-3.5" />
@@ -107,7 +108,7 @@ function PromptCard({
           )}
           <button
             onClick={handleEdit}
-            title="Edit prompt"
+            title={t("settings.scenarios.actions.editPrompt")}
             className="rounded p-1.5 text-muted-foreground/60 hover:text-foreground hover:bg-accent/40 transition-colors duration-150 cursor-pointer"
           >
             <Edit2 className="h-3.5 w-3.5" />
@@ -133,14 +134,14 @@ function PromptCard({
                   className="flex items-center gap-1.5 rounded-lg border border-border/40 bg-secondary/30 px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors duration-150 cursor-pointer"
                 >
                   <X className="h-3 w-3" />
-                  Cancel
+                  {t("settings.scenarios.actions.cancel")}
                 </button>
                 <button
                   onClick={handleSave}
                   className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors duration-150 cursor-pointer shadow-sm shadow-primary/20"
                 >
                   <Check className="h-3 w-3" />
-                  Save
+                  {t("settings.scenarios.actions.save")}
                 </button>
               </div>
             </div>
@@ -172,12 +173,12 @@ function CreateScenarioDialog({
   return (
     <div className="rounded-xl border border-border/30 bg-card/60 p-4 shadow-lg">
       <p className="mb-3 text-xs font-medium text-foreground">
-        {mode === "clone" ? "Clone scenario as:" : "New scenario name:"}
+        {mode === "clone" ? t("settings.scenarios.dialog.cloneAs") : t("settings.scenarios.dialog.newName")}
       </p>
       <input
         value={name}
         onChange={(e) => setName(e.target.value)}
-        placeholder="e.g. Sales Call, 1:1 Meeting"
+        placeholder={t("settings.scenarios.dialog.placeholder")}
         className="w-full rounded-lg border border-border/40 bg-background/60 px-3 py-2 text-xs text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20 mb-3"
         autoFocus
         onKeyDown={(e) => {
@@ -190,18 +191,50 @@ function CreateScenarioDialog({
           onClick={onCancel}
           className="rounded-lg border border-border/40 bg-secondary/30 px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors duration-150 cursor-pointer"
         >
-          Cancel
+          {t("settings.scenarios.actions.cancel")}
         </button>
         <button
           onClick={() => name.trim() && onConfirm(name.trim())}
           disabled={!name.trim()}
           className="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-150 cursor-pointer shadow-sm shadow-primary/20"
         >
-          {mode === "clone" ? "Clone" : "Create"}
+          {mode === "clone" ? t("settings.scenarios.actions.clone") : t("settings.scenarios.actions.create")}
         </button>
       </div>
     </div>
   );
+}
+
+function getScenarioDisplayName(scenario: ScenarioTemplate): string {
+  if (scenario.is_custom) return scenario.name;
+  switch (scenario.id) {
+    case "team_meeting":
+      return t("settings.scenarios.builtIn.teamMeeting.name");
+    case "lecture":
+      return t("settings.scenarios.builtIn.lecture.name");
+    case "interview":
+      return t("settings.scenarios.builtIn.interview.name");
+    case "webinar":
+      return t("settings.scenarios.builtIn.webinar.name");
+    default:
+      return scenario.name;
+  }
+}
+
+function getScenarioDisplayDescription(scenario: ScenarioTemplate): string {
+  if (scenario.is_custom) return scenario.description;
+  switch (scenario.id) {
+    case "team_meeting":
+      return t("settings.scenarios.builtIn.teamMeeting.description");
+    case "lecture":
+      return t("settings.scenarios.builtIn.lecture.description");
+    case "interview":
+      return t("settings.scenarios.builtIn.interview.description");
+    case "webinar":
+      return t("settings.scenarios.builtIn.webinar.description");
+    default:
+      return scenario.description;
+  }
 }
 
 // ── Main Component ──
@@ -255,10 +288,10 @@ export function ScenarioSettings() {
     const newScenario: ScenarioTemplate = {
       id: `custom_${Date.now()}`,
       name,
-      description: "Custom scenario",
-      system_prompt: "You are an AI meeting assistant.",
-      summary_prompt: "Summarize this meeting with key points and action items.",
-      question_detection_prompt: "Detect questions from participants that need follow-up.",
+      description: t("settings.scenarios.defaults.customDescription"),
+      system_prompt: "Вы AI-ассистент встречи.",
+      summary_prompt: "Составьте сводку встречи с ключевыми пунктами и задачами.",
+      question_detection_prompt: "Определяйте вопросы участников, требующие дальнейшего действия.",
       is_custom: true,
     };
     createCustomScenario(newScenario);
@@ -282,20 +315,20 @@ export function ScenarioSettings() {
       <div className="rounded-xl border border-border/30 bg-card/50 p-5">
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <label className="text-sm font-medium text-foreground">Active Scenario</label>
+            <label className="text-sm font-medium text-foreground">{t("settings.scenarios.selector.activeScenario")}</label>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Shapes how the AI interprets the meeting context
+              {t("settings.scenarios.selector.description")}
             </p>
           </div>
           <div className="flex items-center gap-2">
             {/* Clone button */}
             <button
               onClick={() => { setCloneSourceId(activeScenarioId); setShowCreate(false); }}
-              title="Clone this scenario"
+              title={t("settings.scenarios.actions.cloneScenario")}
               className="flex items-center gap-1.5 rounded-lg border border-border/40 bg-secondary/30 px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors duration-150 cursor-pointer"
             >
               <Copy className="h-3.5 w-3.5" />
-              Clone
+              {t("settings.scenarios.actions.clone")}
             </button>
             {/* New custom */}
             <button
@@ -303,7 +336,7 @@ export function ScenarioSettings() {
               className="flex items-center gap-1.5 rounded-lg bg-primary/10 border border-primary/30 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 transition-colors duration-150 cursor-pointer"
             >
               <Plus className="h-3.5 w-3.5" />
-              Create Custom
+              {t("settings.scenarios.actions.createCustom")}
             </button>
           </div>
         </div>
@@ -320,9 +353,9 @@ export function ScenarioSettings() {
                   : "border-border/30 text-muted-foreground/70 hover:border-border/60 hover:bg-accent/40 hover:text-foreground"
               }`}
             >
-              {scenario.name}
+              {getScenarioDisplayName(scenario)}
               {scenario.is_custom && (
-                <span className="ml-1.5 text-[10px] text-muted-foreground/50">custom</span>
+                <span className="ml-1.5 text-[10px] text-muted-foreground/50">{t("settings.scenarios.selector.customSuffix")}</span>
               )}
             </button>
           ))}
@@ -332,25 +365,25 @@ export function ScenarioSettings() {
         <div className="rounded-lg border border-border/20 bg-background/40 px-3 py-2.5">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <p className="text-xs font-medium text-foreground">{currentTemplate.name}</p>
-              <p className="mt-0.5 text-xs text-muted-foreground/70">{currentTemplate.description}</p>
+              <p className="text-xs font-medium text-foreground">{getScenarioDisplayName(currentTemplate)}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground/70">{getScenarioDisplayDescription(currentTemplate)}</p>
             </div>
             <div className="flex shrink-0 items-center gap-1.5">
               {hasAnyOverride && !currentTemplate.is_custom && (
                 <span className="rounded px-1.5 py-0.5 text-[10px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                  Modified
+                  {t("settings.scenarios.badges.modified")}
                 </span>
               )}
               {currentTemplate.is_custom && (
                 <>
                   <span className="rounded px-1.5 py-0.5 text-[10px] font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                    Custom
+                    {t("settings.scenarios.badges.custom")}
                   </span>
                   <button
                     onClick={() => {
                       deleteCustomScenario(activeScenarioId);
                     }}
-                    title="Delete this custom scenario"
+                    title={t("settings.scenarios.actions.deleteCustom")}
                     className="rounded p-1 text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors duration-150 cursor-pointer"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -360,11 +393,11 @@ export function ScenarioSettings() {
               {hasAnyOverride && !currentTemplate.is_custom && (
                 <button
                   onClick={() => resetScenarioOverrides(activeScenarioId)}
-                  title="Reset all overrides to default"
+                  title={t("settings.scenarios.actions.resetOverrides")}
                   className="flex items-center gap-1 rounded-lg border border-border/30 bg-secondary/30 px-2 py-1 text-[10px] text-muted-foreground/60 hover:text-foreground transition-colors duration-150 cursor-pointer"
                 >
                   <RotateCcw className="h-3 w-3" />
-                  Reset all
+                  {t("settings.scenarios.actions.resetAll")}
                 </button>
               )}
             </div>
@@ -386,7 +419,7 @@ export function ScenarioSettings() {
           <div className="mt-3">
             <CreateScenarioDialog
               mode="clone"
-              initialName={`${currentTemplate.name} (copy)`}
+              initialName={`${getScenarioDisplayName(currentTemplate)} (${t("settings.scenarios.dialog.copySuffix")})`}
               onConfirm={handleClone}
               onCancel={() => setCloneSourceId(null)}
             />
@@ -397,7 +430,7 @@ export function ScenarioSettings() {
       {/* ── Prompt Editing ── */}
       <div className="space-y-2">
         <h3 className="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
-          Prompts
+          {t("settings.scenarios.promptsTitle")}
         </h3>
         {PROMPT_FIELDS.map((field) => (
           <PromptCard

@@ -3,99 +3,99 @@ import type { ScenarioTemplate } from "./types";
 export const BUILT_IN_SCENARIOS: ScenarioTemplate[] = [
   {
     id: "team_meeting",
-    name: "Team Meeting",
-    description: "Tracks decisions, action items, speaker attribution",
-    system_prompt: `You are an AI assistant in a team meeting. Your role:
-- Track decisions made and who made them
-- Identify action items and who they are assigned to
-- Note disagreements or unresolved questions
-- Attribute statements to speakers by name when available
-- The remote party may include multiple speakers on a shared audio source
-- Be concise and focus on what matters for follow-up`,
-    summary_prompt: `Summarize this meeting with the following structure:
-## Attendees
-List all speakers who participated.
+    name: "Командная встреча",
+    description: "Отслеживает решения, задачи и принадлежность реплик говорящим",
+    system_prompt: `Вы AI-ассистент на командной встрече. Ваша роль:
+- Отслеживать принятые решения и тех, кто их принял
+- Определять задачи и ответственных за них
+- Отмечать разногласия и нерешённые вопросы
+- При возможности связывать высказывания с именами говорящих
+- Удалённая сторона может включать нескольких говорящих на одном аудиоисточнике
+- Быть кратким и фокусироваться на том, что важно для дальнейших действий`,
+    summary_prompt: `Составьте сводку этой встречи со следующей структурой:
+## Участники
+Перечислите всех говорящих, которые участвовали.
 
-## Key Decisions
-Bullet points of decisions made, attributed to speakers.
+## Ключевые решения
+Список принятых решений с указанием говорящих.
 
-## Action Items
-- [ ] Action item (Owner) — due date if mentioned
+## Задачи
+- [ ] Задача (ответственный) — срок, если он упоминался
 
-## Open Questions
-Items that were discussed but not resolved.`,
-    question_detection_prompt: `Detect questions from any speaker in the conversation. Surface unanswered questions — those asked but not addressed by another speaker. Prioritize questions that seem to require follow-up or action.`,
+## Открытые вопросы
+Пункты, которые обсуждались, но не были решены.`,
+    question_detection_prompt: `Определяйте вопросы от любого говорящего в разговоре. Выносите на поверхность вопросы без ответа — заданные, но не закрытые другим говорящим. Приоритизируйте вопросы, которые требуют дальнейшего действия.`,
     is_custom: false,
   },
   {
     id: "lecture",
-    name: "Lecture",
-    description: "Key concepts, definitions, Q&A extraction",
-    system_prompt: `You are an AI assistant in a lecture or class session. Your role:
-- Identify the primary speaker (highest talk time) as the lecturer/presenter
-- Extract key concepts, definitions, and examples
-- Note audience questions and the lecturer's responses
-- Track when new topics are introduced
-- Focus on educational content that would be useful for study notes`,
-    summary_prompt: `Summarize this lecture as study notes:
-## Key Topics
-List major topics covered with timestamps.
+    name: "Лекция",
+    description: "Ключевые понятия, определения и вопросы с ответами",
+    system_prompt: `Вы AI-ассистент на лекции или учебном занятии. Ваша роль:
+- Определять основного говорящего (самое большое время речи) как лектора/ведущего
+- Извлекать ключевые понятия, определения и примеры
+- Отмечать вопросы аудитории и ответы лектора
+- Отслеживать появление новых тем
+- Фокусироваться на образовательном содержании, полезном для конспекта`,
+    summary_prompt: `Составьте сводку этой лекции как учебные заметки:
+## Ключевые темы
+Перечислите основные темы с временными отметками.
 
-## Definitions
-Important terms and their definitions as explained by the lecturer.
+## Определения
+Важные термины и их определения в формулировке лектора.
 
-## Examples
-Key examples used to illustrate concepts.
+## Примеры
+Ключевые примеры, использованные для объяснения понятий.
 
-## Q&A
-Questions asked by audience members and the lecturer's responses.`,
-    question_detection_prompt: `Focus on detecting questions from audience members (non-primary speakers) directed at the lecturer. Also detect rhetorical questions from the lecturer that introduce new concepts.`,
+## Вопросы и ответы
+Вопросы аудитории и ответы лектора.`,
+    question_detection_prompt: `Фокусируйтесь на определении вопросов от участников аудитории (не основных говорящих), адресованных лектору. Также определяйте риторические вопросы лектора, которые вводят новые понятия.`,
     is_custom: false,
   },
   {
     id: "interview",
-    name: "Interview",
-    description: "Questions, responses, follow-ups",
-    system_prompt: `You are an AI assistant in an interview. Your role:
-- Track questions asked by the interviewer
-- Summarize candidate responses
-- Note follow-up questions and areas of deeper exploration
-- Identify key qualifications or concerns raised
-- Maintain a neutral, objective tone`,
-    summary_prompt: `Summarize this interview:
-## Questions & Answers
-For each question, provide:
-- **Q:** The question asked
-- **A:** Summary of the response
-- **Notes:** Any follow-up or notable observations
+    name: "Интервью",
+    description: "Вопросы, ответы и уточнения",
+    system_prompt: `Вы AI-ассистент на интервью. Ваша роль:
+- Отслеживать вопросы интервьюера
+- Суммировать ответы кандидата
+- Отмечать уточняющие вопросы и области для более глубокого изучения
+- Выявлять ключевые квалификации или высказанные опасения
+- Сохранять нейтральный и объективный тон`,
+    summary_prompt: `Составьте сводку этого интервью:
+## Вопросы и ответы
+Для каждого вопроса укажите:
+- **В:** заданный вопрос
+- **О:** краткая сводка ответа
+- **Заметки:** уточнения или важные наблюдения
 
-## Key Themes
-Major topics or skills discussed.
+## Ключевые темы
+Основные обсуждавшиеся темы или навыки.
 
-## Assessment Notes
-Objective observations about the conversation flow.`,
-    question_detection_prompt: `Detect interview questions — focus on questions from the interviewer to the candidate. Flag questions that were asked but not fully answered, or that warrant follow-up.`,
+## Оценочные заметки
+Объективные наблюдения о ходе разговора.`,
+    question_detection_prompt: `Определяйте вопросы интервью — фокусируйтесь на вопросах интервьюера к кандидату. Отмечайте вопросы, на которые не ответили полностью или которые требуют уточнения.`,
     is_custom: false,
   },
   {
     id: "webinar",
-    name: "Webinar",
-    description: "Presentation points, audience Q&A",
-    system_prompt: `You are an AI assistant in a webinar or presentation. Your role:
-- Track the presentation structure and key points
-- Separate presenter content from audience Q&A
-- Note any polls, demonstrations, or interactive elements mentioned
-- Extract actionable takeaways for attendees`,
-    summary_prompt: `Summarize this webinar:
-## Presentation Outline
-Key points in presentation order with timestamps.
+    name: "Вебинар",
+    description: "Пункты презентации и вопросы аудитории",
+    system_prompt: `Вы AI-ассистент на вебинаре или презентации. Ваша роль:
+- Отслеживать структуру презентации и ключевые пункты
+- Отделять содержание ведущего от вопросов аудитории
+- Отмечать упомянутые опросы, демонстрации и интерактивные элементы
+- Извлекать практические выводы для участников`,
+    summary_prompt: `Составьте сводку этого вебинара:
+## Структура презентации
+Ключевые пункты в порядке презентации с временными отметками.
 
-## Key Takeaways
-Actionable insights for attendees.
+## Ключевые выводы
+Практические инсайты для участников.
 
-## Q&A Session
-Audience questions and presenter responses.`,
-    question_detection_prompt: `Detect audience questions during Q&A segments. Also detect presenter questions that are rhetorical or meant to engage the audience.`,
+## Вопросы и ответы
+Вопросы аудитории и ответы ведущего.`,
+    question_detection_prompt: `Определяйте вопросы аудитории во время сегментов вопросов и ответов. Также определяйте вопросы ведущего, если они риторические или предназначены для вовлечения аудитории.`,
     is_custom: false,
   },
 ];

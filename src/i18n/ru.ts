@@ -382,6 +382,72 @@ export const ru: TranslationShape<typeof en> = {
         },
       },
     },
+    scenarios: {
+      fields: {
+        systemPrompt: {
+          label: "Системный промпт",
+          description: "Инструкции для роли и поведения AI во время встречи",
+        },
+        summaryPrompt: {
+          label: "Промпт сводки",
+          description: "Структура и фокус сводок после встречи",
+        },
+        questionDetection: {
+          label: "Определение вопросов",
+          description: "Правила определения и приоритизации вопросов из транскрипта",
+        },
+      },
+      badges: {
+        modified: "Изменено",
+        custom: "Свой",
+      },
+      actions: {
+        resetDefault: "Сбросить по умолчанию",
+        editPrompt: "Редактировать промпт",
+        cancel: "Отмена",
+        save: "Сохранить",
+        clone: "Клонировать",
+        create: "Создать",
+        cloneScenario: "Клонировать этот сценарий",
+        createCustom: "Создать свой",
+        deleteCustom: "Удалить свой сценарий",
+        resetOverrides: "Сбросить все переопределения по умолчанию",
+        resetAll: "Сбросить всё",
+      },
+      dialog: {
+        cloneAs: "Клонировать сценарий как:",
+        newName: "Название нового сценария:",
+        placeholder: "например: звонок продаж, встреча 1:1",
+        copySuffix: "копия",
+      },
+      selector: {
+        activeScenario: "Активный сценарий",
+        description: "Определяет, как AI интерпретирует контекст встречи",
+        customSuffix: "свой",
+      },
+      promptsTitle: "Промпты",
+      defaults: {
+        customDescription: "Свой сценарий",
+      },
+      builtIn: {
+        teamMeeting: {
+          name: "Командная встреча",
+          description: "Отслеживает решения, задачи и принадлежность реплик говорящим",
+        },
+        lecture: {
+          name: "Лекция",
+          description: "Ключевые понятия, определения и вопросы с ответами",
+        },
+        interview: {
+          name: "Интервью",
+          description: "Вопросы, ответы и уточнения",
+        },
+        webinar: {
+          name: "Вебинар",
+          description: "Пункты презентации и вопросы аудитории",
+        },
+      },
+    },
     general: {
       theme: "Тема",
       themeDescription: "Выберите предпочитаемый внешний вид",
