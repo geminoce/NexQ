@@ -197,7 +197,7 @@ tray.*
 6. `TranslationSettings`
 7. `ContextStrategySettings`
 8. `ScenarioSettings` - готово: UI-строки и встроенные prompt-тексты сценариев переведены
-9. `NoisePresetSettings`
+9. `NoisePresetSettings` - готово: компонент уже использует i18n-ключи для названий, описаний и статистики пресетов
 10. `ConfidenceSettings`
 11. `LocalModelManager`
 12. `OpusMtModelManager`
