@@ -95,6 +95,7 @@ export function useSpeechRecognition() {
     }
     return youIsWebSpeech || themIsWebSpeech;
   });
+  const sttLanguage = useConfigStore((s) => s.sttLanguage);
 
   // Ref for store action — always fresh without being a dep.
   const updateInterimRef = useRef(useTranscriptStore.getState().updateInterimSegment);
@@ -145,7 +146,7 @@ export function useSpeechRecognition() {
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.maxAlternatives = 1;
-    recognition.lang = "en-US";
+    recognition.lang = sttLanguage;
 
     recognitionRef.current = recognition;
     shouldRestartRef.current = true;
@@ -292,5 +293,5 @@ export function useSpeechRecognition() {
         recognitionRef.current = null;
       }
     };
-  }, [isRecording, usesWebSpeech]);
+  }, [isRecording, usesWebSpeech, sttLanguage]);
 }

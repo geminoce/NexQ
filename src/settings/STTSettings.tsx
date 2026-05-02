@@ -277,6 +277,8 @@ interface BadgeState { text: string; variant: BadgeVariant }
 export function STTSettings() {
   const sttProvider = useConfigStore((s) => s.sttProvider);
   const setConfigSTTProvider = useConfigStore((s) => s.setSTTProvider);
+  const language = useConfigStore((s) => s.sttLanguage);
+  const setLanguage = useConfigStore((s) => s.setSTTLanguage);
   const activeWhisperModel = useConfigStore((s) => s.activeWhisperModel);
   // Persisted: providers whose key has been saved + tested successfully
   const verifiedCloudProviders = useConfigStore((s) => s.verifiedCloudProviders);
@@ -284,7 +286,6 @@ export function STTSettings() {
 
   const [selectedProvider, setSelectedProvider] =
     useState<STTProviderType>(sttProvider);
-  const [language, setLanguage] = useState("en-US");
   const [apiKey, setApiKey] = useState("");
   const [showApiKey, setShowApiKey] = useState(false);
   const [hasStoredKey, setHasStoredKey] = useState(false);

@@ -83,6 +83,7 @@ interface ConfigState {
 
   // Providers
   sttProvider: STTProviderType;
+  sttLanguage: string;
   llmProvider: LLMProviderType;
   llmModel: string;
 
@@ -178,6 +179,7 @@ interface ConfigState {
   setTheme: (theme: ThemeMode) => void;
   setContextStrategy: (strategy: ContextStrategy) => void;
   setSTTProvider: (provider: STTProviderType) => void;
+  setSTTLanguage: (language: string) => void;
   setLLMProvider: (provider: LLMProviderType) => void;
   setLLMModel: (model: string) => void;
   setMicDeviceId: (id: string | null) => void;
@@ -229,6 +231,7 @@ interface ConfigState {
 export const useConfigStore = create<ConfigState>((set) => ({
   theme: "dark",
   sttProvider: "windows_native",
+  sttLanguage: "en-US",
   llmProvider: "ollama",
   llmModel: "",
   micDeviceId: null,
@@ -302,6 +305,14 @@ export const useConfigStore = create<ConfigState>((set) => ({
   setSTTProvider: (provider) => {
     set({ sttProvider: provider });
     persistValue("sttProvider", provider);
+  },
+  setSTTLanguage: (language) => {
+    set({ sttLanguage: language });
+    persistValue("sttLanguage", language);
+    import("../lib/ipc").then(({ setSTTLanguage }) =>
+      setSTTLanguage(language)
+        .catch((e) => console.warn("[configStore] Failed to update STT language:", e))
+    );
   },
   setLLMProvider: (provider) => {
     set({ llmProvider: provider });
@@ -603,6 +614,7 @@ export const useConfigStore = create<ConfigState>((set) => ({
 
       const theme = await store.get<ThemeMode>("theme");
       const sttProvider = await store.get<STTProviderType>("sttProvider");
+      const sttLanguage = await store.get<string>("sttLanguage");
       const llmProvider = await store.get<LLMProviderType>("llmProvider");
       const llmModel = await store.get<string>("llmModel");
       const micDeviceId = await store.get<string | null>("micDeviceId");
@@ -747,6 +759,7 @@ export const useConfigStore = create<ConfigState>((set) => ({
         _loaded: true,
         ...(theme != null && { theme }),
         ...(sttProvider != null && { sttProvider }),
+        ...(sttLanguage != null && { sttLanguage }),
         ...(llmProvider != null && { llmProvider }),
         ...(llmModel != null && { llmModel }),
         ...(micDeviceId !== undefined && { micDeviceId }),
@@ -828,6 +841,9 @@ export const useConfigStore = create<ConfigState>((set) => ({
       store.onKeyChange<STTProviderType>("sttProvider", (val) => {
         if (val != null) set({ sttProvider: val });
       });
+      store.onKeyChange<string>("sttLanguage", (val) => {
+        if (val != null) set({ sttLanguage: val });
+      });
       store.onKeyChange<LLMProviderType>("llmProvider", (val) => {
         if (val != null) set({ llmProvider: val });
       });
@@ -871,6 +887,13 @@ export const useConfigStore = create<ConfigState>((set) => ({
       import("../lib/ipc").then(({ setPauseThreshold }) =>
         setPauseThreshold(loadedPauseThreshold)
           .catch((e) => console.warn("[configStore] Failed to sync pause threshold on load:", e))
+      );
+
+      // Sync persisted STT language to Rust backend on startup.
+      const loadedSTTLanguage = sttLanguage ?? "en-US";
+      import("../lib/ipc").then(({ setSTTLanguage }) =>
+        setSTTLanguage(loadedSTTLanguage)
+          .catch((e) => console.warn("[configStore] Failed to sync STT language on load:", e))
       );
 
       // Sync persisted LLM provider + model to Rust backend on startup.
