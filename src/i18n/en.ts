@@ -1,0 +1,40 @@
+export const en = {
+  common: {
+    back: "Back",
+    retry: "Retry",
+  },
+  settings: {
+    title: "Settings",
+    navigation: "Settings navigation",
+    runSetupWizard: "Run Setup Wizard",
+    runSetupWizardAction: "Run setup wizard",
+    close: "Close settings",
+    closeEsc: "Close (Esc)",
+    backToLauncher: "Back to Launcher",
+    backToLauncherAction: "Back to launcher",
+    groups: {
+      meeting: "Meeting",
+      providers: "Providers",
+      intelligence: "Intelligence",
+      system: "System",
+    },
+    tabs: {
+      meetingAudio: "Audio & Devices",
+      llm: "LLM Providers",
+      stt: "STT Providers",
+      translation: "Translation",
+      aiActions: "AI Actions",
+      contextStrategy: "Context Strategy",
+      scenarios: "AI Scenarios",
+      noisePresets: "Noise Presets",
+      confidence: "Confidence",
+      hotkeys: "Hotkeys",
+      general: "General",
+      about: "About",
+    },
+  },
+  errors: {
+    boundaryTitle: "Something went wrong",
+    boundaryMessage: "An unexpected error occurred.",
+  },
+} as const;

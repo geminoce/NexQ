@@ -30,6 +30,7 @@ import { ContextStrategySettings } from "./ContextStrategySettings";
 import { AIActionsSettings } from "./AIActionsSettings";
 import { TranslationSettings } from "./TranslationSettings";
 import { Sparkles } from "lucide-react";
+import { t } from "../i18n";
 
 type SettingsTab = "meeting_audio" | "llm" | "stt" | "translation" | "ai_actions" | "context_strategy" | "scenarios" | "noise_presets" | "confidence" | "hotkeys" | "general" | "about";
 
@@ -47,35 +48,35 @@ interface TabGroup {
 
 const TAB_GROUPS: TabGroup[] = [
   {
-    label: "Meeting",
+    label: t("settings.groups.meeting"),
     items: [
-      { id: "meeting_audio", label: "Audio & Devices", icon: <Headphones className="h-4 w-4" /> },
+      { id: "meeting_audio", label: t("settings.tabs.meetingAudio"), icon: <Headphones className="h-4 w-4" /> },
     ],
   },
   {
-    label: "Providers",
+    label: t("settings.groups.providers"),
     items: [
-      { id: "llm", label: "LLM Providers", icon: <Brain className="h-4 w-4" /> },
-      { id: "stt", label: "STT Providers", icon: <Mic className="h-4 w-4" /> },
-      { id: "translation", label: "Translation", icon: <Globe className="h-4 w-4" /> },
+      { id: "llm", label: t("settings.tabs.llm"), icon: <Brain className="h-4 w-4" /> },
+      { id: "stt", label: t("settings.tabs.stt"), icon: <Mic className="h-4 w-4" /> },
+      { id: "translation", label: t("settings.tabs.translation"), icon: <Globe className="h-4 w-4" /> },
     ],
   },
   {
-    label: "Intelligence",
+    label: t("settings.groups.intelligence"),
     items: [
-      { id: "ai_actions", label: "AI Actions", icon: <Sparkles className="h-4 w-4" /> },
-      { id: "context_strategy", label: "Context Strategy", icon: <Database className="h-4 w-4" /> },
-      { id: "scenarios", label: "AI Scenarios", icon: <Theater className="h-4 w-4" /> },
-      { id: "noise_presets", label: "Noise Presets", icon: <Volume2 className="h-4 w-4" /> },
-      { id: "confidence", label: "Confidence", icon: <BarChart2 className="h-4 w-4" /> },
+      { id: "ai_actions", label: t("settings.tabs.aiActions"), icon: <Sparkles className="h-4 w-4" /> },
+      { id: "context_strategy", label: t("settings.tabs.contextStrategy"), icon: <Database className="h-4 w-4" /> },
+      { id: "scenarios", label: t("settings.tabs.scenarios"), icon: <Theater className="h-4 w-4" /> },
+      { id: "noise_presets", label: t("settings.tabs.noisePresets"), icon: <Volume2 className="h-4 w-4" /> },
+      { id: "confidence", label: t("settings.tabs.confidence"), icon: <BarChart2 className="h-4 w-4" /> },
     ],
   },
   {
-    label: "System",
+    label: t("settings.groups.system"),
     items: [
-      { id: "hotkeys", label: "Hotkeys", icon: <Keyboard className="h-4 w-4" /> },
-      { id: "general", label: "General", icon: <SlidersHorizontal className="h-4 w-4" /> },
-      { id: "about", label: "About", icon: <Info className="h-4 w-4" /> },
+      { id: "hotkeys", label: t("settings.tabs.hotkeys"), icon: <Keyboard className="h-4 w-4" /> },
+      { id: "general", label: t("settings.tabs.general"), icon: <SlidersHorizontal className="h-4 w-4" /> },
+      { id: "about", label: t("settings.tabs.about"), icon: <Info className="h-4 w-4" /> },
     ],
   },
 ];
@@ -182,7 +183,7 @@ export function SettingsOverlay({ isModal = false }: SettingsOverlayProps) {
     }
   }, [isModal, handleCloseModal, setCurrentView]);
 
-  const currentTabLabel = TAB_LABELS[activeTab] ?? "Settings";
+  const currentTabLabel = TAB_LABELS[activeTab] ?? t("settings.title");
 
   // Wider content area for two-column settings pages
   const contentMaxW = activeTab === "ai_actions" || activeTab === "translation" ? "max-w-4xl" : "max-w-2xl";
@@ -202,7 +203,7 @@ export function SettingsOverlay({ isModal = false }: SettingsOverlayProps) {
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="Settings"
+          aria-label={t("settings.title")}
           className={`w-[640px] max-h-[520px] flex flex-col rounded-xl border border-border/40 bg-card shadow-2xl shadow-black/20 transition-all duration-200 ${
             isVisible
               ? "opacity-100 scale-100 translate-y-0"
@@ -212,21 +213,21 @@ export function SettingsOverlay({ isModal = false }: SettingsOverlayProps) {
         >
           {/* Header */}
           <div className="flex items-center justify-between border-b border-border/30 px-5 py-3.5">
-            <h2 className="text-base font-semibold text-foreground">Settings</h2>
+            <h2 className="text-base font-semibold text-foreground">{t("settings.title")}</h2>
             <div className="flex items-center gap-1">
               <button
                 onClick={handleRunWizard}
                 className="rounded-lg p-1.5 text-muted-foreground transition-colors duration-150 hover:bg-accent hover:text-foreground cursor-pointer"
-                title="Run Setup Wizard"
-                aria-label="Run setup wizard"
+                title={t("settings.runSetupWizard")}
+                aria-label={t("settings.runSetupWizardAction")}
               >
                 <Wand2 className="h-4 w-4" />
               </button>
               <button
                 onClick={handleCloseModal}
                 className="rounded-lg p-1.5 text-muted-foreground transition-colors duration-150 hover:bg-accent hover:text-foreground cursor-pointer"
-                title="Close (Esc)"
-                aria-label="Close settings"
+                title={t("settings.closeEsc")}
+                aria-label={t("settings.close")}
               >
                 <X className="h-4 w-4" />
               </button>
@@ -234,7 +235,7 @@ export function SettingsOverlay({ isModal = false }: SettingsOverlayProps) {
           </div>
 
           {/* Tab Navigation (horizontal, uses flat list) */}
-          <div className="flex border-b border-border/30 px-2 overflow-x-auto" role="tablist" aria-label="Settings navigation">
+          <div className="flex border-b border-border/30 px-2 overflow-x-auto" role="tablist" aria-label={t("settings.navigation")}>
             {ALL_TABS.map((tab) => (
               <button
                 key={tab.id}
@@ -276,16 +277,16 @@ export function SettingsOverlay({ isModal = false }: SettingsOverlayProps) {
           <button
             onClick={handleBack}
             className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer"
-            title="Back to Launcher"
-            aria-label="Back to launcher"
+            title={t("settings.backToLauncher")}
+            aria-label={t("settings.backToLauncherAction")}
           >
             <ArrowLeft className="h-4 w-4" />
-            <span>Back</span>
+            <span>{t("common.back")}</span>
           </button>
         </div>
 
         {/* Grouped Navigation */}
-        <nav className="flex-1 overflow-y-auto px-3 pt-3 pb-1" role="tablist" aria-label="Settings navigation">
+        <nav className="flex-1 overflow-y-auto px-3 pt-3 pb-1" role="tablist" aria-label={t("settings.navigation")}>
           {TAB_GROUPS.map((group, gi) => (
             <div key={group.label} className={gi > 0 ? "mt-4" : ""}>
               {/* Group label */}
@@ -335,11 +336,11 @@ export function SettingsOverlay({ isModal = false }: SettingsOverlayProps) {
           <button
             onClick={handleRunWizard}
             className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground cursor-pointer"
-            title="Run Setup Wizard"
-            aria-label="Run setup wizard"
+            title={t("settings.runSetupWizard")}
+            aria-label={t("settings.runSetupWizardAction")}
           >
             <Wand2 className="h-4 w-4" />
-            <span>Run Setup Wizard</span>
+            <span>{t("settings.runSetupWizard")}</span>
           </button>
         </div>
       </aside>
