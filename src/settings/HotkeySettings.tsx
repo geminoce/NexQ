@@ -3,20 +3,21 @@ import { useConfigStore } from "../stores/configStore";
 import { showToast } from "../stores/toastStore";
 import type { HotkeyConfig } from "../lib/types";
 import { RotateCcw, Keyboard } from "lucide-react";
+import { t } from "../i18n";
 
 /** Display-friendly labels for each hotkey action */
 const HOTKEY_LABELS: Record<keyof HotkeyConfig, string> = {
-  toggle_assist: "Toggle AI Assist",
-  start_end_meeting: "Start / End Meeting",
-  show_hide: "Show / Hide Overlay",
-  open_settings: "Open Settings",
-  escape: "Escape / Cancel",
-  mode_assist: "Mode: Assist",
-  mode_say: "Mode: What to Say",
-  mode_shorten: "Mode: Shorten",
-  mode_followup: "Mode: Follow-Up",
-  mode_recap: "Mode: Recap",
-  mode_ask: "Mode: Ask Question",
+  toggle_assist: t("settings.hotkeys.labels.toggleAssist"),
+  start_end_meeting: t("settings.hotkeys.labels.startEndMeeting"),
+  show_hide: t("settings.hotkeys.labels.showHide"),
+  open_settings: t("settings.hotkeys.labels.openSettings"),
+  escape: t("settings.hotkeys.labels.escape"),
+  mode_assist: t("settings.hotkeys.labels.modeAssist"),
+  mode_say: t("settings.hotkeys.labels.modeSay"),
+  mode_shorten: t("settings.hotkeys.labels.modeShorten"),
+  mode_followup: t("settings.hotkeys.labels.modeFollowup"),
+  mode_recap: t("settings.hotkeys.labels.modeRecap"),
+  mode_ask: t("settings.hotkeys.labels.modeAsk"),
 };
 
 const DEFAULT_HOTKEYS: HotkeyConfig = {
@@ -86,7 +87,10 @@ export function HotkeySettings() {
 
       if (conflictingAction) {
         setConflict(
-          `"${combo}" is already used by "${HOTKEY_LABELS[conflictingAction[0]]}"`
+          t("settings.hotkeys.conflict", {
+            combo,
+            action: HOTKEY_LABELS[conflictingAction[0]],
+          })
         );
         // Still set it -- user was warned, and they can fix the other one
       } else {
@@ -96,7 +100,7 @@ export function HotkeySettings() {
       const updated: HotkeyConfig = { ...hotkeys, [editingKey]: combo };
       setHotkeys(updated);
       setEditingKey(null);
-      showToast(`Hotkey updated: ${HOTKEY_LABELS[editingKey]} = ${combo}`, "success");
+      showToast(t("settings.hotkeys.updated", { action: HOTKEY_LABELS[editingKey], combo }), "success");
     };
 
     listenerRef.current = handler;
@@ -117,7 +121,7 @@ export function HotkeySettings() {
     setHotkeys(DEFAULT_HOTKEYS);
     setEditingKey(null);
     setConflict(null);
-    showToast("Hotkeys reset to defaults", "info");
+    showToast(t("settings.hotkeys.resetToast"), "info");
   }, [setHotkeys]);
 
   const handleCancelEdit = useCallback(() => {
@@ -133,21 +137,21 @@ export function HotkeySettings() {
           <div className="flex items-center gap-2">
             <Keyboard className="h-4 w-4 text-primary" />
             <h3 className="text-sm font-semibold text-primary/80">
-              Keyboard Shortcuts
+              {t("settings.hotkeys.title")}
             </h3>
           </div>
           <button
             onClick={handleResetDefaults}
             className="flex items-center gap-1.5 rounded-lg border border-border/50 bg-secondary/30 px-3 py-2 text-xs font-medium text-muted-foreground transition-all duration-150 hover:bg-secondary hover:text-foreground hover:-translate-y-px active:translate-y-px active:scale-[0.97] cursor-pointer"
-            aria-label="Reset all hotkeys to defaults"
+            aria-label={t("settings.hotkeys.resetAria")}
           >
             <RotateCcw className="h-3 w-3" />
-            Reset to Defaults
+            {t("settings.hotkeys.resetToDefaults")}
           </button>
         </div>
 
         <p className="mt-2 text-xs text-muted-foreground">
-          Click on any binding to change it, then press your desired key combination.
+          {t("settings.hotkeys.description")}
         </p>
       </div>
 
@@ -164,10 +168,10 @@ export function HotkeySettings() {
           <thead>
             <tr className="border-b border-border/20 bg-secondary/20">
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                Action
+                {t("settings.hotkeys.action")}
               </th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                Binding
+                {t("settings.hotkeys.binding")}
               </th>
             </tr>
           </thead>
@@ -188,7 +192,7 @@ export function HotkeySettings() {
                     }}
                     tabIndex={0}
                     role="button"
-                    aria-label={`Change hotkey for ${HOTKEY_LABELS[action]}, currently ${binding}`}
+                    aria-label={t("settings.hotkeys.changeAria", { action: HOTKEY_LABELS[action], binding })}
                     className={`cursor-pointer transition-colors duration-100 ${
                       isEditing
                         ? "bg-primary/10"
@@ -202,7 +206,7 @@ export function HotkeySettings() {
                       {isEditing ? (
                         <span className="inline-flex items-center gap-2">
                           <span className="animate-pulse rounded-lg bg-primary/20 px-2.5 py-1 font-mono text-primary">
-                            Press a key...
+                            {t("settings.hotkeys.pressKey")}
                           </span>
                           <button
                             onClick={(e) => {
@@ -211,7 +215,7 @@ export function HotkeySettings() {
                             }}
                             className="rounded-lg px-2 py-1 text-meta text-muted-foreground hover:bg-accent hover:text-foreground"
                           >
-                            Cancel
+                            {t("common.cancel")}
                           </button>
                         </span>
                       ) : (
@@ -230,7 +234,7 @@ export function HotkeySettings() {
 
       {/* Info */}
       <p className="text-xs text-muted-foreground/70">
-        Changes are saved automatically. Global shortcuts require Ctrl or Cmd modifier.
+        {t("settings.hotkeys.savedAutomatically")}
       </p>
     </div>
   );
