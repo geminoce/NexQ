@@ -27,6 +27,7 @@ import {
   Settings2,
   Zap,
 } from "lucide-react";
+import { t } from "../i18n";
 
 type ConnectionStatus = "idle" | "testing" | "success" | "error";
 
@@ -34,14 +35,14 @@ const PROVIDER_DISPLAY: Record<
   LLMProviderType,
   { label: string; description: string; requiresKey: boolean; isLocal: boolean }
 > = {
-  ollama: { label: "Ollama", description: "Local models via Ollama", requiresKey: false, isLocal: true },
-  lm_studio: { label: "LM Studio", description: "Local models via LM Studio", requiresKey: false, isLocal: true },
-  openai: { label: "OpenAI", description: "GPT-4o, GPT-4, etc.", requiresKey: true, isLocal: false },
-  anthropic: { label: "Anthropic", description: "Claude Sonnet, Opus, Haiku", requiresKey: true, isLocal: false },
-  groq: { label: "Groq", description: "Ultra-fast inference", requiresKey: true, isLocal: false },
-  gemini: { label: "Google Gemini", description: "Gemini Pro, Flash", requiresKey: true, isLocal: false },
-  openrouter: { label: "OpenRouter", description: "Multi-provider gateway", requiresKey: true, isLocal: false },
-  custom: { label: "Custom", description: "Your own endpoint", requiresKey: false, isLocal: false },
+  ollama: { label: "Ollama", description: t("settings.llm.providers.descriptions.ollama"), requiresKey: false, isLocal: true },
+  lm_studio: { label: "LM Studio", description: t("settings.llm.providers.descriptions.lmStudio"), requiresKey: false, isLocal: true },
+  openai: { label: "OpenAI", description: t("settings.llm.providers.descriptions.openai"), requiresKey: true, isLocal: false },
+  anthropic: { label: "Anthropic", description: t("settings.llm.providers.descriptions.anthropic"), requiresKey: true, isLocal: false },
+  groq: { label: "Groq", description: t("settings.llm.providers.descriptions.groq"), requiresKey: true, isLocal: false },
+  gemini: { label: "Google Gemini", description: t("settings.llm.providers.descriptions.gemini"), requiresKey: true, isLocal: false },
+  openrouter: { label: "OpenRouter", description: t("settings.llm.providers.descriptions.openrouter"), requiresKey: true, isLocal: false },
+  custom: { label: "Custom", description: t("settings.llm.providers.descriptions.custom"), requiresKey: false, isLocal: false },
 };
 
 const ALL_PROVIDERS: LLMProviderType[] = [
@@ -77,24 +78,24 @@ function getBadgeState(
 
   // Verified providers (test passed) → Ready
   if (verifiedProviders.includes(providerType)) {
-    return { text: "Ready", variant: "ready" };
+    return { text: t("settings.llm.badges.ready"), variant: "ready" };
   }
 
   // Local providers — not verified yet
   if (info.isLocal) {
-    return { text: "Local", variant: "local" };
+    return { text: t("settings.llm.badges.local"), variant: "local" };
   }
 
   // Cloud providers
   if (info.requiresKey) {
     if (keyExists) {
-      return { text: "Has Key", variant: "has-key" };
+      return { text: t("settings.llm.badges.hasKey"), variant: "has-key" };
     }
-    return { text: "No Key", variant: "no-key" };
+    return { text: t("settings.llm.badges.noKey"), variant: "no-key" };
   }
 
   // Custom — not configured
-  return { text: "Configure", variant: "not-configured" };
+  return { text: t("settings.llm.badges.configure"), variant: "not-configured" };
 }
 
 const BADGE_STYLES: Record<BadgeVariant, string> = {
@@ -200,7 +201,7 @@ export function LLMSettings() {
       await storeApiKey(selectedProvider, apiKey);
       setKeyStatusMap((prev) => ({ ...prev, [selectedProvider]: true }));
     } catch {
-      showToast("Failed to save API key", "error");
+      showToast(t("settings.llm.apiKey.saveFailed"), "error");
     }
   };
 
@@ -214,7 +215,7 @@ export function LLMSettings() {
       const success = await testLLMConnection(configJson);
       if (success) {
         setConnectionStatus("success");
-        setConnectionMessage("Connected successfully");
+        setConnectionMessage(t("settings.llm.connection.connected"));
         await setLLMProvider(configJson).catch(() => {});
         setConfigProvider(selectedProvider);
         // Mark as verified
@@ -224,11 +225,11 @@ export function LLMSettings() {
         setKeyStatusMap((prev) => ({ ...prev, [selectedProvider]: true }));
       } else {
         setConnectionStatus("error");
-        setConnectionMessage("Connection failed");
+        setConnectionMessage(t("settings.llm.connection.failed"));
       }
     } catch (err) {
       setConnectionStatus("error");
-      setConnectionMessage(err instanceof Error ? err.message : "Connection failed");
+      setConnectionMessage(err instanceof Error ? err.message : t("settings.llm.connection.failed"));
     }
   };
 
@@ -249,7 +250,7 @@ export function LLMSettings() {
         const orModels = await listOpenRouterModels(true);
         setOpenRouterModels(orModels);
         if (orModels.length === 0) {
-          setModelsError("No text models found");
+          setModelsError(t("settings.llm.models.noTextModels"));
         }
       } else {
         // Use generic model listing for other providers
@@ -262,13 +263,13 @@ export function LLMSettings() {
         if (chatModels.length === 0) {
           setModelsError(
             modelList.length > 0
-              ? "No chat models found (embedding-only models filtered)"
-              : "No models found"
+              ? t("settings.llm.models.noChatModels")
+              : t("settings.llm.models.noModels")
           );
         }
       }
     } catch (err) {
-      setModelsError(err instanceof Error ? err.message : "Failed to load models");
+      setModelsError(err instanceof Error ? err.message : t("settings.llm.models.loadFailed"));
     } finally {
       setModelsLoading(false);
     }
@@ -292,20 +293,22 @@ export function LLMSettings() {
         <Zap className="h-4 w-4 text-primary shrink-0" />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-foreground">
-            Active: {PROVIDER_DISPLAY[llmProvider]?.label || llmProvider}
-            {llmModel ? ` / ${llmModel}` : " — no model selected"}
+            {t("settings.llm.active.label", {
+              provider: PROVIDER_DISPLAY[llmProvider]?.label || llmProvider,
+              model: llmModel ? ` / ${llmModel}` : t("settings.llm.active.noModelSelected"),
+            })}
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">
             {llmModel
-              ? "This provider and model will be used for AI responses"
-              : "Select a provider, test connection, and load models below"}
+              ? t("settings.llm.active.usingProvider")
+              : t("settings.llm.active.setupPrompt")}
           </p>
         </div>
       </div>
 
       {/* Provider Selection */}
       <div className="rounded-xl border border-border/30 bg-card/50 p-5">
-        <h3 className="mb-3 text-sm font-semibold text-primary/80">Provider</h3>
+        <h3 className="mb-3 text-sm font-semibold text-primary/80">{t("settings.llm.providers.title")}</h3>
         <div className="grid grid-cols-4 gap-2.5">
           {ALL_PROVIDERS.map((pType) => {
             const display = PROVIDER_DISPLAY[pType];
@@ -329,7 +332,7 @@ export function LLMSettings() {
                     className={`h-2.5 w-2.5 rounded-full ring-2 ring-card ${
                       isActive && badge.variant === "ready" ? DOT_STYLES["ready"] : DOT_STYLES[badge.variant]
                     }`}
-                    title={isActive ? `Active — ${badge.text}` : badge.text}
+                    title={isActive ? t("settings.llm.badges.activeTitle", { status: badge.text }) : badge.text}
                     aria-hidden="true"
                   />
                 </div>
@@ -359,7 +362,7 @@ export function LLMSettings() {
       {/* API Key Input (for cloud providers) */}
       {requiresApiKey && (
         <div className="rounded-xl border border-border/30 bg-card/50 p-5">
-          <h3 className="mb-3 text-sm font-semibold text-primary/80">API Key</h3>
+          <h3 className="mb-3 text-sm font-semibold text-primary/80">{t("settings.llm.apiKey.title")}</h3>
           <div className="flex gap-2">
             <div className="relative flex-1">
               <input
@@ -367,15 +370,17 @@ export function LLMSettings() {
                 value={apiKey}
                 onChange={(e) => setApiKeyValue(e.target.value)}
                 onBlur={handleSaveApiKey}
-                placeholder={`Enter ${PROVIDER_DISPLAY[selectedProvider]?.label || selectedProvider} API key`}
+                placeholder={t("settings.llm.apiKey.placeholder", {
+                  provider: PROVIDER_DISPLAY[selectedProvider]?.label || selectedProvider,
+                })}
                 maxLength={256}
                 className="w-full rounded-lg border border-border/50 bg-background px-3.5 py-2.5 pr-10 text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20"
               />
               <button
                 onClick={() => setShowApiKey(!showApiKey)}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground cursor-pointer"
-                title={showApiKey ? "Hide" : "Show"}
-                aria-label={showApiKey ? "Hide API key" : "Show API key"}
+                title={showApiKey ? t("settings.llm.apiKey.hide") : t("settings.llm.apiKey.show")}
+                aria-label={showApiKey ? t("settings.llm.apiKey.hideAria") : t("settings.llm.apiKey.showAria")}
                 aria-pressed={showApiKey}
               >
                 {showApiKey ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
@@ -383,7 +388,7 @@ export function LLMSettings() {
             </div>
           </div>
           <p className="mt-1.5 text-xs text-muted-foreground">
-            Stored securely in your system keychain
+            {t("settings.llm.apiKey.storedSecurely")}
           </p>
         </div>
       )}
@@ -391,9 +396,9 @@ export function LLMSettings() {
       {/* Custom Provider Config */}
       {isCustom && (
         <div className="space-y-4 rounded-xl border border-border/30 bg-card/50 p-5">
-          <h3 className="text-sm font-semibold text-primary/80">Custom Provider</h3>
+          <h3 className="text-sm font-semibold text-primary/80">{t("settings.llm.custom.title")}</h3>
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-foreground">Base URL</label>
+            <label className="mb-1.5 block text-xs font-medium text-foreground">{t("settings.llm.custom.baseUrl")}</label>
             <input
               type="text"
               value={customBaseUrl}
@@ -405,27 +410,29 @@ export function LLMSettings() {
           </div>
           <div className="flex gap-3">
             <div className="flex-1">
-              <label className="mb-1.5 block text-xs font-medium text-foreground">Auth Type</label>
+              <label className="mb-1.5 block text-xs font-medium text-foreground">{t("settings.llm.custom.authType")}</label>
               <select
                 value={customAuthType}
                 onChange={(e) => setCustomAuthType(e.target.value as "none" | "bearer" | "api_key")}
                 className="w-full rounded-lg border border-border/50 bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20"
               >
-                <option value="none">None</option>
-                <option value="bearer">Bearer Token</option>
-                <option value="api_key">API Key Header</option>
+                <option value="none">{t("settings.llm.custom.authTypes.none")}</option>
+                <option value="bearer">{t("settings.llm.custom.authTypes.bearer")}</option>
+                <option value="api_key">{t("settings.llm.custom.authTypes.apiKey")}</option>
               </select>
             </div>
             {customAuthType !== "none" && (
               <div className="flex-1">
                 <label className="mb-1.5 block text-xs font-medium text-foreground">
-                  {customAuthType === "bearer" ? "Token" : "API Key"}
+                  {customAuthType === "bearer" ? t("settings.llm.custom.token") : t("settings.llm.custom.apiKey")}
                 </label>
                 <input
                   type="password"
                   value={customAuthValue}
                   onChange={(e) => setCustomAuthValue(e.target.value)}
-                  placeholder={customAuthType === "bearer" ? "Bearer token..." : "API key..."}
+                  placeholder={customAuthType === "bearer"
+                    ? t("settings.llm.custom.bearerPlaceholder")
+                    : t("settings.llm.custom.apiKeyPlaceholder")}
                   maxLength={256}
                   className="w-full rounded-lg border border-border/50 bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20"
                 />
@@ -441,15 +448,15 @@ export function LLMSettings() {
           <Server className="h-4 w-4 text-muted-foreground shrink-0" />
           <span className="text-xs text-muted-foreground">
             {selectedProvider === "ollama"
-              ? "Requires Ollama running on localhost:11434"
-              : "Requires LM Studio running on localhost:1234"}
+              ? t("settings.llm.localStatus.ollama")
+              : t("settings.llm.localStatus.lmStudio")}
           </span>
         </div>
       )}
 
       {/* Connection Test & Model Loading */}
       <div className="rounded-xl border border-border/30 bg-card/50 p-5">
-        <h3 className="mb-3 text-sm font-semibold text-primary/80">Connection</h3>
+        <h3 className="mb-3 text-sm font-semibold text-primary/80">{t("settings.llm.connection.title")}</h3>
         <div className="flex items-center gap-2">
           <button
             onClick={handleTestConnection}
@@ -457,7 +464,7 @@ export function LLMSettings() {
             className="inline-flex items-center gap-1.5 rounded-lg border border-border/50 bg-background px-4 py-2 text-sm font-medium text-foreground transition-all duration-150 hover:bg-accent hover:-translate-y-px active:translate-y-px active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:active:scale-100 cursor-pointer"
           >
             {connectionStatus === "testing" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wifi className="h-3.5 w-3.5" />}
-            Test Connection
+            {t("settings.llm.connection.test")}
           </button>
           <button
             onClick={handleLoadModels}
@@ -465,7 +472,7 @@ export function LLMSettings() {
             className="inline-flex items-center gap-1.5 rounded-lg border border-border/50 bg-background px-4 py-2 text-sm font-medium text-foreground transition-all duration-150 hover:bg-accent hover:-translate-y-px active:translate-y-px active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:active:scale-100 cursor-pointer"
           >
             {modelsLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
-            Load Models
+            {t("settings.llm.connection.loadModels")}
           </button>
           {connectionStatus === "success" && (
             <div className="flex items-center gap-1 text-success">
@@ -484,7 +491,7 @@ export function LLMSettings() {
 
       {/* Model Selection */}
       <div className="rounded-xl border border-border/30 bg-card/50 p-5">
-        <h3 className="mb-3 text-sm font-semibold text-primary/80">Model</h3>
+        <h3 className="mb-3 text-sm font-semibold text-primary/80">{t("settings.llm.models.title")}</h3>
         {selectedProvider === "openrouter" && openRouterModels.length > 0 ? (
           <OpenRouterModelCatalog models={openRouterModels} />
         ) : models.length > 0 ? (
@@ -493,17 +500,17 @@ export function LLMSettings() {
             onChange={(e) => handleModelSelect(e.target.value)}
             className="w-full rounded-lg border border-border/50 bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20 cursor-pointer"
           >
-            <option value="">Select a model...</option>
+            <option value="">{t("settings.llm.models.select")}</option>
             {models.map((m) => (
               <option key={m.id} value={m.id}>
-                {m.name}{m.context_window ? ` (${Math.round(m.context_window / 1000)}K ctx)` : ""}
+                {m.name}{m.context_window ? ` (${t("settings.llm.models.contextWindow", { size: Math.round(m.context_window / 1000) })})` : ""}
               </option>
             ))}
           </select>
         ) : (
           <div className="rounded-lg border border-border/30 bg-accent/20 px-4 py-3">
             <p className="text-xs text-muted-foreground">
-              {modelsError || (modelsLoading ? "Loading models..." : 'Click "Load Models" to fetch available models')}
+              {modelsError || (modelsLoading ? t("settings.llm.models.loading") : t("settings.llm.models.loadPrompt"))}
             </p>
           </div>
         )}
@@ -529,7 +536,9 @@ export function LLMSettings() {
           }}
           className="w-full rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm font-medium text-primary transition-all duration-150 hover:bg-primary/10 hover:-translate-y-px active:translate-y-px active:scale-[0.99] cursor-pointer"
         >
-          Set {PROVIDER_DISPLAY[selectedProvider]?.label || selectedProvider} as Active Provider
+          {t("settings.llm.actions.setActiveProvider", {
+            provider: PROVIDER_DISPLAY[selectedProvider]?.label || selectedProvider,
+          })}
         </button>
       )}
     </div>
