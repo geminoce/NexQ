@@ -33,6 +33,7 @@ import {
   Cpu,
 } from "lucide-react";
 import { LocalModelManager } from "./LocalModelManager";
+import { t } from "../i18n";
 
 // ── Provider definitions ──
 
@@ -56,7 +57,7 @@ const PROVIDER_OPTIONS: ProviderOption[] = [
   {
     value: "web_speech",
     label: "Web Speech",
-    description: "Browser-native, free",
+    description: t("settings.stt.providerDescriptions.webSpeech"),
     requiresApiKey: false,
     isLocal: true,
     credentialKey: "",
@@ -65,7 +66,7 @@ const PROVIDER_OPTIONS: ProviderOption[] = [
   {
     value: "windows_native",
     label: "Windows Speech",
-    description: "Built-in, zero download",
+    description: t("settings.stt.providerDescriptions.windowsSpeech"),
     requiresApiKey: false,
     isLocal: true,
     credentialKey: "",
@@ -74,7 +75,7 @@ const PROVIDER_OPTIONS: ProviderOption[] = [
   {
     value: "sherpa_onnx",
     label: "Sherpa-ONNX",
-    description: "Local streaming, offline, free",
+    description: t("settings.stt.providerDescriptions.sherpaOnnx"),
     requiresApiKey: false,
     isLocal: true,
     credentialKey: "",
@@ -83,7 +84,7 @@ const PROVIDER_OPTIONS: ProviderOption[] = [
   {
     value: "ort_streaming",
     label: "ORT Streaming",
-    description: "Local, GPU-accelerated",
+    description: t("settings.stt.providerDescriptions.ortStreaming"),
     requiresApiKey: false,
     isLocal: true,
     credentialKey: "",
@@ -92,7 +93,7 @@ const PROVIDER_OPTIONS: ProviderOption[] = [
   {
     value: "whisper_cpp",
     label: "Whisper.cpp",
-    description: "Batch transcription of recorded meetings",
+    description: t("settings.stt.providerDescriptions.whisperCpp"),
     requiresApiKey: false,
     isLocal: true,
     credentialKey: "",
@@ -102,7 +103,7 @@ const PROVIDER_OPTIONS: ProviderOption[] = [
   {
     value: "parakeet_tdt",
     label: "Parakeet TDT",
-    description: "Best accuracy, offline, English",
+    description: t("settings.stt.providerDescriptions.parakeetTdt"),
     requiresApiKey: false,
     isLocal: true,
     credentialKey: "",
@@ -111,7 +112,7 @@ const PROVIDER_OPTIONS: ProviderOption[] = [
   {
     value: "deepgram",
     label: "Deepgram",
-    description: "Real-time streaming, best quality",
+    description: t("settings.stt.providerDescriptions.deepgram"),
     requiresApiKey: true,
     isLocal: false,
     credentialKey: "deepgram",
@@ -119,7 +120,7 @@ const PROVIDER_OPTIONS: ProviderOption[] = [
   {
     value: "whisper_api",
     label: "Whisper API",
-    description: "OpenAI Whisper model",
+    description: t("settings.stt.providerDescriptions.whisperApi"),
     requiresApiKey: true,
     isLocal: false,
     credentialKey: "whisper_api",
@@ -127,7 +128,7 @@ const PROVIDER_OPTIONS: ProviderOption[] = [
   {
     value: "azure_speech",
     label: "Azure Speech",
-    description: "Azure Cognitive Services",
+    description: t("settings.stt.providerDescriptions.azureSpeech"),
     requiresApiKey: true,
     isLocal: false,
     credentialKey: "azure_speech",
@@ -136,7 +137,7 @@ const PROVIDER_OPTIONS: ProviderOption[] = [
   {
     value: "groq_whisper",
     label: "Groq Whisper",
-    description: "Ultra-fast Whisper inference",
+    description: t("settings.stt.providerDescriptions.groqWhisper"),
     requiresApiKey: true,
     isLocal: false,
     credentialKey: "groq_whisper",
@@ -144,23 +145,23 @@ const PROVIDER_OPTIONS: ProviderOption[] = [
 ];
 
 const LANGUAGES = [
-  { value: "en-US", label: "English (US)" },
-  { value: "en-GB", label: "English (UK)" },
-  { value: "es-ES", label: "Spanish" },
-  { value: "fr-FR", label: "French" },
-  { value: "de-DE", label: "German" },
-  { value: "it-IT", label: "Italian" },
-  { value: "pt-BR", label: "Portuguese (Brazil)" },
-  { value: "ja-JP", label: "Japanese" },
-  { value: "zh-CN", label: "Chinese (Simplified)" },
-  { value: "ko-KR", label: "Korean" },
-  { value: "nl-NL", label: "Dutch" },
-  { value: "hi-IN", label: "Hindi" },
-  { value: "ru-RU", label: "Russian" },
-  { value: "ar-SA", label: "Arabic" },
-  { value: "tr-TR", label: "Turkish" },
-  { value: "pl-PL", label: "Polish" },
-  { value: "sv-SE", label: "Swedish" },
+  { value: "en-US", label: t("settings.stt.languages.enUS") },
+  { value: "en-GB", label: t("settings.stt.languages.enGB") },
+  { value: "es-ES", label: t("settings.stt.languages.esES") },
+  { value: "fr-FR", label: t("settings.stt.languages.frFR") },
+  { value: "de-DE", label: t("settings.stt.languages.deDE") },
+  { value: "it-IT", label: t("settings.stt.languages.itIT") },
+  { value: "pt-BR", label: t("settings.stt.languages.ptBR") },
+  { value: "ja-JP", label: t("settings.stt.languages.jaJP") },
+  { value: "zh-CN", label: t("settings.stt.languages.zhCN") },
+  { value: "ko-KR", label: t("settings.stt.languages.koKR") },
+  { value: "nl-NL", label: t("settings.stt.languages.nlNL") },
+  { value: "hi-IN", label: t("settings.stt.languages.hiIN") },
+  { value: "ru-RU", label: t("settings.stt.languages.ruRU") },
+  { value: "ar-SA", label: t("settings.stt.languages.arSA") },
+  { value: "tr-TR", label: t("settings.stt.languages.trTR") },
+  { value: "pl-PL", label: t("settings.stt.languages.plPL") },
+  { value: "sv-SE", label: t("settings.stt.languages.svSE") },
 ];
 
 // ── Deepgram Models ──
@@ -337,29 +338,29 @@ export function STTSettings() {
   }
 
   function getBadgeState(p: ProviderOption): BadgeState {
-    if (p.alwaysReady) return { text: "Ready", variant: "ready" };
+    if (p.alwaysReady) return { text: t("settings.stt.badges.ready"), variant: "ready" };
 
     // Batch-only: green "Batch" if model downloaded, amber "Batch" if not
     if (p.batchOnly) {
       const downloaded = p.requiresModels
         ? getEngineDownloadedModels(p.requiresModels)
         : [];
-      return { text: "Batch", variant: downloaded.length > 0 ? "ready" : "warning" };
+      return { text: t("settings.stt.badges.batch"), variant: downloaded.length > 0 ? "ready" : "warning" };
     }
 
     if (p.requiresApiKey) {
       // Verified = key was saved+tested successfully (persisted across page navigations)
-      if (verifiedCloudProviders.includes(p.value)) return { text: "Ready", variant: "ready" };
-      return { text: "No Key", variant: "error" };
+      if (verifiedCloudProviders.includes(p.value)) return { text: t("settings.stt.badges.ready"), variant: "ready" };
+      return { text: t("settings.stt.badges.noKey"), variant: "error" };
     }
 
     if (p.requiresModels) {
       const downloaded = getEngineDownloadedModels(p.requiresModels);
-      if (downloaded.length === 0) return { text: "No Model", variant: "error" };
-      return { text: "Ready", variant: "ready" };
+      if (downloaded.length === 0) return { text: t("settings.stt.badges.noModel"), variant: "error" };
+      return { text: t("settings.stt.badges.ready"), variant: "ready" };
     }
 
-    return { text: "Ready", variant: "ready" };
+    return { text: t("settings.stt.badges.ready"), variant: "ready" };
   }
 
   function isProviderReady(p: ProviderOption): boolean {
@@ -431,7 +432,7 @@ export function STTSettings() {
     if (!apiKey.trim() || !currentProviderOption?.credentialKey) return;
 
     setConnectionStatus("testing");
-    setStatusMessage("Testing connection...");
+    setStatusMessage(t("settings.stt.connection.testingConnection"));
 
     try {
       // Temporarily store so the backend can read it during test
@@ -446,7 +447,7 @@ export function STTSettings() {
         setHasStoredKey(true);
         setKeyDirty(false);
         setConnectionStatus("success");
-        setStatusMessage("Connection successful — provider is ready");
+        setStatusMessage(t("settings.stt.connection.successReady"));
         // Persist the verified state
         const updated = Array.from(new Set([...verifiedCloudProviders, selectedProvider]));
         setVerifiedCloudProviders(updated);
@@ -455,7 +456,7 @@ export function STTSettings() {
         await deleteApiKey(currentProviderOption.credentialKey).catch(() => {});
         setHasStoredKey(false);
         setConnectionStatus("error");
-        setStatusMessage("Connection failed — key not saved");
+        setStatusMessage(t("settings.stt.connection.failedKeyNotSaved"));
         const updated = verifiedCloudProviders.filter((p) => p !== selectedProvider);
         setVerifiedCloudProviders(updated);
       }
@@ -463,7 +464,7 @@ export function STTSettings() {
       await deleteApiKey(currentProviderOption.credentialKey!).catch(() => {});
       setHasStoredKey(false);
       setConnectionStatus("error");
-      setStatusMessage(`Test failed: ${e}`);
+      setStatusMessage(t("settings.stt.connection.testFailed", { error: String(e) }));
       const updated = verifiedCloudProviders.filter((p) => p !== selectedProvider);
       setVerifiedCloudProviders(updated);
     }
@@ -494,7 +495,7 @@ export function STTSettings() {
   /** Test Connection — only for local/always-ready providers; cloud uses handleSaveAndTest. */
   const handleTestConnection = useCallback(async () => {
     setConnectionStatus("testing");
-    setStatusMessage("Testing...");
+    setStatusMessage(t("settings.stt.connection.testing"));
 
     try {
       if (currentProviderOption?.requiresModels) {
@@ -504,20 +505,23 @@ export function STTSettings() {
         const downloaded = eng?.models.filter((m) => m.is_downloaded && !m.id.startsWith("binary-")) ?? [];
         if (downloaded.length === 0) {
           setConnectionStatus("error");
-          setStatusMessage("No model downloaded. Download a model below first.");
+          setStatusMessage(t("settings.stt.connection.noModelDownloaded"));
           return;
         }
         setConnectionStatus("success");
-        setStatusMessage(`Ready — ${downloaded.length} model${downloaded.length > 1 ? "s" : ""} available`);
+        setStatusMessage(t("settings.stt.connection.readyModels", {
+          count: downloaded.length,
+          plural: downloaded.length > 1 ? "s" : "",
+        }));
         return;
       }
 
       const success = await testSTTConnection(selectedProvider);
       setConnectionStatus(success ? "success" : "error");
-      setStatusMessage(success ? "Ready" : "Connection failed");
+      setStatusMessage(success ? t("settings.stt.connection.ready") : t("settings.stt.connection.failed"));
     } catch (e) {
       setConnectionStatus("error");
-      setStatusMessage(`Test failed: ${e}`);
+      setStatusMessage(t("settings.stt.connection.testFailed", { error: String(e) }));
     }
   }, [selectedProvider, currentProviderOption]);
 
@@ -538,8 +542,8 @@ export function STTSettings() {
             <div className="flex h-5 w-5 items-center justify-center rounded bg-success/10">
               <HardDrive className="h-3 w-3 text-success" />
             </div>
-            <span className="text-xs font-semibold text-foreground">Local & Built-in</span>
-            <span className="ml-auto text-meta text-muted-foreground/60 font-medium uppercase tracking-wider">Free · No API Key</span>
+            <span className="text-xs font-semibold text-foreground">{t("settings.stt.sections.localBuiltIn")}</span>
+            <span className="ml-auto text-meta text-muted-foreground/60 font-medium uppercase tracking-wider">{t("settings.stt.sections.freeNoApiKey")}</span>
           </div>
           <div className="grid grid-cols-3 gap-2">
             {localProviders.map((p) => (
@@ -561,8 +565,8 @@ export function STTSettings() {
             <div className="flex h-5 w-5 items-center justify-center rounded bg-info/10">
               <Cloud className="h-3 w-3 text-info" />
             </div>
-            <span className="text-xs font-semibold text-foreground">Cloud</span>
-            <span className="ml-auto text-meta text-muted-foreground/60 font-medium uppercase tracking-wider">Requires API Key</span>
+            <span className="text-xs font-semibold text-foreground">{t("settings.stt.sections.cloud")}</span>
+            <span className="ml-auto text-meta text-muted-foreground/60 font-medium uppercase tracking-wider">{t("settings.stt.sections.requiresApiKey")}</span>
           </div>
           <div className="grid grid-cols-4 gap-2">
             {cloudProviders.map((p) => (
@@ -584,22 +588,21 @@ export function STTSettings() {
         <div className="rounded-xl border border-border/30 bg-card/50 p-5">
           <h3 className="mb-1 text-sm font-semibold text-primary/80 flex items-center gap-1.5">
             <HardDrive className="h-4 w-4" />
-            {currentProviderOption?.label} Models
+            {t("settings.stt.models.title", { provider: currentProviderOption?.label ?? "" })}
             {currentProviderOption?.batchOnly && (
               <span className="ml-1 rounded border border-warning/30 bg-warning/10 px-1.5 py-0.5 text-meta font-semibold text-warning uppercase tracking-wide">
-                Batch
+                {t("settings.stt.models.batch")}
               </span>
             )}
           </h3>
           {currentProviderOption?.batchOnly && (
             <p className="mb-3 text-xs text-muted-foreground/70">
-              Whisper.cpp is for post-meeting batch transcription only — not live streaming.
-              It will be available in the "Past Meetings" tab.
+              {t("settings.stt.models.whisperCppBatchNote")}
             </p>
           )}
           {!currentProviderOption?.batchOnly && (
             <p className="mb-3 text-xs text-muted-foreground">
-              Download a model, then click <strong>Activate</strong> to enable this provider.
+              {t("settings.stt.models.downloadThenActivate")}
             </p>
           )}
           <LocalModelManager engineFilter={modelEngineId} />
@@ -609,7 +612,7 @@ export function STTSettings() {
       {/* API Key — cloud providers only. Save & Test flow: test first, persist only on success. */}
       {currentProviderOption?.requiresApiKey && (
         <div className="rounded-xl border border-border/30 bg-card/50 p-5">
-          <h3 className="mb-3 text-sm font-semibold text-primary/80">API Key</h3>
+          <h3 className="mb-3 text-sm font-semibold text-primary/80">{t("settings.stt.sections.apiKey")}</h3>
 
           <div className="flex gap-2">
             <div className="relative flex-1">
@@ -624,8 +627,8 @@ export function STTSettings() {
                 }}
                 placeholder={
                   hasStoredKey && !keyDirty
-                    ? "Key stored — type to replace"
-                    : `Enter ${currentProviderOption.label} API key`
+                    ? t("settings.stt.apiKey.storedPlaceholder")
+                    : t("settings.stt.apiKey.enterPlaceholder", { provider: currentProviderOption.label })
                 }
                 className="w-full rounded-lg border border-border/50 bg-background px-3.5 py-2.5 pr-10 text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20"
               />
@@ -633,7 +636,7 @@ export function STTSettings() {
                 onClick={() => setShowApiKey(!showApiKey)}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
                 type="button"
-                aria-label={showApiKey ? "Hide API key" : "Show API key"}
+                aria-label={showApiKey ? t("settings.stt.apiKey.hide") : t("settings.stt.apiKey.show")}
                 aria-pressed={showApiKey}
               >
                 {showApiKey ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
@@ -652,7 +655,7 @@ export function STTSettings() {
                 ) : (
                   <Wifi className="h-3.5 w-3.5" />
                 )}
-                Save & Test
+                {t("settings.stt.apiKey.saveAndTest")}
               </button>
             )}
 
@@ -663,7 +666,7 @@ export function STTSettings() {
                 className="flex items-center gap-1.5 rounded-lg border border-destructive/30 px-3 py-2 text-xs text-destructive transition-colors hover:bg-destructive/10"
               >
                 <Trash2 className="h-3.5 w-3.5" />
-                Clear
+                {t("settings.stt.apiKey.clear")}
               </button>
             )}
           </div>
@@ -684,12 +687,12 @@ export function STTSettings() {
             )}
             {connectionStatus === "idle" && hasStoredKey && !keyDirty && (
               <p className="text-xs text-success/70">
-                API key verified and stored securely
+                {t("settings.stt.apiKey.verifiedStored")}
               </p>
             )}
             {connectionStatus === "idle" && !hasStoredKey && (
               <p className="text-xs text-muted-foreground">
-                Enter your key and click Save & Test
+                {t("settings.stt.apiKey.enterAndSave")}
               </p>
             )}
           </div>
@@ -700,7 +703,7 @@ export function STTSettings() {
       {currentProviderOption?.needsRegion && (
         <div className="rounded-xl border border-border/30 bg-card/50 p-5">
           <h3 className="mb-3 text-sm font-semibold text-primary/80">
-            Azure Region
+            {t("settings.stt.sections.azureRegion")}
           </h3>
           <input
             type="text"
@@ -711,7 +714,7 @@ export function STTSettings() {
             className="w-full rounded-lg border border-border/50 bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20"
           />
           <p className="mt-1.5 text-xs text-muted-foreground">
-            Azure region for your Speech Services resource (e.g., eastus, westeurope, southeastasia)
+            {t("settings.stt.region.help")}
           </p>
         </div>
       )}
@@ -731,12 +734,12 @@ export function STTSettings() {
       {/* Language Selection */}
       <div className="rounded-xl border border-border/30 bg-card/50 p-5">
         <h3 className="mb-3 text-sm font-semibold text-primary/80">
-          Language
+          {t("settings.stt.sections.language")}
         </h3>
         <select
           value={language}
           onChange={(e) => setLanguage(e.target.value)}
-          aria-label="STT language"
+          aria-label={t("settings.stt.sections.language")}
           className="w-full rounded-lg border border-border/50 bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20"
         >
           {LANGUAGES.map((lang) => (
@@ -750,7 +753,7 @@ export function STTSettings() {
       {/* Test Connection — only for local/always-ready providers; cloud uses Save & Test in the key section */}
       {!currentProviderOption?.requiresApiKey && (
         <div className="rounded-xl border border-border/30 bg-card/50 p-5">
-          <h3 className="mb-3 text-sm font-semibold text-primary/80">Connection</h3>
+          <h3 className="mb-3 text-sm font-semibold text-primary/80">{t("settings.stt.sections.connection")}</h3>
           <div className="flex items-center gap-2">
             <button
               onClick={handleTestConnection}
@@ -762,7 +765,7 @@ export function STTSettings() {
               ) : (
                 <Wifi className="h-3.5 w-3.5" />
               )}
-              Test Connection
+              {t("settings.stt.connection.test")}
             </button>
 
             {connectionStatus === "success" && (
@@ -822,7 +825,7 @@ function ProviderCard({
         />
       </div>
       <span className="text-meta text-muted-foreground/70 line-clamp-1 leading-tight">
-        {provider.batchOnly ? "Batch mode only" : provider.description}
+        {provider.batchOnly ? t("settings.stt.providerDescriptions.batchOnly") : provider.description}
       </span>
     </button>
   );
