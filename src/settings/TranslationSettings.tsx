@@ -31,6 +31,7 @@ import {
 import { OpusMtModelManager } from "./OpusMtModelManager";
 import { listOpusMtModels } from "../lib/ipc";
 import type { OpusMtModelStatus } from "../lib/types";
+import { t } from "../i18n";
 
 // ── Provider definitions ──
 
@@ -50,7 +51,7 @@ const LOCAL_PROVIDERS: ProviderOption[] = [
   {
     value: "opus-mt",
     label: "OPUS-MT",
-    description: "100+ langs · Fully offline · Private",
+    description: t("settings.translation.providers.descriptions.opusMt"),
     requiresApiKey: false,
     isLocal: true,
     credentialKey: "",
@@ -58,7 +59,7 @@ const LOCAL_PROVIDERS: ProviderOption[] = [
   {
     value: "llm",
     label: "LLM Translation",
-    description: "Uses your active LLM provider",
+    description: t("settings.translation.providers.descriptions.llm"),
     requiresApiKey: false,
     isLocal: true,
     credentialKey: "",
@@ -69,33 +70,33 @@ const CLOUD_PROVIDERS: ProviderOption[] = [
   {
     value: "microsoft",
     label: "Microsoft Translator",
-    description: "179 langs · 2M free/mo",
+    description: t("settings.translation.providers.descriptions.microsoft"),
     requiresApiKey: true,
     isLocal: false,
     credentialKey: "translation_microsoft",
     needsRegion: true,
     helpUrl: "https://learn.microsoft.com/en-us/azure/cognitive-services/translator/quickstart-text-rest-api",
-    helpLabel: "Get a free API key",
+    helpLabel: t("settings.translation.providers.helpFreeKey"),
   },
   {
     value: "google",
     label: "Google Translate",
-    description: "133 langs · $20 free/mo",
+    description: t("settings.translation.providers.descriptions.google"),
     requiresApiKey: true,
     isLocal: false,
     credentialKey: "translation_google",
     helpUrl: "https://cloud.google.com/translate/docs/setup",
-    helpLabel: "Get a free API key",
+    helpLabel: t("settings.translation.providers.helpFreeKey"),
   },
   {
     value: "deepl",
     label: "DeepL",
-    description: "31 langs · 500K free/mo",
+    description: t("settings.translation.providers.descriptions.deepl"),
     requiresApiKey: true,
     isLocal: false,
     credentialKey: "translation_deepl",
     helpUrl: "https://www.deepl.com/pro-api",
-    helpLabel: "Get a free API key",
+    helpLabel: t("settings.translation.providers.helpFreeKey"),
   },
 ];
 
@@ -185,6 +186,50 @@ const DOT_COLORS: Record<BadgeVariant, string> = {
 type ConnectionStatus = "idle" | "testing" | "success" | "error";
 
 // ══════════════════════════════════════════════════════════════
+
+function getLanguageDisplayName(code: string, fallback: string): string {
+  switch (code) {
+    case "af": return t("settings.translation.language.names.af");
+    case "ar": return t("settings.translation.language.names.ar");
+    case "bn": return t("settings.translation.language.names.bn");
+    case "bg": return t("settings.translation.language.names.bg");
+    case "zh": return t("settings.translation.language.names.zh");
+    case "zh-TW": return t("settings.translation.language.names.zhTW");
+    case "cs": return t("settings.translation.language.names.cs");
+    case "da": return t("settings.translation.language.names.da");
+    case "nl": return t("settings.translation.language.names.nl");
+    case "en": return t("settings.translation.language.names.en");
+    case "et": return t("settings.translation.language.names.et");
+    case "fa": return t("settings.translation.language.names.fa");
+    case "fi": return t("settings.translation.language.names.fi");
+    case "fr": return t("settings.translation.language.names.fr");
+    case "de": return t("settings.translation.language.names.de");
+    case "el": return t("settings.translation.language.names.el");
+    case "he": return t("settings.translation.language.names.he");
+    case "hi": return t("settings.translation.language.names.hi");
+    case "hu": return t("settings.translation.language.names.hu");
+    case "id": return t("settings.translation.language.names.id");
+    case "it": return t("settings.translation.language.names.it");
+    case "ja": return t("settings.translation.language.names.ja");
+    case "ko": return t("settings.translation.language.names.ko");
+    case "ms": return t("settings.translation.language.names.ms");
+    case "no": return t("settings.translation.language.names.no");
+    case "pl": return t("settings.translation.language.names.pl");
+    case "pt": return t("settings.translation.language.names.pt");
+    case "ro": return t("settings.translation.language.names.ro");
+    case "ru": return t("settings.translation.language.names.ru");
+    case "sk": return t("settings.translation.language.names.sk");
+    case "sl": return t("settings.translation.language.names.sl");
+    case "es": return t("settings.translation.language.names.es");
+    case "sv": return t("settings.translation.language.names.sv");
+    case "th": return t("settings.translation.language.names.th");
+    case "tr": return t("settings.translation.language.names.tr");
+    case "uk": return t("settings.translation.language.names.uk");
+    case "ur": return t("settings.translation.language.names.ur");
+    case "vi": return t("settings.translation.language.names.vi");
+    default: return fallback;
+  }
+}
 
 export function TranslationSettings() {
   const provider = useTranslationStore((s) => s.provider);
@@ -322,20 +367,20 @@ export function TranslationSettings() {
   function getBadgeState(p: ProviderOption): BadgeState {
     if (p.isLocal) {
       if (p.value === "llm") {
-        return { text: "Available", variant: "available" };
+        return { text: t("settings.translation.badges.available"), variant: "available" };
       }
       // OPUS-MT — dynamic badge based on model presence
       if (p.value === "opus-mt") {
-        if (opusMtHasActive) return { text: "Ready", variant: "ready" };
-        if (opusMtDownloadedCount > 0) return { text: `${opusMtDownloadedCount} Models`, variant: "available" };
-        return { text: "No Models", variant: "no-key" };
+        if (opusMtHasActive) return { text: t("settings.translation.badges.ready"), variant: "ready" };
+        if (opusMtDownloadedCount > 0) return { text: t("settings.translation.badges.models", { count: opusMtDownloadedCount }), variant: "available" };
+        return { text: t("settings.translation.badges.noModels"), variant: "no-key" };
       }
-      return { text: "Not Ready", variant: "no-key" };
+      return { text: t("settings.translation.badges.notReady"), variant: "no-key" };
     }
     // Cloud providers
-    if (testedProviders.has(p.value)) return { text: "Ready", variant: "ready" };
-    if (keyStatusMap[p.credentialKey]) return { text: "Has Key", variant: "available" };
-    return { text: "No Key", variant: "no-key" };
+    if (testedProviders.has(p.value)) return { text: t("settings.translation.badges.ready"), variant: "ready" };
+    if (keyStatusMap[p.credentialKey]) return { text: t("settings.translation.badges.hasKey"), variant: "available" };
+    return { text: t("settings.translation.badges.noKey"), variant: "no-key" };
   }
 
   // ── Handlers ──
@@ -352,7 +397,7 @@ export function TranslationSettings() {
     if (!apiKey.trim()) return;
 
     setConnectionStatus("testing");
-    setStatusMessage("Testing connection...");
+    setStatusMessage(t("settings.translation.connection.testingConnection"));
     setResponseMs(null);
 
     try {
@@ -381,7 +426,10 @@ export function TranslationSettings() {
         setConnectionStatus("success");
         setResponseMs(result.response_ms);
         setStatusMessage(
-          `Connected — ${result.language_count} languages available (${result.response_ms}ms)`
+          t("settings.translation.connection.connectedWithAvailable", {
+            count: result.language_count,
+            ms: result.response_ms,
+          })
         );
         setKeyStatusMap((prev) => ({ ...prev, [currentProviderOption.credentialKey]: true }));
         setTestedProviders((prev) => new Set(prev).add(selectedProvider));
@@ -402,7 +450,7 @@ export function TranslationSettings() {
           await setTranslationProvider(previousProvider).catch(() => {});
         }
         setConnectionStatus("error");
-        setStatusMessage(result.error || "Connection failed");
+        setStatusMessage(result.error || t("settings.translation.connection.failed"));
       }
     } catch (e) {
       setConnectionStatus("error");
@@ -413,7 +461,7 @@ export function TranslationSettings() {
   const handleTestLocal = useCallback(async () => {
 
     setConnectionStatus("testing");
-    setStatusMessage("Testing...");
+    setStatusMessage(t("settings.translation.connection.testing"));
     setResponseMs(null);
 
     try {
@@ -424,17 +472,20 @@ export function TranslationSettings() {
         setConnectionStatus("success");
         setResponseMs(result.response_ms);
         setStatusMessage(
-          `Connected — ${result.language_count} languages (${result.response_ms}ms)`
+          t("settings.translation.connection.connectedWithCount", {
+            count: result.language_count,
+            ms: result.response_ms,
+          })
         );
         setTestedProviders((prev) => new Set(prev).add(selectedProvider));
         setStoreProvider(selectedProvider);
       } else {
         setConnectionStatus("error");
-        setStatusMessage(result.error || "Connection failed");
+        setStatusMessage(result.error || t("settings.translation.connection.failed"));
       }
     } catch (e) {
       setConnectionStatus("error");
-      setStatusMessage(e instanceof Error ? e.message : "Test failed");
+      setStatusMessage(e instanceof Error ? e.message : t("settings.translation.connection.testFailed"));
     }
   }, [selectedProvider, setStoreProvider]);
 
@@ -499,18 +550,22 @@ export function TranslationSettings() {
         <Globe className="h-4 w-4 text-primary shrink-0" />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-foreground">
-            Active: {ALL_PROVIDERS.find((p) => p.value === provider)?.label || provider}
-            {" · "}
-            {DEFAULT_TARGET_LANGUAGES.find((l) => l.code === targetLang)?.name || targetLang}
+            {t("settings.translation.active.label", {
+              provider: ALL_PROVIDERS.find((p) => p.value === provider)?.label || provider,
+              language: getLanguageDisplayName(
+                targetLang,
+                DEFAULT_TARGET_LANGUAGES.find((l) => l.code === targetLang)?.name || targetLang,
+              ),
+            })}
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            This provider will be used for transcript translation
+            {t("settings.translation.active.description")}
           </p>
         </div>
         {connectionStatus === "success" && selectedProvider === provider && (
           <div className="flex items-center gap-1 text-success shrink-0">
             <CheckCircle className="h-3.5 w-3.5" />
-            <span className="text-xs">Connected</span>
+            <span className="text-xs">{t("settings.translation.active.connected")}</span>
           </div>
         )}
       </div>
@@ -527,9 +582,9 @@ export function TranslationSettings() {
                 <div className="flex h-5 w-5 items-center justify-center rounded bg-success/10">
                   <Server className="h-3 w-3 text-success" />
                 </div>
-                <span className="text-xs font-semibold text-foreground">Local & Offline</span>
+                <span className="text-xs font-semibold text-foreground">{t("settings.translation.providers.localTitle")}</span>
                 <span className="ml-auto text-meta text-muted-foreground/60 font-medium uppercase tracking-wider">
-                  Free · No API Key · Private
+                  {t("settings.translation.providers.localMeta")}
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-2">
@@ -552,9 +607,9 @@ export function TranslationSettings() {
                 <div className="flex h-5 w-5 items-center justify-center rounded bg-info/10">
                   <Cloud className="h-3 w-3 text-info" />
                 </div>
-                <span className="text-xs font-semibold text-foreground">Cloud Providers</span>
+                <span className="text-xs font-semibold text-foreground">{t("settings.translation.providers.cloudTitle")}</span>
                 <span className="ml-auto text-meta text-muted-foreground/60 font-medium uppercase tracking-wider">
-                  Requires API Key
+                  {t("settings.translation.providers.cloudMeta")}
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-2">
@@ -575,7 +630,7 @@ export function TranslationSettings() {
           {/* ── API Key Configuration (cloud providers only) ── */}
           {isCloud && (
             <div className="rounded-xl border border-border/30 bg-card/50 p-4">
-              <h3 className="mb-3 text-sm font-semibold text-primary/80">API Key</h3>
+              <h3 className="mb-3 text-sm font-semibold text-primary/80">{t("settings.translation.apiKey.title")}</h3>
 
               <div className="flex gap-2">
                 <div className="relative flex-1">
@@ -590,8 +645,10 @@ export function TranslationSettings() {
                     }}
                     placeholder={
                       hasStoredKey && !keyDirty
-                        ? "Key stored — type to replace"
-                        : `Enter ${currentProviderOption?.label || selectedProvider} API key`
+                        ? t("settings.translation.apiKey.storedPlaceholder")
+                        : t("settings.translation.apiKey.enterPlaceholder", {
+                          provider: currentProviderOption?.label || selectedProvider,
+                        })
                     }
                     maxLength={256}
                     className="w-full rounded-lg border border-border/50 bg-background px-3.5 py-2.5 pr-10 text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20"
@@ -600,7 +657,7 @@ export function TranslationSettings() {
                     onClick={() => setShowApiKey(!showApiKey)}
                     className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground cursor-pointer"
                     type="button"
-                    aria-label={showApiKey ? "Hide API key" : "Show API key"}
+                    aria-label={showApiKey ? t("settings.translation.apiKey.hide") : t("settings.translation.apiKey.show")}
                     aria-pressed={showApiKey}
                   >
                     {showApiKey ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
@@ -619,7 +676,7 @@ export function TranslationSettings() {
                     ) : (
                       <Wifi className="h-3.5 w-3.5" />
                     )}
-                    Save & Test
+                    {t("settings.translation.apiKey.saveAndTest")}
                   </button>
                 )}
 
@@ -635,7 +692,7 @@ export function TranslationSettings() {
                     ) : (
                       <Wifi className="h-3.5 w-3.5" />
                     )}
-                    Test Connection
+                    {t("settings.translation.apiKey.testConnection")}
                   </button>
                 )}
 
@@ -660,10 +717,10 @@ export function TranslationSettings() {
                       } catch { /* ignore */ }
                     }}
                     className="flex items-center gap-1.5 rounded-lg border border-destructive/30 px-3 py-2 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
-                    title="Remove stored API key"
+                    title={t("settings.translation.apiKey.removeStored")}
                   >
                     <XCircle className="h-3.5 w-3.5" />
-                    Clear
+                    {t("settings.translation.apiKey.clear")}
                   </button>
                 )}
               </div>
@@ -677,7 +734,7 @@ export function TranslationSettings() {
                     rel="noopener noreferrer"
                     className="text-primary/70 hover:text-primary underline-offset-2 hover:underline"
                   >
-                    {currentProviderOption.helpLabel || "Get a free API key"} &rarr;
+                    {currentProviderOption.helpLabel || t("settings.translation.providers.helpFreeKey")} &rarr;
                   </a>
                 </p>
               )}
@@ -685,7 +742,7 @@ export function TranslationSettings() {
               {/* Azure Region dropdown (Microsoft only) */}
               {currentProviderOption?.needsRegion && (
                 <div className="mt-3">
-                  <label className="mb-1.5 block text-xs font-medium text-foreground">Azure Region</label>
+                  <label className="mb-1.5 block text-xs font-medium text-foreground">{t("settings.translation.region.title")}</label>
                   <select
                     value={azureRegion}
                     onChange={(e) => setAzureRegion(e.target.value)}
@@ -696,7 +753,7 @@ export function TranslationSettings() {
                     ))}
                   </select>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Region for your Azure Translator resource
+                    {t("settings.translation.region.help")}
                   </p>
                 </div>
               )}
@@ -717,12 +774,12 @@ export function TranslationSettings() {
                 )}
                 {connectionStatus === "idle" && hasStoredKey && !keyDirty && (
                   <p className="text-xs text-success/70">
-                    API key stored securely
+                    {t("settings.translation.apiKey.storedSecurely")}
                   </p>
                 )}
                 {connectionStatus === "idle" && !hasStoredKey && (
                   <p className="text-xs text-muted-foreground">
-                    Enter your key and click Save & Test
+                    {t("settings.translation.apiKey.enterAndSave")}
                   </p>
                 )}
               </div>
@@ -735,7 +792,7 @@ export function TranslationSettings() {
           {/* ── LLM local provider — Test Connection ── */}
           {isLlm && (
             <div className="rounded-xl border border-border/30 bg-card/50 p-4">
-              <h3 className="mb-3 text-sm font-semibold text-primary/80">Connection</h3>
+              <h3 className="mb-3 text-sm font-semibold text-primary/80">{t("settings.translation.connection.title")}</h3>
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleTestLocal}
@@ -747,7 +804,7 @@ export function TranslationSettings() {
                   ) : (
                     <Wifi className="h-3.5 w-3.5" />
                   )}
-                  Test Connection
+                  {t("settings.translation.connection.test")}
                 </button>
 
                 {canMakeActive && (
@@ -756,7 +813,7 @@ export function TranslationSettings() {
                     className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 cursor-pointer"
                   >
                     <Zap className="h-3.5 w-3.5" />
-                    Make Active
+                    {t("settings.translation.connection.makeActive")}
                   </button>
                 )}
 
@@ -782,7 +839,9 @@ export function TranslationSettings() {
               onClick={handleMakeActive}
               className="w-full rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm font-medium text-primary transition-all duration-150 hover:bg-primary/10 hover:-translate-y-px active:translate-y-px active:scale-[0.99] cursor-pointer"
             >
-              Set {currentProviderOption?.label || selectedProvider} as Active Translation Provider
+              {t("settings.translation.actions.setActiveProvider", {
+                provider: currentProviderOption?.label || selectedProvider,
+              })}
             </button>
           )}
         </div>
@@ -791,21 +850,23 @@ export function TranslationSettings() {
         <div className="space-y-5">
           {/* ── Language Settings ── */}
           <div className="rounded-xl border border-border/30 bg-card/50 p-4">
-            <h3 className="mb-3 text-sm font-semibold text-primary/80">Language</h3>
+            <h3 className="mb-3 text-sm font-semibold text-primary/80">{t("settings.translation.language.title")}</h3>
 
             {/* Banner: activate provider to see its languages */}
             {selectedProvider !== provider && (
               <div className="mb-3 flex items-center gap-2 rounded-lg border border-info/20 bg-info/5 px-3 py-2">
                 <Info className="h-3.5 w-3.5 text-info shrink-0" />
                 <p className="text-xs text-muted-foreground">
-                  Activate <span className="font-medium text-foreground">{currentProviderOption?.label}</span> to see its supported languages
+                  {t("settings.translation.language.activateNotice", {
+                    provider: currentProviderOption?.label || selectedProvider,
+                  })}
                 </p>
               </div>
             )}
 
             <div className="space-y-4">
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-foreground">Target Language</label>
+                <label className="mb-1.5 block text-xs font-medium text-foreground">{t("settings.translation.language.target")}</label>
                 <select
                   value={targetLang}
                   onChange={(e) => setTargetLang(e.target.value)}
@@ -813,30 +874,30 @@ export function TranslationSettings() {
                 >
                   {languageOptions.map((lang) => (
                     <option key={lang.code} value={lang.code}>
-                      {lang.name}
+                      {getLanguageDisplayName(lang.code, lang.name)}
                     </option>
                   ))}
                 </select>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Translate transcripts into this language
+                  {t("settings.translation.language.targetHelp")}
                 </p>
               </div>
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-foreground">Source Language</label>
+                <label className="mb-1.5 block text-xs font-medium text-foreground">{t("settings.translation.language.source")}</label>
                 <select
                   value={sourceLang}
                   onChange={(e) => setSourceLang(e.target.value)}
                   className="w-full rounded-lg border border-border/50 bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20 cursor-pointer"
                 >
-                  <option value="auto">Auto-detect (recommended)</option>
+                  <option value="auto">{t("settings.translation.language.autoDetect")}</option>
                   {languageOptions.map((lang) => (
                     <option key={lang.code} value={lang.code}>
-                      {lang.name}
+                      {getLanguageDisplayName(lang.code, lang.name)}
                     </option>
                   ))}
                 </select>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Detect source language automatically or set explicitly
+                  {t("settings.translation.language.sourceHelp")}
                 </p>
               </div>
             </div>
@@ -844,28 +905,28 @@ export function TranslationSettings() {
 
           {/* ── Behavior Toggles ── */}
           <div className="rounded-xl border border-border/30 bg-card/50 p-4">
-            <h3 className="mb-3 text-sm font-semibold text-primary/80">Behavior</h3>
+            <h3 className="mb-3 text-sm font-semibold text-primary/80">{t("settings.translation.behavior.title")}</h3>
             <div className="space-y-4">
               {/* Select-to-translate toolbar */}
               <ToggleRow
-                label="Select-to-translate toolbar"
-                description="Show a translate button when selecting text in the transcript"
+                label={t("settings.translation.behavior.selectionToolbar.label")}
+                description={t("settings.translation.behavior.selectionToolbar.description")}
                 checked={selectionToolbarEnabled}
                 onChange={setSelectionToolbarEnabled}
               />
 
               {/* Show translations in post-meeting */}
               <ToggleRow
-                label="Show translations in post-meeting review"
-                description="Display translation toolbar and cached translations when reviewing past meetings"
+                label={t("settings.translation.behavior.postMeeting.label")}
+                description={t("settings.translation.behavior.postMeeting.description")}
                 checked={showPostMeetingTranslation}
                 onChange={setShowPostMeetingTranslation}
               />
 
               {/* Cache translations */}
               <ToggleRow
-                label="Cache translations"
-                description="Store translated text locally to avoid re-translating the same content"
+                label={t("settings.translation.behavior.cache.label")}
+                description={t("settings.translation.behavior.cache.description")}
                 checked={cacheEnabled}
                 onChange={setCacheEnabled}
               />
@@ -907,7 +968,7 @@ function ProviderCard({
         <div className="absolute -top-1 -right-1">
           <div
             className={`h-2.5 w-2.5 rounded-full ring-2 ring-card ${DOT_COLORS[badge.variant]}`}
-            title={`Active provider — ${badge.text}`}
+            title={t("settings.translation.badges.activeTitle", { status: badge.text })}
             aria-hidden="true"
           />
         </div>
