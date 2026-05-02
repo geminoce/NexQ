@@ -198,7 +198,7 @@ tray.*
 7. `ContextStrategySettings`
 8. `ScenarioSettings` - готово: UI-строки и встроенные prompt-тексты сценариев переведены
 9. `NoisePresetSettings` - готово: компонент уже использует i18n-ключи для названий, описаний и статистики пресетов
-10. `ConfidenceSettings`
+10. `ConfidenceSettings` - готово: все видимые строки компонента уже используют i18n-ключи
 11. `LocalModelManager`
 12. `OpusMtModelManager`
 13. `OpenRouterModelCatalog`
