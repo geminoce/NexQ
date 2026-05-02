@@ -270,6 +270,67 @@ function configMatchesPreset(config: DeepgramConfig, preset: DeepgramConfig): bo
   );
 }
 
+function getDeepgramPresetLabel(id: string): string {
+  switch (id) {
+    case "default":
+      return t("settings.stt.advanced.deepgram.presets.default.label");
+    case "low_latency":
+      return t("settings.stt.advanced.deepgram.presets.lowLatency.label");
+    case "high_accuracy":
+      return t("settings.stt.advanced.deepgram.presets.highAccuracy.label");
+    case "meeting_mode":
+      return t("settings.stt.advanced.deepgram.presets.meetingMode.label");
+    case "economy":
+      return t("settings.stt.advanced.deepgram.presets.economy.label");
+    default:
+      return id;
+  }
+}
+
+function getDeepgramPresetDescription(id: string): string {
+  switch (id) {
+    case "default":
+      return t("settings.stt.advanced.deepgram.presets.default.description");
+    case "low_latency":
+      return t("settings.stt.advanced.deepgram.presets.lowLatency.description");
+    case "high_accuracy":
+      return t("settings.stt.advanced.deepgram.presets.highAccuracy.description");
+    case "meeting_mode":
+      return t("settings.stt.advanced.deepgram.presets.meetingMode.description");
+    case "economy":
+      return t("settings.stt.advanced.deepgram.presets.economy.description");
+    default:
+      return "";
+  }
+}
+
+function getDeepgramModelDescription(id: string): string {
+  switch (id) {
+    case "nova-3":
+      return t("settings.stt.advanced.deepgram.modelDescriptions.nova3");
+    case "nova-2":
+      return t("settings.stt.advanced.deepgram.modelDescriptions.nova2");
+    case "nova":
+      return t("settings.stt.advanced.deepgram.modelDescriptions.nova");
+    case "enhanced":
+      return t("settings.stt.advanced.deepgram.modelDescriptions.enhanced");
+    case "base":
+      return t("settings.stt.advanced.deepgram.modelDescriptions.base");
+    case "whisper-large":
+      return t("settings.stt.advanced.deepgram.modelDescriptions.whisperLarge");
+    case "whisper-medium":
+      return t("settings.stt.advanced.deepgram.modelDescriptions.whisperMedium");
+    case "whisper-small":
+      return t("settings.stt.advanced.deepgram.modelDescriptions.whisperSmall");
+    case "whisper-tiny":
+      return t("settings.stt.advanced.deepgram.modelDescriptions.whisperTiny");
+    case "whisper-base":
+      return t("settings.stt.advanced.deepgram.modelDescriptions.whisperBase");
+    default:
+      return "";
+  }
+}
+
 type ConnectionStatus = "idle" | "testing" | "success" | "error";
 type BadgeVariant = "ready" | "warning" | "error";
 interface BadgeState { text: string; variant: BadgeVariant }
@@ -955,20 +1016,23 @@ function DeepgramAdvancedSettings() {
           <div className="flex h-5 w-5 items-center justify-center rounded bg-primary/10">
             <Settings2 className="h-3 w-3 text-primary" />
           </div>
-          <span className="text-xs font-semibold text-foreground">Deepgram Settings</span>
+          <span className="text-xs font-semibold text-foreground">{t("settings.stt.advanced.deepgram.title")}</span>
           {activePresetId !== "custom" && (
             <span className="ml-1 rounded border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-meta font-semibold text-primary uppercase tracking-wide">
-              {DEEPGRAM_PRESETS.find((p) => p.id === activePresetId)?.label}
+              {getDeepgramPresetLabel(activePresetId)}
             </span>
           )}
           {activePresetId === "custom" && (
             <span className="ml-1 rounded border border-warning/30 bg-warning/10 px-1.5 py-0.5 text-meta font-semibold text-warning uppercase tracking-wide">
-              Custom
+              {t("settings.stt.advanced.common.custom")}
             </span>
           )}
           {activeModel && (
             <span className="ml-auto text-meta text-muted-foreground/60">
-              ${activeModel.costPerMin.toFixed(4)}/min · {activeModel.label}
+              {t("settings.stt.advanced.common.costPerMinute", {
+                cost: activeModel.costPerMin.toFixed(4),
+                model: activeModel.label,
+              })}
             </span>
           )}
         </div>
@@ -976,20 +1040,20 @@ function DeepgramAdvancedSettings() {
 
       {/* Presets */}
       <div className="px-5 py-3 border-b border-border/20 bg-muted/5">
-        <p className="mb-2 text-meta font-medium text-muted-foreground uppercase tracking-wider">Presets</p>
+        <p className="mb-2 text-meta font-medium text-muted-foreground uppercase tracking-wider">{t("settings.stt.advanced.common.presets")}</p>
         <div className="flex flex-wrap gap-1.5">
           {DEEPGRAM_PRESETS.map((preset) => (
             <button
               key={preset.id}
               onClick={() => applyPreset(preset)}
-              title={preset.description}
+              title={getDeepgramPresetDescription(preset.id)}
               className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition-all ${
                 activePresetId === preset.id
                   ? "border-primary bg-primary/10 text-primary"
                   : "border-border/40 bg-card/50 text-muted-foreground hover:border-border/70 hover:text-foreground"
               }`}
             >
-              {preset.label}
+              {getDeepgramPresetLabel(preset.id)}
             </button>
           ))}
         </div>
@@ -997,7 +1061,7 @@ function DeepgramAdvancedSettings() {
 
       {/* Model Selection */}
       <div className="px-5 py-3 border-b border-border/20">
-        <label className="mb-1.5 block text-meta font-medium text-muted-foreground uppercase tracking-wider">Model</label>
+        <label className="mb-1.5 block text-meta font-medium text-muted-foreground uppercase tracking-wider">{t("settings.stt.advanced.common.model")}</label>
         <div className="grid grid-cols-2 gap-1.5">
           {DEEPGRAM_MODELS.map((model) => {
             const tierColors: Record<string, string> = {
@@ -1022,11 +1086,13 @@ function DeepgramAdvancedSettings() {
                       {model.label}
                     </span>
                     {model.tier === "latest" && (
-                      <span className="rounded bg-success/10 px-1 py-0.5 text-[8px] font-bold text-success">NEW</span>
+                      <span className="rounded bg-success/10 px-1 py-0.5 text-[8px] font-bold text-success">{t("settings.stt.advanced.common.new")}</span>
                     )}
                   </div>
-                  <p className="text-meta text-muted-foreground/70 leading-tight mt-0.5">{model.description}</p>
-                  <p className={`text-meta font-mono mt-0.5 ${tierColors[model.tier]}`}>${model.costPerMin.toFixed(4)}/min</p>
+                  <p className="text-meta text-muted-foreground/70 leading-tight mt-0.5">{getDeepgramModelDescription(model.id)}</p>
+                  <p className={`text-meta font-mono mt-0.5 ${tierColors[model.tier]}`}>
+                    {t("settings.stt.advanced.common.costPerMinuteShort", { cost: model.costPerMin.toFixed(4) })}
+                  </p>
                 </div>
               </button>
             );
@@ -1036,33 +1102,33 @@ function DeepgramAdvancedSettings() {
 
       {/* Core Feature Toggles */}
       <div className="px-5 py-3 border-b border-border/20">
-        <label className="mb-2 block text-meta font-medium text-muted-foreground uppercase tracking-wider">Features</label>
+        <label className="mb-2 block text-meta font-medium text-muted-foreground uppercase tracking-wider">{t("settings.stt.advanced.common.features")}</label>
         <div className="space-y-2">
           <DeepgramToggle
-            label="Smart Format"
+            label={t("settings.stt.advanced.deepgram.toggles.smartFormat.label")}
             param="smart_format"
-            description="Formats dates, times, numbers and adds paragraph breaks"
+            description={t("settings.stt.advanced.deepgram.toggles.smartFormat.description")}
             checked={deepgramConfig.smart_format}
             onChange={(v) => updateField("smart_format", v)}
           />
           <DeepgramToggle
-            label="Interim Results"
+            label={t("settings.stt.advanced.deepgram.toggles.interimResults.label")}
             param="interim_results"
-            description="Show partial transcripts as you speak (lower latency feel)"
+            description={t("settings.stt.advanced.deepgram.toggles.interimResults.description")}
             checked={deepgramConfig.interim_results}
             onChange={(v) => updateField("interim_results", v)}
           />
           <DeepgramToggle
-            label="Punctuation"
+            label={t("settings.stt.advanced.deepgram.toggles.punctuation.label")}
             param="punctuate"
-            description="Add punctuation and capitalization to the transcript"
+            description={t("settings.stt.advanced.deepgram.toggles.punctuation.description")}
             checked={deepgramConfig.punctuate}
             onChange={(v) => updateField("punctuate", v)}
           />
           <DeepgramToggle
-            label="VAD Events"
+            label={t("settings.stt.advanced.deepgram.toggles.vadEvents.label")}
             param="vad_events"
-            description="Emit events when speech starts/ends (improves endpointing)"
+            description={t("settings.stt.advanced.deepgram.toggles.vadEvents.description")}
             checked={deepgramConfig.vad_events}
             onChange={(v) => updateField("vad_events", v)}
           />
@@ -1073,7 +1139,7 @@ function DeepgramAdvancedSettings() {
       <div className="px-5 py-3 border-b border-border/20">
         <div className="flex items-center justify-between mb-2">
           <div>
-            <span className="text-xs font-medium text-foreground">Endpointing</span>
+            <span className="text-xs font-medium text-foreground">{t("settings.stt.advanced.deepgram.endpointing.title")}</span>
             <code className="ml-2 text-meta text-muted-foreground/60">endpointing=NUMBER</code>
           </div>
           <button
@@ -1090,7 +1156,7 @@ function DeepgramAdvancedSettings() {
         {deepgramConfig.endpointing !== null && (
           <>
             <div className="flex items-center justify-between mb-1">
-              <span className="text-meta text-muted-foreground">Silence threshold</span>
+              <span className="text-meta text-muted-foreground">{t("settings.stt.advanced.deepgram.endpointing.threshold")}</span>
               <span className="text-meta font-mono text-primary tabular-nums">{deepgramConfig.endpointing}ms</span>
             </div>
             <input
@@ -1103,16 +1169,16 @@ function DeepgramAdvancedSettings() {
               className="w-full h-1.5 rounded-full bg-muted appearance-none cursor-pointer accent-primary"
             />
             <div className="flex justify-between mt-0.5">
-              <span className="text-meta text-muted-foreground/70">10ms (fast)</span>
-              <span className="text-meta text-muted-foreground/70">2000ms (slow)</span>
+              <span className="text-meta text-muted-foreground/70">{t("settings.stt.advanced.deepgram.endpointing.fast")}</span>
+              <span className="text-meta text-muted-foreground/70">{t("settings.stt.advanced.deepgram.endpointing.slow")}</span>
             </div>
             <p className="mt-1 text-meta text-muted-foreground/60">
-              Returns transcript when this much silence is detected. 10–999ms gives best results.
+              {t("settings.stt.advanced.deepgram.endpointing.help")}
             </p>
           </>
         )}
         {deepgramConfig.endpointing === null && (
-          <p className="text-meta text-muted-foreground/60">Disabled — server default endpointing used</p>
+          <p className="text-meta text-muted-foreground/60">{t("settings.stt.advanced.deepgram.endpointing.disabled")}</p>
         )}
       </div>
 
@@ -1121,7 +1187,7 @@ function DeepgramAdvancedSettings() {
         onClick={() => setShowAdvanced(!showAdvanced)}
         className="flex w-full items-center justify-between px-5 py-2.5 text-xs text-muted-foreground hover:bg-accent/30 transition-colors"
       >
-        <span className="font-medium">Advanced Settings</span>
+        <span className="font-medium">{t("settings.stt.advanced.common.advancedSettings")}</span>
         {showAdvanced ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
       </button>
 
@@ -1130,30 +1196,30 @@ function DeepgramAdvancedSettings() {
           {/* Advanced Feature Toggles */}
           <div className="px-5 py-3 border-b border-border/20 space-y-2">
             <DeepgramToggle
-              label="Diarization"
+              label={t("settings.stt.advanced.deepgram.toggles.diarization.label")}
               param="diarize"
-              description="Detect and label different speakers in the transcript"
+              description={t("settings.stt.advanced.deepgram.toggles.diarization.description")}
               checked={deepgramConfig.diarize}
               onChange={(v) => updateField("diarize", v)}
             />
             <DeepgramToggle
-              label="Numerals"
+              label={t("settings.stt.advanced.deepgram.toggles.numerals.label")}
               param="numerals"
-              description='Convert spoken numbers to digits ("nine hundred" → "900")'
+              description={t("settings.stt.advanced.deepgram.toggles.numerals.description")}
               checked={deepgramConfig.numerals}
               onChange={(v) => updateField("numerals", v)}
             />
             <DeepgramToggle
-              label="Profanity Filter"
+              label={t("settings.stt.advanced.deepgram.toggles.profanityFilter.label")}
               param="profanity_filter"
-              description="Remove profanity from the transcript"
+              description={t("settings.stt.advanced.deepgram.toggles.profanityFilter.description")}
               checked={deepgramConfig.profanity_filter}
               onChange={(v) => updateField("profanity_filter", v)}
             />
             <DeepgramToggle
-              label="Dictation"
+              label={t("settings.stt.advanced.deepgram.toggles.dictation.label")}
               param="dictation"
-              description='Format spoken punctuation commands ("period" → ".")'
+              description={t("settings.stt.advanced.deepgram.toggles.dictation.description")}
               checked={deepgramConfig.dictation}
               onChange={(v) => updateField("dictation", v)}
             />
@@ -1162,11 +1228,11 @@ function DeepgramAdvancedSettings() {
           {/* Keyterm Prompting */}
           <div className="px-5 py-3">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-medium text-foreground">Keyterm Prompting</span>
+              <span className="text-xs font-medium text-foreground">{t("settings.stt.advanced.deepgram.keyterms.title")}</span>
               <code className="text-meta text-muted-foreground/60">keyterm=TERM</code>
             </div>
             <p className="mb-2 text-meta text-muted-foreground/70">
-              Boost recognition of specific words or phrases (product names, jargon). Up to 100 keyterms.
+              {t("settings.stt.advanced.deepgram.keyterms.help")}
             </p>
             <div className="flex gap-2 mb-2">
               <input
@@ -1174,7 +1240,7 @@ function DeepgramAdvancedSettings() {
                 value={keytermInput}
                 onChange={(e) => setKeytermInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter") addKeyterm(); }}
-                placeholder="Add keyterm or phrase…"
+                placeholder={t("settings.stt.advanced.deepgram.keyterms.placeholder")}
                 className="flex-1 rounded-lg border border-border/50 bg-background px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20"
               />
               <button
@@ -1182,7 +1248,7 @@ function DeepgramAdvancedSettings() {
                 disabled={!keytermInput.trim() || deepgramConfig.keyterms.length >= 100}
                 className="rounded-lg border border-border/50 bg-background px-3 py-1.5 text-xs text-foreground transition-colors hover:bg-accent disabled:opacity-40"
               >
-                Add
+                {t("settings.stt.advanced.deepgram.keyterms.add")}
               </button>
             </div>
             {deepgramConfig.keyterms.length > 0 && (
@@ -1204,7 +1270,7 @@ function DeepgramAdvancedSettings() {
               </div>
             )}
             {deepgramConfig.keyterms.length === 0 && (
-              <p className="text-meta text-muted-foreground/70">No keyterms — model uses default recognition</p>
+              <p className="text-meta text-muted-foreground/70">{t("settings.stt.advanced.deepgram.keyterms.empty")}</p>
             )}
           </div>
         </div>
@@ -1355,6 +1421,73 @@ function groqConfigMatchesPreset(config: GroqConfig, preset: GroqConfig): boolea
   );
 }
 
+function getGroqPresetLabel(id: string): string {
+  switch (id) {
+    case "default":
+      return t("settings.stt.advanced.groq.presets.default.label");
+    case "low_latency":
+      return t("settings.stt.advanced.groq.presets.lowLatency.label");
+    case "high_accuracy":
+      return t("settings.stt.advanced.groq.presets.highAccuracy.label");
+    case "verbose":
+      return t("settings.stt.advanced.groq.presets.verbose.label");
+    default:
+      return id;
+  }
+}
+
+function getGroqPresetDescription(id: string): string {
+  switch (id) {
+    case "default":
+      return t("settings.stt.advanced.groq.presets.default.description");
+    case "low_latency":
+      return t("settings.stt.advanced.groq.presets.lowLatency.description");
+    case "high_accuracy":
+      return t("settings.stt.advanced.groq.presets.highAccuracy.description");
+    case "verbose":
+      return t("settings.stt.advanced.groq.presets.verbose.description");
+    default:
+      return "";
+  }
+}
+
+function getGroqModelDescription(id: string): string {
+  switch (id) {
+    case "whisper-large-v3":
+      return t("settings.stt.advanced.groq.modelDescriptions.whisperLargeV3");
+    case "whisper-large-v3-turbo":
+      return t("settings.stt.advanced.groq.modelDescriptions.whisperLargeV3Turbo");
+    default:
+      return "";
+  }
+}
+
+function getGroqResponseFormatLabel(format: GroqConfig["response_format"]): string {
+  switch (format) {
+    case "json":
+      return t("settings.stt.advanced.groq.responseFormat.labels.json");
+    case "verbose_json":
+      return t("settings.stt.advanced.groq.responseFormat.labels.verboseJson");
+    case "text":
+      return t("settings.stt.advanced.groq.responseFormat.labels.text");
+    default:
+      return format;
+  }
+}
+
+function getGroqResponseFormatDescription(format: GroqConfig["response_format"]): string {
+  switch (format) {
+    case "verbose_json":
+      return t("settings.stt.advanced.groq.responseFormat.descriptions.verboseJson");
+    case "text":
+      return t("settings.stt.advanced.groq.responseFormat.descriptions.text");
+    case "json":
+      return t("settings.stt.advanced.groq.responseFormat.descriptions.json");
+    default:
+      return t("settings.stt.advanced.groq.responseFormat.descriptions.json");
+  }
+}
+
 // ── Groq Advanced Settings ──
 
 function GroqAdvancedSettings() {
@@ -1384,45 +1517,51 @@ function GroqAdvancedSettings() {
           <div className="flex h-5 w-5 items-center justify-center rounded bg-primary/10">
             <Settings2 className="h-3 w-3 text-primary" />
           </div>
-          <span className="text-xs font-semibold text-foreground">Groq Whisper Settings</span>
+          <span className="text-xs font-semibold text-foreground">{t("settings.stt.advanced.groq.title")}</span>
           {activePresetId !== "custom" && (
             <span className="ml-1 rounded border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-meta font-semibold text-primary uppercase tracking-wide">
-              {GROQ_PRESETS.find((p) => p.id === activePresetId)?.label}
+              {getGroqPresetLabel(activePresetId)}
             </span>
           )}
           {activePresetId === "custom" && (
             <span className="ml-1 rounded border border-warning/30 bg-warning/10 px-1.5 py-0.5 text-meta font-semibold text-warning uppercase tracking-wide">
-              Custom
+              {t("settings.stt.advanced.common.custom")}
             </span>
           )}
           {activeModel && (
             <span className="ml-auto text-meta text-muted-foreground/60">
-              ${activeModel.costPerHour.toFixed(3)}/hr · {activeModel.speedFactor} real-time
+              {t("settings.stt.advanced.common.costPerHour", {
+                cost: activeModel.costPerHour.toFixed(3),
+                speed: activeModel.speedFactor,
+              })}
             </span>
           )}
         </div>
         <p className="mt-1.5 text-meta text-muted-foreground/60 leading-tight">
-          Batch mode — audio is accumulated and sent every {groqConfig.segment_duration_secs}s.
-          Expect {groqConfig.segment_duration_secs + 1}–{groqConfig.segment_duration_secs + 2}s total latency.
+          {t("settings.stt.advanced.groq.batchMode", {
+            duration: groqConfig.segment_duration_secs,
+            min: groqConfig.segment_duration_secs + 1,
+            max: groqConfig.segment_duration_secs + 2,
+          })}
         </p>
       </div>
 
       {/* Presets */}
       <div className="px-5 py-3 border-b border-border/20 bg-muted/5">
-        <p className="mb-2 text-meta font-medium text-muted-foreground uppercase tracking-wider">Presets</p>
+        <p className="mb-2 text-meta font-medium text-muted-foreground uppercase tracking-wider">{t("settings.stt.advanced.common.presets")}</p>
         <div className="flex flex-wrap gap-1.5">
           {GROQ_PRESETS.map((preset) => (
             <button
               key={preset.id}
               onClick={() => applyPreset(preset)}
-              title={preset.description}
+              title={getGroqPresetDescription(preset.id)}
               className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition-all ${
                 activePresetId === preset.id
                   ? "border-primary bg-primary/10 text-primary"
                   : "border-border/40 bg-card/50 text-muted-foreground hover:border-border/70 hover:text-foreground"
               }`}
             >
-              {preset.label}
+              {getGroqPresetLabel(preset.id)}
             </button>
           ))}
         </div>
@@ -1430,7 +1569,7 @@ function GroqAdvancedSettings() {
 
       {/* Model Selection */}
       <div className="px-5 py-3 border-b border-border/20">
-        <label className="mb-1.5 block text-meta font-medium text-muted-foreground uppercase tracking-wider">Model</label>
+        <label className="mb-1.5 block text-meta font-medium text-muted-foreground uppercase tracking-wider">{t("settings.stt.advanced.common.model")}</label>
         <div className="grid grid-cols-2 gap-1.5">
           {GROQ_MODELS.map((model) => (
             <button
@@ -1448,15 +1587,17 @@ function GroqAdvancedSettings() {
                     {model.label}
                   </span>
                   {model.id === "whisper-large-v3-turbo" && (
-                    <span className="rounded bg-success/10 px-1 py-0.5 text-[8px] font-bold text-success">FAST</span>
+                    <span className="rounded bg-success/10 px-1 py-0.5 text-[8px] font-bold text-success">{t("settings.stt.advanced.common.fast")}</span>
                   )}
                   {model.id === "whisper-large-v3" && (
-                    <span className="rounded bg-info/10 px-1 py-0.5 text-[8px] font-bold text-info">BEST</span>
+                    <span className="rounded bg-info/10 px-1 py-0.5 text-[8px] font-bold text-info">{t("settings.stt.advanced.common.best")}</span>
                   )}
                 </div>
-                <p className="text-meta text-muted-foreground/70 leading-tight mt-0.5">{model.description}</p>
+                <p className="text-meta text-muted-foreground/70 leading-tight mt-0.5">{getGroqModelDescription(model.id)}</p>
                 <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-meta font-mono text-success">${model.costPerHour.toFixed(3)}/hr</span>
+                  <span className="text-meta font-mono text-success">
+                    {t("settings.stt.advanced.common.costPerHourShort", { cost: model.costPerHour.toFixed(3) })}
+                  </span>
                   <span className="text-meta text-muted-foreground/70">{model.speedFactor}</span>
                 </div>
               </div>
@@ -1469,12 +1610,12 @@ function GroqAdvancedSettings() {
       <div className="px-5 py-3 border-b border-border/20">
         <div className="flex items-center justify-between mb-2">
           <div>
-            <span className="text-xs font-medium text-foreground">Batch Duration</span>
+            <span className="text-xs font-medium text-foreground">{t("settings.stt.advanced.groq.batchDuration.title")}</span>
             <code className="ml-2 text-meta text-muted-foreground/60">segment={groqConfig.segment_duration_secs}s</code>
           </div>
         </div>
         <div className="flex items-center justify-between mb-1">
-          <span className="text-meta text-muted-foreground">Audio accumulation time</span>
+          <span className="text-meta text-muted-foreground">{t("settings.stt.advanced.groq.batchDuration.label")}</span>
           <span className="text-meta font-mono text-primary tabular-nums">{groqConfig.segment_duration_secs.toFixed(1)}s</span>
         </div>
         <input
@@ -1487,11 +1628,11 @@ function GroqAdvancedSettings() {
           className="w-full h-1.5 rounded-full bg-muted appearance-none cursor-pointer accent-primary"
         />
         <div className="flex justify-between mt-0.5">
-          <span className="text-meta text-muted-foreground/70">2s (fast, less context)</span>
-          <span className="text-meta text-muted-foreground/70">15s (slow, more context)</span>
+          <span className="text-meta text-muted-foreground/70">{t("settings.stt.advanced.groq.batchDuration.fast")}</span>
+          <span className="text-meta text-muted-foreground/70">{t("settings.stt.advanced.groq.batchDuration.slow")}</span>
         </div>
         <p className="mt-1 text-meta text-muted-foreground/60">
-          Shorter = faster responses but less context per API call. Minimum billed: 10s.
+          {t("settings.stt.advanced.groq.batchDuration.help")}
         </p>
       </div>
 
@@ -1500,7 +1641,7 @@ function GroqAdvancedSettings() {
         onClick={() => setShowAdvanced(!showAdvanced)}
         className="flex w-full items-center justify-between px-5 py-2.5 text-xs text-muted-foreground hover:bg-accent/30 transition-colors"
       >
-        <span className="font-medium">Advanced Settings</span>
+        <span className="font-medium">{t("settings.stt.advanced.common.advancedSettings")}</span>
         {showAdvanced ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
       </button>
 
@@ -1510,7 +1651,7 @@ function GroqAdvancedSettings() {
           <div className="px-5 py-3 border-b border-border/20">
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-1.5">
-                <span className="text-xs font-medium text-foreground">Temperature</span>
+                <span className="text-xs font-medium text-foreground">{t("settings.stt.advanced.groq.temperature.title")}</span>
                 <code className="text-meta text-muted-foreground/70">temperature={groqConfig.temperature}</code>
               </div>
               <span className="text-meta font-mono text-primary tabular-nums">{groqConfig.temperature.toFixed(1)}</span>
@@ -1525,18 +1666,18 @@ function GroqAdvancedSettings() {
               className="w-full h-1.5 rounded-full bg-muted appearance-none cursor-pointer accent-primary"
             />
             <div className="flex justify-between mt-0.5">
-              <span className="text-meta text-muted-foreground/70">0 (deterministic)</span>
-              <span className="text-meta text-muted-foreground/70">1 (creative)</span>
+              <span className="text-meta text-muted-foreground/70">{t("settings.stt.advanced.groq.temperature.deterministic")}</span>
+              <span className="text-meta text-muted-foreground/70">{t("settings.stt.advanced.groq.temperature.creative")}</span>
             </div>
             <p className="mt-1 text-meta text-muted-foreground/60">
-              Lower values give more consistent results. 0 is recommended for transcription.
+              {t("settings.stt.advanced.groq.temperature.help")}
             </p>
           </div>
 
           {/* Response Format */}
           <div className="px-5 py-3 border-b border-border/20">
             <div className="flex items-center gap-1.5 mb-2">
-              <span className="text-xs font-medium text-foreground">Response Format</span>
+              <span className="text-xs font-medium text-foreground">{t("settings.stt.advanced.groq.responseFormat.title")}</span>
               <code className="text-meta text-muted-foreground/70">response_format={groqConfig.response_format}</code>
             </div>
             <div className="flex gap-1.5">
@@ -1556,32 +1697,30 @@ function GroqAdvancedSettings() {
                       : "border-border/40 bg-card/50 text-muted-foreground hover:border-border/70 hover:text-foreground"
                   }`}
                 >
-                  {fmt === "json" ? "JSON" : fmt === "verbose_json" ? "Verbose JSON" : "Text"}
+                  {getGroqResponseFormatLabel(fmt)}
                 </button>
               ))}
             </div>
             <p className="mt-1.5 text-meta text-muted-foreground/60">
-              {groqConfig.response_format === "verbose_json"
-                ? "Includes segment/word timestamps, confidence scores, and no-speech probability"
-                : groqConfig.response_format === "text"
-                  ? "Plain text output only — no metadata"
-                  : "Standard JSON with text field"}
+              {getGroqResponseFormatDescription(groqConfig.response_format)}
             </p>
           </div>
 
           {/* Timestamp Granularities — only for verbose_json */}
           {groqConfig.response_format === "verbose_json" && (
             <div className="px-5 py-3 border-b border-border/20">
-              <span className="text-xs font-medium text-foreground mb-2 block">Timestamp Granularities</span>
+              <span className="text-xs font-medium text-foreground mb-2 block">{t("settings.stt.advanced.groq.timestamps.title")}</span>
               <div className="space-y-2">
                 {(["segment", "word"] as const).map((gran) => (
                   <DeepgramToggle
                     key={gran}
-                    label={gran === "segment" ? "Segment Timestamps" : "Word Timestamps"}
+                    label={gran === "segment"
+                      ? t("settings.stt.advanced.groq.timestamps.segment.label")
+                      : t("settings.stt.advanced.groq.timestamps.word.label")}
                     param={`timestamp_granularities[]=${gran}`}
                     description={gran === "segment"
-                      ? "Include start/end times for each segment"
-                      : "Include start/end times for each word"}
+                      ? t("settings.stt.advanced.groq.timestamps.segment.description")
+                      : t("settings.stt.advanced.groq.timestamps.word.description")}
                     checked={groqConfig.timestamp_granularities.includes(gran)}
                     onChange={(v) => {
                       const current = groqConfig.timestamp_granularities;
@@ -1599,22 +1738,22 @@ function GroqAdvancedSettings() {
           {/* Prompt */}
           <div className="px-5 py-3">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-medium text-foreground">Prompt</span>
+              <span className="text-xs font-medium text-foreground">{t("settings.stt.advanced.groq.prompt.title")}</span>
               <code className="text-meta text-muted-foreground/60">prompt</code>
             </div>
             <p className="mb-2 text-meta text-muted-foreground/70">
-              Guide transcription style, spelling, or context. Up to 224 tokens. Must match audio language.
+              {t("settings.stt.advanced.groq.prompt.help")}
             </p>
             <textarea
               value={groqConfig.prompt}
               onChange={(e) => updateField("prompt", e.target.value)}
-              placeholder="e.g., NexQ, Tauri, WASAPI, transcription..."
+              placeholder={t("settings.stt.advanced.groq.prompt.placeholder")}
               rows={2}
               className="w-full rounded-lg border border-border/50 bg-background px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20 resize-none"
             />
             {groqConfig.prompt && (
               <p className="mt-1 text-meta text-muted-foreground/70">
-                ~{Math.ceil(groqConfig.prompt.length / 4)} tokens (max 224)
+                {t("settings.stt.advanced.groq.prompt.tokens", { count: Math.ceil(groqConfig.prompt.length / 4) })}
               </p>
             )}
           </div>
@@ -1637,42 +1776,41 @@ function DualPassSettings() {
   return (
     <div className="rounded-xl border border-border/30 bg-card/50 p-5">
       <h3 className="mb-1 text-sm font-semibold text-primary/80">
-        Transcription Tuning
+        {t("settings.stt.advanced.dualPass.title")}
       </h3>
       <p className="mb-4 text-meta text-muted-foreground">
-        Dual-pass: fast pass shows words immediately, correction pass refines.
-        Changes apply instantly.
+        {t("settings.stt.advanced.dualPass.description")}
       </p>
 
       <div className="space-y-4">
         <SliderSetting
-          label="Fast pass interval"
+          label={t("settings.stt.advanced.dualPass.fastPass.label")}
           value={dualPass.shortChunkSecs}
           min={0.5}
           max={3.0}
           step={0.1}
           unit="s"
-          hint="Shorter = faster words but less accurate"
+          hint={t("settings.stt.advanced.dualPass.fastPass.hint")}
           onChange={(v) => update("shortChunkSecs", v)}
         />
         <SliderSetting
-          label="Correction interval"
+          label={t("settings.stt.advanced.dualPass.correction.label")}
           value={dualPass.longChunkSecs}
           min={2.0}
           max={8.0}
           step={0.5}
           unit="s"
-          hint="Longer = more context for correction"
+          hint={t("settings.stt.advanced.dualPass.correction.hint")}
           onChange={(v) => update("longChunkSecs", v)}
         />
         <SliderSetting
-          label="Pause for new line"
+          label={t("settings.stt.advanced.dualPass.pause.label")}
           value={dualPass.pauseSecs}
           min={0.5}
           max={3.0}
           step={0.1}
           unit="s"
-          hint="Silence before starting a new transcript line"
+          hint={t("settings.stt.advanced.dualPass.pause.hint")}
           onChange={(v) => update("pauseSecs", v)}
         />
       </div>

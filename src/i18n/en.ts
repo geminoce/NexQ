@@ -282,6 +282,193 @@ export const en = {
         ready: "Ready",
         failed: "Connection failed",
       },
+      advanced: {
+        common: {
+          presets: "Presets",
+          model: "Model",
+          features: "Features",
+          custom: "Custom",
+          advancedSettings: "Advanced Settings",
+          new: "NEW",
+          fast: "FAST",
+          best: "BEST",
+          costPerMinute: "${cost}/min · {model}",
+          costPerMinuteShort: "${cost}/min",
+          costPerHour: "${cost}/hr · {speed} real-time",
+          costPerHourShort: "${cost}/hr",
+        },
+        deepgram: {
+          title: "Deepgram Settings",
+          presets: {
+            default: {
+              label: "Default",
+              description: "Balanced settings for most meetings",
+            },
+            lowLatency: {
+              label: "Low Latency",
+              description: "Fastest response, minimal post-processing",
+            },
+            highAccuracy: {
+              label: "High Accuracy",
+              description: "Best transcript quality, smart formatting",
+            },
+            meetingMode: {
+              label: "Meeting",
+              description: "Speaker detection, formatted output",
+            },
+            economy: {
+              label: "Economy",
+              description: "Nova 2 model, lower cost",
+            },
+          },
+          modelDescriptions: {
+            nova3: "Best accuracy, latest model",
+            nova2: "Great accuracy, widely used",
+            nova: "Previous generation",
+            enhanced: "High accuracy, conservative",
+            base: "Fastest, most economical",
+            whisperLarge: "OpenAI Whisper large",
+            whisperMedium: "OpenAI Whisper medium",
+            whisperSmall: "OpenAI Whisper small",
+            whisperTiny: "Smallest, fastest Whisper",
+            whisperBase: "OpenAI Whisper base",
+          },
+          toggles: {
+            smartFormat: {
+              label: "Smart Format",
+              description: "Formats dates, times, numbers and adds paragraph breaks",
+            },
+            interimResults: {
+              label: "Interim Results",
+              description: "Show partial transcripts as you speak (lower latency feel)",
+            },
+            punctuation: {
+              label: "Punctuation",
+              description: "Add punctuation and capitalization to the transcript",
+            },
+            vadEvents: {
+              label: "VAD Events",
+              description: "Emit events when speech starts/ends (improves endpointing)",
+            },
+            diarization: {
+              label: "Diarization",
+              description: "Detect and label different speakers in the transcript",
+            },
+            numerals: {
+              label: "Numerals",
+              description: "Convert spoken numbers to digits (\"nine hundred\" -> \"900\")",
+            },
+            profanityFilter: {
+              label: "Profanity Filter",
+              description: "Remove profanity from the transcript",
+            },
+            dictation: {
+              label: "Dictation",
+              description: "Format spoken punctuation commands (\"period\" -> \".\")",
+            },
+          },
+          endpointing: {
+            title: "Endpointing",
+            threshold: "Silence threshold",
+            fast: "10ms (fast)",
+            slow: "2000ms (slow)",
+            help: "Returns transcript when this much silence is detected. 10-999ms gives best results.",
+            disabled: "Disabled - server default endpointing used",
+          },
+          keyterms: {
+            title: "Keyterm Prompting",
+            help: "Boost recognition of specific words or phrases (product names, jargon). Up to 100 keyterms.",
+            placeholder: "Add keyterm or phrase...",
+            add: "Add",
+            empty: "No keyterms - model uses default recognition",
+          },
+        },
+        groq: {
+          title: "Groq Whisper Settings",
+          batchMode: "Batch mode - audio is accumulated and sent every {duration}s. Expect {min}-{max}s total latency.",
+          presets: {
+            default: {
+              label: "Default",
+              description: "Balanced - fast model, 5s batches",
+            },
+            lowLatency: {
+              label: "Low Latency",
+              description: "Shorter 3s batches for faster feedback",
+            },
+            highAccuracy: {
+              label: "High Accuracy",
+              description: "Best model, longer 8s batches for context",
+            },
+            verbose: {
+              label: "Verbose",
+              description: "Word timestamps + segment data",
+            },
+          },
+          modelDescriptions: {
+            whisperLargeV3: "Highest accuracy, 99+ languages",
+            whisperLargeV3Turbo: "Fast + cheap, best price/performance",
+          },
+          batchDuration: {
+            title: "Batch Duration",
+            label: "Audio accumulation time",
+            fast: "2s (fast, less context)",
+            slow: "15s (slow, more context)",
+            help: "Shorter = faster responses but less context per API call. Minimum billed: 10s.",
+          },
+          temperature: {
+            title: "Temperature",
+            deterministic: "0 (deterministic)",
+            creative: "1 (creative)",
+            help: "Lower values give more consistent results. 0 is recommended for transcription.",
+          },
+          responseFormat: {
+            title: "Response Format",
+            labels: {
+              json: "JSON",
+              verboseJson: "Verbose JSON",
+              text: "Text",
+            },
+            descriptions: {
+              verboseJson: "Includes segment/word timestamps, confidence scores, and no-speech probability",
+              text: "Plain text output only - no metadata",
+              json: "Standard JSON with text field",
+            },
+          },
+          timestamps: {
+            title: "Timestamp Granularities",
+            segment: {
+              label: "Segment Timestamps",
+              description: "Include start/end times for each segment",
+            },
+            word: {
+              label: "Word Timestamps",
+              description: "Include start/end times for each word",
+            },
+          },
+          prompt: {
+            title: "Prompt",
+            help: "Guide transcription style, spelling, or context. Up to 224 tokens. Must match audio language.",
+            placeholder: "e.g., NexQ, Tauri, WASAPI, transcription...",
+            tokens: "~{count} tokens (max 224)",
+          },
+        },
+        dualPass: {
+          title: "Transcription Tuning",
+          description: "Dual-pass: fast pass shows words immediately, correction pass refines. Changes apply instantly.",
+          fastPass: {
+            label: "Fast pass interval",
+            hint: "Shorter = faster words but less accurate",
+          },
+          correction: {
+            label: "Correction interval",
+            hint: "Longer = more context for correction",
+          },
+          pause: {
+            label: "Pause for new line",
+            hint: "Silence before starting a new transcript line",
+          },
+        },
+      },
       languages: {
         enUS: "English (US)",
         enGB: "English (UK)",
