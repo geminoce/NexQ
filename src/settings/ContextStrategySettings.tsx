@@ -23,15 +23,16 @@ import {
   Target,
   Gauge,
 } from "lucide-react";
+import { t } from "../i18n";
 
 // ─── Preset Definitions ───────────────────────────────────────────────────────
 const PRESETS = [
   {
     id: "fastest",
-    label: "Fastest",
+    label: t("settings.contextStrategy.presets.fastest.label"),
     ms: "~10ms",
     icon: Zap,
-    description: "Keyword-only search, no embedding needed at query time",
+    description: t("settings.contextStrategy.presets.fastest.description"),
     config: {
       search_mode: "keyword",
       top_k: 3,
@@ -45,10 +46,10 @@ const PRESETS = [
   },
   {
     id: "faster",
-    label: "Faster",
+    label: t("settings.contextStrategy.presets.faster.label"),
     ms: "~80ms",
     icon: Gauge,
-    description: "Hybrid search with small embedding model",
+    description: t("settings.contextStrategy.presets.faster.description"),
     config: {
       search_mode: "hybrid",
       top_k: 3,
@@ -62,10 +63,10 @@ const PRESETS = [
   },
   {
     id: "default",
-    label: "Default",
+    label: t("settings.contextStrategy.presets.default.label"),
     ms: "~200ms",
     icon: Target,
-    description: "Best balance of speed and accuracy",
+    description: t("settings.contextStrategy.presets.default.description"),
     config: {
       search_mode: "hybrid",
       top_k: 5,
@@ -79,10 +80,10 @@ const PRESETS = [
   },
   {
     id: "accurate",
-    label: "Accurate",
+    label: t("settings.contextStrategy.presets.accurate.label"),
     ms: "~350ms",
     icon: Target,
-    description: "More results, finer chunks, better coverage",
+    description: t("settings.contextStrategy.presets.accurate.description"),
     config: {
       search_mode: "hybrid",
       top_k: 10,
@@ -96,10 +97,10 @@ const PRESETS = [
   },
   {
     id: "most_accurate",
-    label: "Most Accurate",
+    label: t("settings.contextStrategy.presets.mostAccurate.label"),
     ms: "~600ms",
     icon: Target,
-    description: "High-dimensional model, fine chunks, maximum context",
+    description: t("settings.contextStrategy.presets.mostAccurate.description"),
     config: {
       search_mode: "hybrid",
       top_k: 15,
@@ -131,124 +132,36 @@ function getActivePresetId(config: RagConfig): string | null {
 // ─── Help Content ─────────────────────────────────────────────────────────────
 const HELP: Record<string, { title: string; body: string }> = {
   embedding_model: {
-    title: "Embedding Model",
-    body: `Converts documents and your query into vectors for semantic search. Runs locally via Ollama.
-
-• nomic-embed-text (768d) — best balance of quality and speed, ~150ms/query ✓ default
-• mxbai-embed-large (1024d) — highest quality embeddings, ~250ms/query, requires more RAM
-• all-minilm (384d) — fastest (~60ms/query), good for simple documents
-
-⚠ Changing model invalidates the entire index — full rebuild required.`,
+    title: t("settings.contextStrategy.help.embeddingModel.title"),
+    body: t("settings.contextStrategy.help.embeddingModel.body"),
   },
   top_k: {
-    title: "Results to Retrieve (top-K)",
-    body: `How many document chunks are injected into the LLM prompt alongside your question.
-
-• 3 chunks  → ~300–600 tokens context, fastest LLM response
-• 5 chunks  → ~600–1000 tokens, good balance ✓ default
-• 10 chunks → ~1200–2000 tokens, better coverage for multi-part questions
-• 15–20     → best for large documents with scattered information
-
-More chunks = higher LLM token cost + slightly longer generation time.
-Inference latency impact: ~+50ms per 5 additional chunks (LLM input).`,
+    title: t("settings.contextStrategy.help.topK.title"),
+    body: t("settings.contextStrategy.help.topK.body"),
   },
   search_mode: {
-    title: "Search Mode",
-    body: `How the top-K relevant chunks are found from the index:
-
-• Hybrid (recommended) — fuses semantic + keyword scores via RRF
-  Best quality, handles both vague ("explain their background") and
-  exact queries ("Agency: State of Michigan"). ~150–250ms search time.
-
-• Semantic Only — pure embedding similarity (cosine distance)
-  Good for conceptual/paraphrased questions. ~150–250ms.
-  Exact terms may not match if not semantically related.
-
-• Keyword Only — BM25 exact text matching (no embedding at query time)
-  Fastest: ~5–15ms search. Best for names, codes, exact phrases.
-  Fails for conceptual questions or paraphrasing.`,
+    title: t("settings.contextStrategy.help.searchMode.title"),
+    body: t("settings.contextStrategy.help.searchMode.body"),
   },
   chunk_size: {
-    title: "Chunk Size (tokens)",
-    body: `How many tokens each indexed document segment contains.
-
-• Small (128–256) — precise retrieval, more chunks, specific context
-  Good for Q&A on dense technical docs. More chunks = slightly slower search.
-
-• Medium (512) — good balance ✓ default
-  Works well for resumes, job descriptions, notes.
-
-• Large (1024–2048) — more narrative context per chunk, fewer total chunks
-  Good for prose documents. Risk: relevant detail buried inside large chunk.
-
-Latency impact at query time: minimal (cosine scan is O(n), ~1ms per 1000 chunks).
-Indexing time impact: smaller chunks = more embeddings = longer initial build.
-
-⚠ Requires full index rebuild after changing.`,
+    title: t("settings.contextStrategy.help.chunkSize.title"),
+    body: t("settings.contextStrategy.help.chunkSize.body"),
   },
   chunk_overlap: {
-    title: "Chunk Overlap (tokens)",
-    body: `How many tokens are repeated between adjacent chunks to avoid
-cutting sentences or ideas at boundaries.
-
-• 0       — no overlap, fastest indexing, may miss boundary context
-• 32–64   — recommended, prevents most boundary split issues ✓ default (64)
-• 128–256 — high continuity for narrative text, increases index size
-             and indexing time proportionally
-
-Example: with chunk_size=512 and overlap=64, every chunk shares
-64 tokens with the previous one, so a key sentence near a boundary
-appears in two chunks and is more likely to be retrieved.
-
-⚠ Requires full index rebuild after changing.`,
+    title: t("settings.contextStrategy.help.chunkOverlap.title"),
+    body: t("settings.contextStrategy.help.chunkOverlap.body"),
   },
   similarity_threshold: {
-    title: "Similarity Threshold",
-    body: `Minimum relevance score to include a chunk in results.
-
-IMPORTANT: This only meaningfully applies to Semantic Only mode.
-In Hybrid mode, scores are RRF-fused (max ~0.016) so setting this
-above 0.0 will filter ALL results. Keep at 0.0–0.1 for Hybrid.
-
-For Semantic Only (cosine similarity, range 0–1):
-• 0.0–0.1 — return everything (low quality bar)
-• 0.3     — filters weakly related chunks ✓ default for semantic
-• 0.5+    — strict, may miss some relevant content
-
-Accuracy impact: higher threshold = fewer but more precise results.
-Latency impact: none (filtering happens after search).`,
+    title: t("settings.contextStrategy.help.similarityThreshold.title"),
+    body: t("settings.contextStrategy.help.similarityThreshold.body"),
   },
   semantic_weight: {
-    title: "Semantic Weight (Hybrid mode)",
-    body: `In Hybrid mode, controls the balance between semantic and keyword
-scores during Reciprocal Rank Fusion (RRF).
-
-Formula: score = w_sem/(60+rank_sem) + (1-w_sem)/(60+rank_kw)
-
-• 0.3 — favor keyword matching (exact terms, names, IDs)
-• 0.7 — favor semantic understanding ✓ default
-• 1.0 — pure semantic (equivalent to Semantic Only mode)
-• 0.0 — pure keyword (equivalent to Keyword Only mode)
-
-Recommendation:
-• Technical docs with exact terms → 0.4–0.5
-• Narrative docs, resumes, essays → 0.7–0.8
-• Unknown content type → keep at 0.7
-
-Has no effect in Semantic Only or Keyword Only modes.`,
+    title: t("settings.contextStrategy.help.semanticWeight.title"),
+    body: t("settings.contextStrategy.help.semanticWeight.body"),
   },
   batch_size: {
-    title: "Embedding Batch Size",
-    body: `How many text chunks are sent to Ollama per embedding API call
-during the index build phase.
-
-• 8–16  — safe for low-memory machines (<4GB RAM)
-• 32    — good balance, ~2–3x faster than batch=8 ✓ default
-• 64    — fastest indexing, needs ~1–2GB extra RAM for the batch
-
-Does NOT affect search latency — only initial index build time.
-
-For 60 chunks at batch=32: ~2 Ollama calls vs ~8 calls at batch=8.`,
+    title: t("settings.contextStrategy.help.batchSize.title"),
+    body: t("settings.contextStrategy.help.batchSize.body"),
   },
 };
 
@@ -302,7 +215,7 @@ function HelpButton({
           ? "border-primary/40 bg-primary/10 text-primary"
           : "border-border/30 text-muted-foreground/60 hover:border-border/60 hover:text-muted-foreground"
       } h-[18px] w-[18px]`}
-      title="Show explanation"
+      title={t("settings.contextStrategy.common.showExplanation")}
     >
       {isOpen ? <X className="h-2.5 w-2.5" /> : <HelpCircle className="h-2.5 w-2.5" />}
     </button>
@@ -334,7 +247,7 @@ function RebuildBadge({ show }: { show: boolean }) {
   if (!show) return null;
   return (
     <span className="rounded-full bg-amber-500/10 px-1.5 py-0.5 text-meta font-medium text-amber-500">
-      rebuild
+      {t("settings.contextStrategy.common.rebuild")}
     </span>
   );
 }
@@ -510,25 +423,25 @@ export function ContextStrategySettings() {
         >
           <div className="flex items-center gap-2">
             <Database className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-foreground">Local RAG</span>
+            <span className="text-sm font-medium text-foreground">{t("settings.contextStrategy.strategy.localRag")}</span>
           </div>
           <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed">
-            Embed documents locally via Ollama, hybrid semantic+keyword search
+            {t("settings.contextStrategy.strategy.localRagDescription")}
           </p>
         </button>
 
         <div className="relative flex flex-col items-start rounded-xl border border-border/30 bg-accent/10 p-4 text-left opacity-60 cursor-not-allowed">
           <div className="absolute -top-1.5 right-2">
             <span className="rounded-full bg-muted px-2 py-0.5 text-meta font-medium text-muted-foreground">
-              Coming Soon
+              {t("settings.contextStrategy.strategy.comingSoon")}
             </span>
           </div>
           <div className="flex items-center gap-2">
             <Cloud className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium text-muted-foreground">Gemini Context Cache</span>
+            <span className="text-sm font-medium text-muted-foreground">{t("settings.contextStrategy.strategy.geminiCache")}</span>
           </div>
           <p className="mt-1.5 text-xs text-muted-foreground/70 leading-relaxed">
-            Cache documents in Gemini for fast repeated queries
+            {t("settings.contextStrategy.strategy.geminiCacheDescription")}
           </p>
         </div>
       </div>
@@ -538,9 +451,9 @@ export function ContextStrategySettings() {
           {/* ── Quick Presets ── */}
           <div className="rounded-xl border border-border/30 bg-card/50 p-4">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-primary/80">Quick Presets</h3>
+              <h3 className="text-sm font-semibold text-primary/80">{t("settings.contextStrategy.presets.title")}</h3>
               <p className="text-meta text-muted-foreground/60">
-                Expected search latency per query
+                {t("settings.contextStrategy.presets.expectedLatency")}
               </p>
             </div>
             <div className="grid grid-cols-5 gap-2">
@@ -570,15 +483,14 @@ export function ContextStrategySettings() {
               })}
             </div>
             <p className="mt-2.5 text-meta text-muted-foreground/70 leading-relaxed">
-              Latency = query embedding + chunk search. Fastest uses keyword-only (no embedding).
-              Accurate presets produce smaller chunks and retrieve more — requires index rebuild.
+              {t("settings.contextStrategy.presets.note")}
             </p>
           </div>
 
           {/* ── Connection ── */}
           <div className="rounded-xl border border-border/30 bg-card/50 p-5">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-primary/80">Connection</h3>
+              <h3 className="text-sm font-semibold text-primary/80">{t("settings.contextStrategy.connection.title")}</h3>
             </div>
             <div className="space-y-4">
               {/* Ollama status */}
@@ -587,17 +499,20 @@ export function ContextStrategySettings() {
                   <>
                     <div className="h-2.5 w-2.5 rounded-full bg-success" />
                     <Wifi className="h-3.5 w-3.5 text-success" />
-                    <span className="text-xs text-success">Ollama Connected</span>
+                    <span className="text-xs text-success">{t("settings.contextStrategy.connection.ollamaConnected")}</span>
                     <span className="text-meta text-muted-foreground">
-                      ({ollamaStatus.models.length} model{ollamaStatus.models.length !== 1 ? "s" : ""})
+                      {t("settings.contextStrategy.connection.modelsCount", {
+                        count: ollamaStatus.models.length,
+                        plural: ollamaStatus.models.length !== 1 ? "s" : "",
+                      })}
                     </span>
                   </>
                 ) : (
                   <>
                     <div className="h-2.5 w-2.5 rounded-full bg-red-500" />
                     <WifiOff className="h-3.5 w-3.5 text-red-500" />
-                    <span className="text-xs text-red-500">Ollama Disconnected</span>
-                    <span className="text-meta text-muted-foreground/60">— start Ollama to use embedding</span>
+                    <span className="text-xs text-red-500">{t("settings.contextStrategy.connection.ollamaDisconnected")}</span>
+                    <span className="text-meta text-muted-foreground/60">{t("settings.contextStrategy.connection.startOllama")}</span>
                   </>
                 )}
               </div>
@@ -607,13 +522,13 @@ export function ContextStrategySettings() {
                   {selectedModelAvailable ? (
                     <>
                       <CheckCircle2 className="h-3.5 w-3.5 text-success" />
-                      <span className="text-success">{localConfig.embedding_model} available</span>
+                      <span className="text-success">{t("settings.contextStrategy.connection.modelAvailable", { model: localConfig.embedding_model })}</span>
                     </>
                   ) : (
                     <>
                       <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
                       <span className="text-amber-500">
-                        {localConfig.embedding_model} not found — pull it below
+                        {t("settings.contextStrategy.connection.modelMissing", { model: localConfig.embedding_model })}
                       </span>
                     </>
                   )}
@@ -624,7 +539,7 @@ export function ContextStrategySettings() {
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="flex items-center gap-1.5 text-xs font-medium text-foreground">
-                    Embedding Model
+                    {t("settings.contextStrategy.connection.embeddingModel")}
                     <HelpButton id="embedding_model" activeId={openHelp} onToggle={toggleHelp} />
                   </label>
                   <RebuildBadge show={hasIndex && localConfig.embedding_model !== (ragConfig?.embedding_model ?? "nomic-embed-text")} />
@@ -649,7 +564,7 @@ export function ContextStrategySettings() {
                   className="inline-flex items-center gap-1.5 rounded-lg border border-border/50 bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isCheckingConnection ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wifi className="h-3.5 w-3.5" />}
-                  Test Connection
+                  {t("settings.contextStrategy.connection.testConnection")}
                 </button>
                 <button
                   onClick={() => pullModel(localConfig.embedding_model)}
@@ -657,7 +572,7 @@ export function ContextStrategySettings() {
                   className="inline-flex items-center gap-1.5 rounded-lg border border-border/50 bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isPullingModel ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
-                  {isPullingModel ? "Pulling..." : "Pull Model"}
+                  {isPullingModel ? t("settings.contextStrategy.connection.pulling") : t("settings.contextStrategy.connection.pullModel")}
                 </button>
               </div>
 
@@ -666,7 +581,7 @@ export function ContextStrategySettings() {
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span className="flex items-center gap-1.5">
                       <Loader2 className="h-3 w-3 animate-spin text-primary" />
-                      {pullProgress?.status || "Connecting..."}
+                      {pullProgress?.status || t("settings.contextStrategy.connection.connecting")}
                     </span>
                     {pullProgress && pullProgress.total > 0 && (
                       <span className="font-mono">
@@ -692,13 +607,13 @@ export function ContextStrategySettings() {
 
           {/* ── Search Settings ── */}
           <div className="rounded-xl border border-border/30 bg-card/50 p-5">
-            <h3 className="mb-3 text-sm font-semibold text-primary/80">Search Settings</h3>
+            <h3 className="mb-3 text-sm font-semibold text-primary/80">{t("settings.contextStrategy.search.title")}</h3>
             <div className="grid grid-cols-2 gap-4">
               {/* top-K */}
               <div>
                 <div className="flex items-center gap-1.5 mb-1.5">
                   <label className="text-xs font-medium text-foreground">
-                    Results to Retrieve (top-K)
+                    {t("settings.contextStrategy.search.topK")}
                   </label>
                   <HelpButton id="top_k" activeId={openHelp} onToggle={toggleHelp} />
                 </div>
@@ -711,7 +626,7 @@ export function ContextStrategySettings() {
                   className="w-full rounded-lg border border-border/50 bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20"
                 >
                   {[3, 5, 7, 10, 15, 20].map((v) => (
-                    <option key={v} value={v}>{v} chunks</option>
+                    <option key={v} value={v}>{t("settings.contextStrategy.common.chunks", { count: v })}</option>
                   ))}
                 </select>
               </div>
@@ -719,7 +634,7 @@ export function ContextStrategySettings() {
               {/* Search mode */}
               <div>
                 <div className="flex items-center gap-1.5 mb-1.5">
-                  <label className="text-xs font-medium text-foreground">Search Mode</label>
+                  <label className="text-xs font-medium text-foreground">{t("settings.contextStrategy.search.searchMode")}</label>
                   <HelpButton id="search_mode" activeId={openHelp} onToggle={toggleHelp} />
                 </div>
                 <select
@@ -727,9 +642,9 @@ export function ContextStrategySettings() {
                   onChange={(e) => handleSelectChange("search_mode", e.target.value)}
                   className="w-full rounded-lg border border-border/50 bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20"
                 >
-                  <option value="hybrid">Hybrid (recommended)</option>
-                  <option value="semantic">Semantic Only</option>
-                  <option value="keyword">Keyword Only (fastest)</option>
+                  <option value="hybrid">{t("settings.contextStrategy.search.modes.hybrid")}</option>
+                  <option value="semantic">{t("settings.contextStrategy.search.modes.semantic")}</option>
+                  <option value="keyword">{t("settings.contextStrategy.search.modes.keyword")}</option>
                 </select>
               </div>
             </div>
@@ -742,40 +657,40 @@ export function ContextStrategySettings() {
             indexStale ? "border-amber-500/40 ring-1 ring-amber-500/10" : "border-border/30"
           }`}>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-primary/80">Index Status</h3>
+              <h3 className="text-sm font-semibold text-primary/80">{t("settings.contextStrategy.index.title")}</h3>
               {indexStale && (
                 <div className="flex items-center gap-1.5 rounded-full bg-amber-500/10 px-2.5 py-1 text-meta font-medium text-amber-500">
                   <AlertTriangle className="h-3 w-3" />
-                  Settings Changed — Rebuild Required
+                  {t("settings.contextStrategy.index.stale")}
                 </div>
               )}
             </div>
 
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div className="rounded-lg bg-accent/20 px-3 py-2.5">
-                <span className="text-muted-foreground">Files indexed</span>
+                <span className="text-muted-foreground">{t("settings.contextStrategy.index.filesIndexed")}</span>
                 <p className="mt-0.5 text-sm font-medium text-foreground">
                   {indexStatus?.indexed_files ?? 0} / {indexStatus?.total_files ?? 0}
                 </p>
               </div>
               <div className="rounded-lg bg-accent/20 px-3 py-2.5">
-                <span className="text-muted-foreground">Total chunks</span>
+                <span className="text-muted-foreground">{t("settings.contextStrategy.index.totalChunks")}</span>
                 <p className="mt-0.5 text-sm font-medium text-foreground">
                   {indexStatus?.total_chunks ?? 0}
                 </p>
               </div>
               <div className="rounded-lg bg-accent/20 px-3 py-2.5">
-                <span className="text-muted-foreground">Total tokens</span>
+                <span className="text-muted-foreground">{t("settings.contextStrategy.index.totalTokens")}</span>
                 <p className="mt-0.5 text-sm font-medium text-foreground">
                   {indexStatus?.total_tokens ? `~${Math.round(indexStatus.total_tokens / 1000)}k` : "0"}
                 </p>
               </div>
               <div className="rounded-lg bg-accent/20 px-3 py-2.5">
-                <span className="text-muted-foreground">Last indexed</span>
+                <span className="text-muted-foreground">{t("settings.contextStrategy.index.lastIndexed")}</span>
                 <p className="mt-0.5 text-sm font-medium text-foreground truncate">
                   {indexStatus?.last_indexed_at
                     ? new Date(indexStatus.last_indexed_at).toLocaleString()
-                    : "Never"}
+                    : t("settings.contextStrategy.index.never")}
                 </p>
               </div>
             </div>
@@ -784,7 +699,10 @@ export function ContextStrategySettings() {
               <div className="mt-3 space-y-1.5">
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>{indexProgress.status}</span>
-                  <span>{indexProgress.filesDone}/{indexProgress.filesTotal} files</span>
+                  <span>{t("settings.contextStrategy.index.filesProgress", {
+                    done: indexProgress.filesDone,
+                    total: indexProgress.filesTotal,
+                  })}</span>
                 </div>
                 <div className="h-1.5 rounded-full bg-muted/40">
                   <div
@@ -810,7 +728,13 @@ export function ContextStrategySettings() {
                 }`}
               >
                 {isIndexing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
-                {confirmRebuild ? "Confirm Rebuild" : indexStale ? "Rebuild Required" : hasIndex ? "Rebuild Index" : "Build Index"}
+                {confirmRebuild
+                  ? t("settings.contextStrategy.index.confirmRebuild")
+                  : indexStale
+                    ? t("settings.contextStrategy.index.rebuildRequired")
+                    : hasIndex
+                      ? t("settings.contextStrategy.index.rebuildIndex")
+                      : t("settings.contextStrategy.index.buildIndex")}
               </button>
               <button
                 onClick={handleClearIndex}
@@ -821,7 +745,7 @@ export function ContextStrategySettings() {
                 }`}
               >
                 <Trash2 className="h-3.5 w-3.5" />
-                {confirmClear ? "Confirm Clear" : "Clear Index"}
+                {confirmClear ? t("settings.contextStrategy.index.confirmClear") : t("settings.contextStrategy.index.clearIndex")}
               </button>
             </div>
           </div>
@@ -832,7 +756,7 @@ export function ContextStrategySettings() {
               onClick={() => setAdvancedOpen(!advancedOpen)}
               className="flex w-full items-center justify-between px-5 py-3.5 text-sm font-semibold text-primary/80 transition-colors hover:bg-accent/20"
             >
-              <span>Advanced Settings</span>
+              <span>{t("settings.contextStrategy.advanced.title")}</span>
               {advancedOpen
                 ? <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 : <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -846,11 +770,11 @@ export function ContextStrategySettings() {
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="text-xs font-medium text-foreground flex items-center gap-1.5">
-                      Chunk Size
+                      {t("settings.contextStrategy.advanced.chunkSize")}
                       <HelpButton id="chunk_size" activeId={openHelp} onToggle={toggleHelp} />
                       <RebuildBadge show={hasIndex && localConfig.chunk_size !== (ragConfig?.chunk_size ?? 512)} />
                     </label>
-                    <span className="text-xs text-muted-foreground font-mono">{localConfig.chunk_size} tokens</span>
+                    <span className="text-xs text-muted-foreground font-mono">{t("settings.contextStrategy.common.tokens", { count: localConfig.chunk_size })}</span>
                   </div>
                   {openHelp === "chunk_size" && <HelpPanel id="chunk_size" />}
                   <input
@@ -861,7 +785,7 @@ export function ContextStrategySettings() {
                     className="w-full accent-primary mt-1.5"
                   />
                   <div className="flex justify-between text-meta text-muted-foreground/60">
-                    <span>128 — precise</span><span>2048 — broad</span>
+                    <span>{t("settings.contextStrategy.advanced.ranges.precise")}</span><span>{t("settings.contextStrategy.advanced.ranges.broad")}</span>
                   </div>
                 </div>
 
@@ -869,11 +793,11 @@ export function ContextStrategySettings() {
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="text-xs font-medium text-foreground flex items-center gap-1.5">
-                      Chunk Overlap
+                      {t("settings.contextStrategy.advanced.chunkOverlap")}
                       <HelpButton id="chunk_overlap" activeId={openHelp} onToggle={toggleHelp} />
                       <RebuildBadge show={hasIndex && localConfig.chunk_overlap !== (ragConfig?.chunk_overlap ?? 64)} />
                     </label>
-                    <span className="text-xs text-muted-foreground font-mono">{localConfig.chunk_overlap} tokens</span>
+                    <span className="text-xs text-muted-foreground font-mono">{t("settings.contextStrategy.common.tokens", { count: localConfig.chunk_overlap })}</span>
                   </div>
                   {openHelp === "chunk_overlap" && <HelpPanel id="chunk_overlap" />}
                   <input
@@ -884,7 +808,7 @@ export function ContextStrategySettings() {
                     className="w-full accent-primary mt-1.5"
                   />
                   <div className="flex justify-between text-meta text-muted-foreground/60">
-                    <span>0 — no overlap</span><span>512 — max continuity</span>
+                    <span>{t("settings.contextStrategy.advanced.ranges.noOverlap")}</span><span>{t("settings.contextStrategy.advanced.ranges.maxContinuity")}</span>
                   </div>
                 </div>
 
@@ -892,11 +816,11 @@ export function ContextStrategySettings() {
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="text-xs font-medium text-foreground flex items-center gap-1.5">
-                      Similarity Threshold
+                      {t("settings.contextStrategy.advanced.similarityThreshold")}
                       <HelpButton id="similarity_threshold" activeId={openHelp} onToggle={toggleHelp} />
                       {localConfig.search_mode !== "semantic" && (
                         <span className="rounded-full bg-muted/60 px-1.5 py-0.5 text-meta text-muted-foreground/60">
-                          semantic only
+                          {t("settings.contextStrategy.advanced.semanticOnly")}
                         </span>
                       )}
                     </label>
@@ -911,7 +835,7 @@ export function ContextStrategySettings() {
                     className="w-full accent-primary mt-1.5"
                   />
                   <div className="flex justify-between text-meta text-muted-foreground/60">
-                    <span>0.0 — include all</span><span>0.9 — strict</span>
+                    <span>{t("settings.contextStrategy.advanced.ranges.includeAll")}</span><span>{t("settings.contextStrategy.advanced.ranges.strict")}</span>
                   </div>
                 </div>
 
@@ -919,16 +843,19 @@ export function ContextStrategySettings() {
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="text-xs font-medium text-foreground flex items-center gap-1.5">
-                      Semantic Weight
+                      {t("settings.contextStrategy.advanced.semanticWeight")}
                       <HelpButton id="semantic_weight" activeId={openHelp} onToggle={toggleHelp} />
                       {localConfig.search_mode !== "hybrid" && (
                         <span className="rounded-full bg-muted/60 px-1.5 py-0.5 text-meta text-muted-foreground/60">
-                          hybrid only
+                          {t("settings.contextStrategy.advanced.hybridOnly")}
                         </span>
                       )}
                     </label>
                     <span className="text-xs text-muted-foreground font-mono">
-                      {Math.round(localConfig.semantic_weight * 100)}% semantic / {Math.round((1 - localConfig.semantic_weight) * 100)}% keyword
+                      {t("settings.contextStrategy.advanced.semanticKeywordRatio", {
+                        semantic: Math.round(localConfig.semantic_weight * 100),
+                        keyword: Math.round((1 - localConfig.semantic_weight) * 100),
+                      })}
                     </span>
                   </div>
                   {openHelp === "semantic_weight" && <HelpPanel id="semantic_weight" />}
@@ -940,14 +867,14 @@ export function ContextStrategySettings() {
                     className="w-full accent-primary mt-1.5"
                   />
                   <div className="flex justify-between text-meta text-muted-foreground/60">
-                    <span>0.0 — keyword</span><span>1.0 — semantic</span>
+                    <span>{t("settings.contextStrategy.advanced.ranges.keyword")}</span><span>{t("settings.contextStrategy.advanced.ranges.semantic")}</span>
                   </div>
                 </div>
 
                 {/* Ollama URL */}
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-foreground">
-                    Ollama URL
+                    {t("settings.contextStrategy.advanced.ollamaUrl")}
                   </label>
                   <input
                     type="text"
@@ -962,7 +889,7 @@ export function ContextStrategySettings() {
                 {/* Batch Size */}
                 <div>
                   <div className="flex items-center gap-1.5 mb-1.5">
-                    <label className="text-xs font-medium text-foreground">Batch Size</label>
+                    <label className="text-xs font-medium text-foreground">{t("settings.contextStrategy.advanced.batchSize")}</label>
                     <HelpButton id="batch_size" activeId={openHelp} onToggle={toggleHelp} />
                   </div>
                   {openHelp === "batch_size" && <HelpPanel id="batch_size" />}
@@ -972,7 +899,7 @@ export function ContextStrategySettings() {
                     className="w-full rounded-lg border border-border/50 bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20 mt-1"
                   >
                     {[8, 16, 32, 64].map((v) => (
-                      <option key={v} value={v}>{v} chunks/request</option>
+                      <option key={v} value={v}>{t("settings.contextStrategy.common.chunksPerRequest", { count: v })}</option>
                     ))}
                   </select>
                 </div>
@@ -983,7 +910,7 @@ export function ContextStrategySettings() {
                   className="inline-flex items-center gap-1.5 rounded-lg border border-border/50 bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
                 >
                   <RotateCcw className="h-3.5 w-3.5" />
-                  Reset to Defaults
+                  {t("settings.contextStrategy.advanced.resetDefaults")}
                 </button>
               </div>
             )}
@@ -992,10 +919,8 @@ export function ContextStrategySettings() {
           {/* ── How it works during meetings ── */}
           <div className="rounded-xl border border-border/20 bg-accent/10 px-4 py-3">
             <p className="text-xs text-muted-foreground/70 leading-relaxed">
-              <span className="font-semibold text-foreground/70">During meetings: </span>
-              The live transcript is sent as a rolling context window (configured in General settings),
-              not stored in the RAG index. RAG retrieves the top-{localConfig.top_k} relevant chunks
-              from your pre-indexed documents. Both are injected into the LLM prompt together.
+              <span className="font-semibold text-foreground/70">{t("settings.contextStrategy.duringMeetings.prefix")}</span>
+              {t("settings.contextStrategy.duringMeetings.body", { topK: localConfig.top_k })}
             </p>
           </div>
         </>
