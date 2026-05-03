@@ -4,6 +4,14 @@
 use serde::Serialize;
 
 #[derive(Debug, Clone, Serialize)]
+pub struct ModelFileDefinition {
+    pub filename: &'static str,
+    pub download_url: &'static str,
+    pub size_bytes: u64,
+    pub sha256: &'static str,
+}
+
+#[derive(Debug, Clone, Serialize)]
 pub struct ModelDefinition {
     pub engine: &'static str,
     pub model_id: &'static str,
@@ -17,6 +25,9 @@ pub struct ModelDefinition {
     pub filename: &'static str,
     /// Whether the download is a .tar.bz2 archive that needs extraction.
     pub is_archive: bool,
+    /// Optional multi-file model payload. Files are downloaded into `filename` as a directory.
+    #[serde(default)]
+    pub files: &'static [ModelFileDefinition],
 }
 
 /// Whisper.cpp GGML models hosted on HuggingFace.
@@ -33,6 +44,7 @@ static WHISPER_CPP_MODELS: &[ModelDefinition] = &[
         is_streaming: false,
         filename: "ggml-tiny.bin",
         is_archive: false,
+        files: &[],
     },
     ModelDefinition {
         engine: "whisper_cpp",
@@ -46,6 +58,7 @@ static WHISPER_CPP_MODELS: &[ModelDefinition] = &[
         is_streaming: false,
         filename: "ggml-base.bin",
         is_archive: false,
+        files: &[],
     },
     ModelDefinition {
         engine: "whisper_cpp",
@@ -59,6 +72,7 @@ static WHISPER_CPP_MODELS: &[ModelDefinition] = &[
         is_streaming: false,
         filename: "ggml-small.bin",
         is_archive: false,
+        files: &[],
     },
     ModelDefinition {
         engine: "whisper_cpp",
@@ -72,6 +86,7 @@ static WHISPER_CPP_MODELS: &[ModelDefinition] = &[
         is_streaming: false,
         filename: "ggml-medium.bin",
         is_archive: false,
+        files: &[],
     },
     ModelDefinition {
         engine: "whisper_cpp",
@@ -85,6 +100,7 @@ static WHISPER_CPP_MODELS: &[ModelDefinition] = &[
         is_streaming: false,
         filename: "ggml-distil-large-v3.bin",
         is_archive: false,
+        files: &[],
     },
     ModelDefinition {
         engine: "whisper_cpp",
@@ -98,6 +114,7 @@ static WHISPER_CPP_MODELS: &[ModelDefinition] = &[
         is_streaming: false,
         filename: "ggml-large-v3-turbo.bin",
         is_archive: false,
+        files: &[],
     },
 ];
 
@@ -118,6 +135,7 @@ static SHERPA_ONNX_MODELS: &[ModelDefinition] = &[
         is_streaming: true,
         filename: "sherpa-onnx-streaming-zipformer-en-2023-06-26",
         is_archive: true,
+        files: &[],
     },
     ModelDefinition {
         engine: "sherpa_onnx",
@@ -131,6 +149,7 @@ static SHERPA_ONNX_MODELS: &[ModelDefinition] = &[
         is_streaming: true,
         filename: "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17",
         is_archive: true,
+        files: &[],
     },
     ModelDefinition {
         engine: "sherpa_onnx",
@@ -144,6 +163,7 @@ static SHERPA_ONNX_MODELS: &[ModelDefinition] = &[
         is_streaming: true,
         filename: "sherpa-onnx-streaming-zipformer-multi-zh-hans-2023-12-12",
         is_archive: true,
+        files: &[],
     },
     ModelDefinition {
         engine: "sherpa_onnx",
@@ -157,6 +177,7 @@ static SHERPA_ONNX_MODELS: &[ModelDefinition] = &[
         is_streaming: false,
         filename: "sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17",
         is_archive: true,
+        files: &[],
     },
 ];
 
@@ -175,6 +196,7 @@ static ORT_STREAMING_MODELS: &[ModelDefinition] = &[
         is_streaming: true,
         filename: "sherpa-onnx-streaming-zipformer-en-2023-06-26",
         is_archive: true,
+        files: &[],
     },
     ModelDefinition {
         engine: "ort_streaming",
@@ -188,6 +210,7 @@ static ORT_STREAMING_MODELS: &[ModelDefinition] = &[
         is_streaming: true,
         filename: "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17",
         is_archive: true,
+        files: &[],
     },
 ];
 
@@ -206,6 +229,7 @@ static PARAKEET_TDT_MODELS: &[ModelDefinition] = &[
         is_streaming: false,
         filename: "sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8",
         is_archive: true,
+        files: &[],
     },
     ModelDefinition {
         engine: "parakeet_tdt",
@@ -219,6 +243,66 @@ static PARAKEET_TDT_MODELS: &[ModelDefinition] = &[
         is_streaming: false,
         filename: "sherpa-onnx-nemo-parakeet_tdt_ctc_110m-en-36000-int8",
         is_archive: true,
+        files: &[],
+    },
+];
+
+static GIGAAM_V3_E2E_RNNT_FILES: &[ModelFileDefinition] = &[
+    ModelFileDefinition {
+        filename: "gigaam_v3_e2e_rnnt_encoder_int8.onnx",
+        download_url: "https://huggingface.co/Smirnov75/GigaAM-v3-sherpa-onnx/resolve/main/gigaam_v3_e2e_rnnt_encoder_int8.onnx",
+        size_bytes: 319_000_000,
+        sha256: "",
+    },
+    ModelFileDefinition {
+        filename: "gigaam_v3_e2e_rnnt_decoder.onnx",
+        download_url: "https://huggingface.co/Smirnov75/GigaAM-v3-sherpa-onnx/resolve/main/gigaam_v3_e2e_rnnt_decoder.onnx",
+        size_bytes: 4_600_000,
+        sha256: "",
+    },
+    ModelFileDefinition {
+        filename: "gigaam_v3_e2e_rnnt_joint.onnx",
+        download_url: "https://huggingface.co/Smirnov75/GigaAM-v3-sherpa-onnx/resolve/main/gigaam_v3_e2e_rnnt_joint.onnx",
+        size_bytes: 2_710_000,
+        sha256: "",
+    },
+    ModelFileDefinition {
+        filename: "gigaam_v3_e2e_rnnt_tokens.txt",
+        download_url: "https://huggingface.co/Smirnov75/GigaAM-v3-sherpa-onnx/resolve/main/gigaam_v3_e2e_rnnt_tokens.txt",
+        size_bytes: 13_400,
+        sha256: "",
+    },
+];
+
+/// GigaAM v2 Russian NeMo RNNT model, converted for sherpa-onnx.
+static GIGAAM_RUSSIAN_MODELS: &[ModelDefinition] = &[
+    ModelDefinition {
+        engine: "gigaam_russian",
+        model_id: "giga-am-v2-russian-2025-04-19",
+        display_name: "GigaAM v2 Russian (int8, Russian)",
+        size_bytes: 254_000_000, // extracted model files are ~242 MB
+        download_url: "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19.tar.bz2",
+        sha256: "",
+        accuracy_rating: 5,
+        speed_rating: 4,
+        is_streaming: false,
+        filename: "sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19",
+        is_archive: true,
+        files: &[],
+    },
+    ModelDefinition {
+        engine: "gigaam_russian",
+        model_id: "gigaam-v3-e2e-rnnt-punct",
+        display_name: "GigaAM v3 e2e RNNT (punctuation)",
+        size_bytes: 326_400_000,
+        download_url: "",
+        sha256: "",
+        accuracy_rating: 5,
+        speed_rating: 4,
+        is_streaming: false,
+        filename: "GigaAM-v3-sherpa-onnx-e2e-rnnt-int8",
+        is_archive: false,
+        files: GIGAAM_V3_E2E_RNNT_FILES,
     },
 ];
 
@@ -229,6 +313,7 @@ pub fn get_models_for_engine(engine: &str) -> &'static [ModelDefinition] {
         "sherpa_onnx" => SHERPA_ONNX_MODELS,
         "ort_streaming" => ORT_STREAMING_MODELS,
         "parakeet_tdt" => PARAKEET_TDT_MODELS,
+        "gigaam_russian" => GIGAAM_RUSSIAN_MODELS,
         _ => &[],
     }
 }
@@ -270,6 +355,11 @@ pub fn get_engines() -> Vec<EngineInfo> {
             engine: "parakeet_tdt",
             name: "Parakeet TDT",
             description: "NVIDIA Parakeet TDT 0.6B — #1 on Open ASR Leaderboard (~6% WER). CTC/TDT architecture via ONNX Runtime.",
+        },
+        EngineInfo {
+            engine: "gigaam_russian",
+            name: "GigaAM Russian",
+            description: "GigaAM v2 Russian NeMo RNNT via sherpa-onnx. Offline Russian ASR with NexQ audio pipeline.",
         },
     ]
 }

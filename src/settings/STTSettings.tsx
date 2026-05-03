@@ -110,6 +110,15 @@ const PROVIDER_OPTIONS: ProviderOption[] = [
     requiresModels: "parakeet_tdt",
   },
   {
+    value: "gigaam_russian",
+    label: "GigaAM Russian",
+    description: t("settings.stt.providerDescriptions.gigaamRussian"),
+    requiresApiKey: false,
+    isLocal: true,
+    credentialKey: "",
+    requiresModels: "gigaam_russian",
+  },
+  {
     value: "deepgram",
     label: "Deepgram",
     description: t("settings.stt.providerDescriptions.deepgram"),
@@ -925,6 +934,7 @@ function ProviderIcon({ value, isSelected }: { value: STTProviderType; isSelecte
     case "ort_streaming":
       return <Zap className={cls} />;
     case "parakeet_tdt":
+    case "gigaam_russian":
       return <Cpu className={cls} />;
     case "deepgram":
     case "whisper_api":

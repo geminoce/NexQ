@@ -46,7 +46,14 @@ impl ModelManager {
     pub fn is_model_downloaded(&self, engine: &str, model_id: &str) -> bool {
         if let Some(def) = get_model(engine, model_id) {
             let path = self.model_file_path(engine, def.filename);
-            if def.is_archive {
+            if !def.files.is_empty() {
+                path.is_dir()
+                    && def
+                        .files
+                        .iter()
+                        .all(|file| path.join(file.filename).is_file())
+                    && model_discovery::has_model_files(&path)
+            } else if def.is_archive {
                 // Archive models are extracted to a directory
                 path.is_dir()
             } else {
@@ -61,7 +68,13 @@ impl ModelManager {
     pub fn get_model_path(&self, engine: &str, model_id: &str) -> Option<PathBuf> {
         let def = get_model(engine, model_id)?;
         let path = self.model_file_path(engine, def.filename);
-        if def.is_archive {
+        if !def.files.is_empty() {
+            if self.is_model_downloaded(engine, model_id) {
+                Some(path)
+            } else {
+                None
+            }
+        } else if def.is_archive {
             if path.is_dir() {
                 Some(path)
             } else {
@@ -113,9 +126,12 @@ impl ModelManager {
         }
 
         let is_archive = def.is_archive;
+        let files = def.files.to_vec();
         let dest_path = if is_archive {
             // Download the archive to a .tar.bz2 file, extract afterward
             engine_dir.join(format!("{}.tar.bz2", def.filename))
+        } else if !files.is_empty() {
+            engine_dir.join(def.filename)
         } else {
             self.model_file_path(engine, def.filename)
         };
@@ -128,11 +144,90 @@ impl ModelManager {
         let sha256 = def.sha256.to_string();
         let engine_str = engine.to_string();
         let model_id_str = model_id.to_string();
+        let model_filename = def.filename.to_string();
 
         // Also capture the expected model directory path for cleanup of old files
         let model_dir_path = engine_dir.join(def.filename);
 
         tokio::spawn(async move {
+            if !files.is_empty() {
+                if let Err(e) = tokio::fs::create_dir_all(&dest_path).await {
+                    log::error!(
+                        "Model directory creation failed ({}:{}): {}",
+                        engine_str,
+                        model_id_str,
+                        e
+                    );
+                    let _ = app_handle.emit(
+                        "model_download_progress",
+                        &downloader::DownloadProgress {
+                            engine: engine_str,
+                            model_id: model_id_str,
+                            downloaded_bytes: 0,
+                            total_bytes: 0,
+                            percent: 0.0,
+                            status: "error".to_string(),
+                        },
+                    );
+                    return;
+                }
+
+                for file in files {
+                    let file_dest = dest_path.join(file.filename);
+                    let result = downloader::download_file(
+                        file.download_url,
+                        &file_dest,
+                        file.sha256,
+                        &engine_str,
+                        &model_id_str,
+                        Arc::clone(&cancel_flag),
+                        app_handle.clone(),
+                    )
+                    .await;
+
+                    if let Err(e) = result {
+                        log::error!(
+                            "Model file download failed ({}:{}:{}): {}",
+                            engine_str,
+                            model_id_str,
+                            file.filename,
+                            e
+                        );
+                        let _ = app_handle.emit(
+                            "model_download_progress",
+                            &downloader::DownloadProgress {
+                                engine: engine_str,
+                                model_id: model_id_str,
+                                downloaded_bytes: 0,
+                                total_bytes: 0,
+                                percent: 0.0,
+                                status: "error".to_string(),
+                            },
+                        );
+                        return;
+                    }
+                }
+
+                log::info!(
+                    "Multi-file model downloaded: {}:{} -> {}",
+                    engine_str,
+                    model_id_str,
+                    model_filename
+                );
+                let _ = app_handle.emit(
+                    "model_download_progress",
+                    &downloader::DownloadProgress {
+                        engine: engine_str,
+                        model_id: model_id_str,
+                        downloaded_bytes: 0,
+                        total_bytes: 0,
+                        percent: 100.0,
+                        status: "complete".to_string(),
+                    },
+                );
+                return;
+            }
+
             let result = downloader::download_file(
                 &url,
                 &dest_path,

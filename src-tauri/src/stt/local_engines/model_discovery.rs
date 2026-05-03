@@ -1,6 +1,6 @@
 // Model file discovery for local STT engines.
 //
-// Scans a model directory to find encoder, decoder, joiner, and tokens
+// Scans a model directory to find encoder, decoder, joiner/joint, and tokens
 // files regardless of naming convention. Handles both canonical names
 // (encoder.onnx) and epoch-based names (encoder-epoch-99-avg-1.onnx).
 
@@ -17,9 +17,9 @@ pub struct ModelFiles {
 
 /// Scan a model directory for transducer model files.
 ///
-/// Looks for files matching `*encoder*.onnx`, `*decoder*.onnx`, `*joiner*.onnx`,
-/// and `tokens.txt`. Searches the top level first, then one directory deeper
-/// (archives often have a nested subdirectory).
+/// Looks for files matching `*encoder*.onnx`, `*decoder*.onnx`,
+/// `*joiner*.onnx`/`*joint*.onnx`, and `tokens.txt`/`*_tokens.txt`.
+/// Searches the top level first, then one directory deeper.
 pub fn discover_model_files(model_dir: &Path) -> Result<ModelFiles, String> {
     if !model_dir.is_dir() {
         return Err(format!(
@@ -39,20 +39,14 @@ pub fn discover_model_files(model_dir: &Path) -> Result<ModelFiles, String> {
     let mut tokens: Option<PathBuf> = None;
 
     for entry in &entries {
-        let name = entry.file_name().to_string_lossy().to_lowercase();
-        let path = entry.path();
-
-        if name.ends_with(".onnx") {
-            if name.contains("encoder") && encoder.is_none() {
-                encoder = Some(path);
-            } else if name.contains("decoder") && decoder.is_none() {
-                decoder = Some(path);
-            } else if name.contains("joiner") && joiner.is_none() {
-                joiner = Some(path);
-            }
-        } else if name == "tokens.txt" {
-            tokens = Some(path);
-        }
+        set_transducer_candidate(
+            &entry.file_name().to_string_lossy().to_lowercase(),
+            entry.path(),
+            &mut encoder,
+            &mut decoder,
+            &mut joiner,
+            &mut tokens,
+        );
     }
 
     // If not found at top level, try one directory deeper
@@ -64,17 +58,14 @@ pub fn discover_model_files(model_dir: &Path) -> Result<ModelFiles, String> {
                         let name = sub.file_name().to_string_lossy().to_lowercase();
                         let path = sub.path();
 
-                        if name.ends_with(".onnx") {
-                            if name.contains("encoder") && encoder.is_none() {
-                                encoder = Some(path);
-                            } else if name.contains("decoder") && decoder.is_none() {
-                                decoder = Some(path);
-                            } else if name.contains("joiner") && joiner.is_none() {
-                                joiner = Some(path);
-                            }
-                        } else if name == "tokens.txt" && tokens.is_none() {
-                            tokens = Some(path);
-                        }
+                        set_transducer_candidate(
+                            &name,
+                            path,
+                            &mut encoder,
+                            &mut decoder,
+                            &mut joiner,
+                            &mut tokens,
+                        );
                     }
                 }
             }
@@ -84,9 +75,30 @@ pub fn discover_model_files(model_dir: &Path) -> Result<ModelFiles, String> {
     Ok(ModelFiles {
         encoder: encoder.ok_or("No *encoder*.onnx found in model directory")?,
         decoder: decoder.ok_or("No *decoder*.onnx found in model directory")?,
-        joiner: joiner.ok_or("No *joiner*.onnx found in model directory")?,
-        tokens: tokens.ok_or("No tokens.txt found in model directory")?,
+        joiner: joiner.ok_or("No *joiner*.onnx or *joint*.onnx found in model directory")?,
+        tokens: tokens.ok_or("No tokens.txt or *_tokens.txt found in model directory")?,
     })
+}
+
+fn set_transducer_candidate(
+    name: &str,
+    path: PathBuf,
+    encoder: &mut Option<PathBuf>,
+    decoder: &mut Option<PathBuf>,
+    joiner: &mut Option<PathBuf>,
+    tokens: &mut Option<PathBuf>,
+) {
+    if name.ends_with(".onnx") {
+        if name.contains("encoder") && encoder.is_none() {
+            *encoder = Some(path);
+        } else if name.contains("decoder") && decoder.is_none() {
+            *decoder = Some(path);
+        } else if (name.contains("joiner") || name.contains("joint")) && joiner.is_none() {
+            *joiner = Some(path);
+        }
+    } else if (name == "tokens.txt" || name.ends_with("_tokens.txt")) && tokens.is_none() {
+        *tokens = Some(path);
+    }
 }
 
 /// Discovered model files for non-transducer models (SenseVoice, Parakeet CTC, etc.).

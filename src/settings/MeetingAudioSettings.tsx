@@ -99,6 +99,15 @@ const STT_OPTIONS: {
     requiresDownload: "parakeet_tdt",
   },
   {
+    value: "gigaam_russian",
+    label: "GigaAM Russian",
+    shortLabel: "GigaAM",
+    icon: <Cpu className="h-3.5 w-3.5" />,
+    requiresKey: false,
+    isCloud: false,
+    requiresDownload: "gigaam_russian",
+  },
+  {
     value: "deepgram",
     label: "Deepgram",
     shortLabel: "Deepgram",
@@ -139,7 +148,7 @@ const EXCLUSIVE_PROVIDERS: STTProviderType[] = ["web_speech", "windows_native"];
 
 const EXCLUSIVE_FALLBACK_ORDER: STTProviderType[] = [
   "deepgram", "groq_whisper", "whisper_api", "azure_speech",
-  "sherpa_onnx", "ort_streaming", "parakeet_tdt",
+  "sherpa_onnx", "ort_streaming", "parakeet_tdt", "gigaam_russian",
 ];
 
 const PRESET_LABEL_KEYS: Record<string, TranslationKey> = {
@@ -650,13 +659,19 @@ function PartyPanel({
 
   function handleProviderChange(newProvider: STTProviderType) {
     const updates: Partial<PartyAudioConfig> = { stt_provider: newProvider };
-    if (newProvider === "sherpa_onnx" || newProvider === "ort_streaming" || newProvider === "parakeet_tdt") {
+    if (
+      newProvider === "sherpa_onnx"
+      || newProvider === "ort_streaming"
+      || newProvider === "parakeet_tdt"
+      || newProvider === "gigaam_russian"
+    ) {
       // Use per-engine active model, falling back to legacy activeWhisperModel
       const activeModelPerEngine = useConfigStore.getState().activeModelPerEngine;
       const DEFAULT_MODEL_PER_ENGINE: Record<string, string> = {
         sherpa_onnx: "streaming-zipformer-en-20M",
         ort_streaming: "zipformer-en-20M",
         parakeet_tdt: "parakeet-tdt-0.6b-v3-int8",
+        gigaam_russian: "giga-am-v2-russian-2025-04-19",
       };
       const engineModel = activeModelPerEngine[newProvider]
         ?? DEFAULT_MODEL_PER_ENGINE[newProvider]

@@ -654,6 +654,7 @@ export const ru: TranslationShape<typeof en> = {
         ortStreaming: "Локально, с ускорением GPU",
         whisperCpp: "Пакетная транскрибация записанных встреч",
         parakeetTdt: "Лучшая точность, офлайн",
+        gigaamRussian: "Русская офлайн-транскрибация",
         deepgram: "Streaming в реальном времени, высокое качество",
         whisperApi: "Модель OpenAI Whisper",
         azureSpeech: "Azure Cognitive Services",

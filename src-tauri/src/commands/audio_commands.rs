@@ -1663,11 +1663,15 @@ async fn create_stt_provider_for_party(
                     // Auto-detect model type: transducer (encoder/decoder/joiner) vs CTC (model.onnx)
                     let transducer = crate::stt::local_engines::model_discovery::discover_model_files(&model_dir);
                     if transducer.is_ok() {
-                        // Transducer model (e.g., 0.6B v3) → use in-process ORT streaming
+                        // NeMo transducer model (e.g., Parakeet TDT v3) → use sherpa-onnx
+                        // runtime while preserving NexQ's AudioChunk feed_audio pipeline.
                         crate::stt::emit_stt_debug(app, "info", "stt",
-                            &format!("[{}] Parakeet transducer model from {} (lang={})",
+                            &format!("[{}] Parakeet TDT using SherpaNemoTransducerSTT from {} (lang={})",
                                 party_role, model_dir.display(), lang));
-                        let mut p = crate::stt::ort_streaming::OrtStreamingSTT::new(model_dir);
+                        let mut p = crate::stt::sherpa_nemo_transducer::SherpaNemoTransducerSTT::new(
+                            model_dir,
+                            STTProviderType::ParakeetTdt,
+                        );
                         p.set_language(&lang);
                         p.set_app_handle(app.clone());
                         Ok(Some(Box::new(p)))
@@ -1709,6 +1713,54 @@ async fn create_stt_provider_for_party(
                 Err(e) => {
                     crate::stt::emit_stt_debug(app, "error", "stt",
                         &format!("[{}] Parakeet model '{}' not found: {}. Download in Settings.",
+                            party_role, model_id, e));
+                    Ok(None)
+                }
+            }
+        }
+        STTProviderType::GigaAmRussian => {
+            let raw_model_id = config.local_model_id.as_deref();
+            let model_id = match raw_model_id {
+                Some(id) if id.contains("giga-am") || id.contains("gigaam") => id,
+                Some(id) => {
+                    log::warn!("GigaAmRussian: ignoring cross-engine model_id '{}', using default", id);
+                    "giga-am-v2-russian-2025-04-19"
+                }
+                None => "giga-am-v2-russian-2025-04-19",
+            };
+            crate::stt::emit_stt_debug(app, "info", "stt",
+                &format!("[{}] GigaAM Russian: looking for model '{}' (local_model_id={:?})",
+                    party_role, model_id, config.local_model_id));
+            let model_result = get_local_model_path(state, "gigaam_russian", model_id)
+                .or_else(|_| find_any_downloaded_model(state, "gigaam_russian"));
+            match model_result {
+                Ok(model_dir) => {
+                    let lang = get_stt_language(state);
+                    let transducer =
+                        crate::stt::local_engines::model_discovery::discover_model_files(&model_dir);
+                    match transducer {
+                        Ok(_) => {
+                            crate::stt::emit_stt_debug(app, "info", "stt",
+                                &format!("[{}] GigaAM Russian using SherpaNemoTransducerSTT from {} (lang={})",
+                                    party_role, model_dir.display(), lang));
+                            let mut p = crate::stt::sherpa_nemo_transducer::SherpaNemoTransducerSTT::new(
+                                model_dir,
+                                STTProviderType::GigaAmRussian,
+                            );
+                            p.set_language(&lang);
+                            p.set_app_handle(app.clone());
+                            Ok(Some(Box::new(p)))
+                        }
+                        Err(e) => {
+                            crate::stt::emit_stt_debug(app, "error", "stt",
+                                &format!("[{}] GigaAM Russian model discovery failed: {}", party_role, e));
+                            Ok(None)
+                        }
+                    }
+                }
+                Err(e) => {
+                    crate::stt::emit_stt_debug(app, "error", "stt",
+                        &format!("[{}] GigaAM Russian model '{}' not found: {}. Download in Settings.",
                             party_role, model_id, e));
                     Ok(None)
                 }

@@ -81,6 +81,8 @@ pub enum STTProviderType {
     /// NVIDIA Parakeet TDT — CTC/TDT architecture via ONNX Runtime.
     /// #1 on Open ASR Leaderboard (~6% WER), native streaming.
     ParakeetTdt,
+    /// GigaAM v2 Russian — local NeMo RNNT model optimized for Russian.
+    GigaAmRussian,
 }
 
 impl STTProviderType {
@@ -96,6 +98,7 @@ impl STTProviderType {
             STTProviderType::SherpaOnnx => "sherpa_onnx",
             STTProviderType::OrtStreaming => "ort_streaming",
             STTProviderType::ParakeetTdt => "parakeet_tdt",
+            STTProviderType::GigaAmRussian => "gigaam_russian",
         }
     }
 
@@ -111,6 +114,7 @@ impl STTProviderType {
             "sherpa_onnx" => Some(STTProviderType::SherpaOnnx),
             "ort_streaming" => Some(STTProviderType::OrtStreaming),
             "parakeet_tdt" => Some(STTProviderType::ParakeetTdt),
+            "gigaam_russian" => Some(STTProviderType::GigaAmRussian),
             _ => None,
         }
     }
@@ -339,6 +343,17 @@ pub fn list_available_providers() -> Vec<STTProviderInfo> {
             is_local: true,
             supported_languages: vec![
                 "en".to_string(),
+                "ru".to_string(),
+            ],
+        },
+        STTProviderInfo {
+            provider_type: "gigaam_russian".to_string(),
+            name: "GigaAM v2 Russian (Local)".to_string(),
+            requires_api_key: false,
+            is_local: true,
+            supported_languages: vec![
+                "ru".to_string(),
+                "ru-RU".to_string(),
             ],
         },
     ]

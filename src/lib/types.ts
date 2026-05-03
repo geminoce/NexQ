@@ -317,11 +317,12 @@ export type STTProviderType =
   | "sherpa_onnx"
   | "ort_streaming"
   | "windows_native"
-  | "parakeet_tdt";
+  | "parakeet_tdt"
+  | "gigaam_russian";
 
 // == LOCAL STT ENGINE TYPES ==
 
-export type LocalSTTEngine = "whisper_cpp" | "sherpa_onnx" | "ort_streaming" | "parakeet_tdt" | "moonshine";
+export type LocalSTTEngine = "whisper_cpp" | "sherpa_onnx" | "ort_streaming" | "parakeet_tdt" | "gigaam_russian" | "moonshine";
 
 export interface LocalSTTModelInfo {
   id: string;

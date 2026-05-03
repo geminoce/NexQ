@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { load, Store } from "@tauri-apps/plugin-store";
 import type {
   RagConfig,
   RagIndexStatus,
@@ -19,6 +20,41 @@ import {
 } from "../lib/ipc";
 import { useConfigStore } from "./configStore";
 import { showToast } from "./toastStore";
+
+const STORE_FILE = "config.json";
+const RAG_CONFIG_KEY = "ragConfig";
+
+let storeInstance: Store | null = null;
+
+async function getStore(): Promise<Store> {
+  if (!storeInstance) {
+    storeInstance = await load(STORE_FILE, { autoSave: true, defaults: {} });
+  }
+  return storeInstance;
+}
+
+async function loadPersistedRagConfig(): Promise<RagConfig | null> {
+  try {
+    const store = await getStore();
+    return (await store.get<RagConfig>(RAG_CONFIG_KEY)) ?? null;
+  } catch (e) {
+    console.warn("[ragStore] Failed to load persisted RAG config:", e);
+    return null;
+  }
+}
+
+async function persistRagConfig(config: RagConfig): Promise<void> {
+  try {
+    const store = await getStore();
+    await store.set(RAG_CONFIG_KEY, config);
+  } catch (e) {
+    console.warn("[ragStore] Failed to persist RAG config:", e);
+  }
+}
+
+function sameRagConfig(a: RagConfig, b: RagConfig): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
 
 interface IndexProgress {
   status: string;
@@ -101,13 +137,20 @@ export const useRagStore = create<RagState>((set) => ({
 
   loadRagConfig: async () => {
     try {
-      const config = await getRagConfig();
+      const backendConfig = await getRagConfig();
+      const persistedConfig = await loadPersistedRagConfig();
+      const config = persistedConfig ? { ...persistedConfig } : backendConfig;
       // Sync enabled flag with persisted contextStrategy
       const strategy = useConfigStore.getState().contextStrategy;
       const shouldBeEnabled = strategy === "local_rag";
       if (config.enabled !== shouldBeEnabled) {
         config.enabled = shouldBeEnabled;
+      }
+      if (!sameRagConfig(config, backendConfig)) {
         await updateRagConfig(config);
+      }
+      if (!persistedConfig || !sameRagConfig(config, persistedConfig)) {
+        await persistRagConfig(config);
       }
       set({ ragConfig: config, error: null });
     } catch (e) {
@@ -120,6 +163,7 @@ export const useRagStore = create<RagState>((set) => ({
     try {
       set({ ragConfig: config, error: null });
       await updateRagConfig(config);
+      await persistRagConfig(config);
     } catch (e) {
       console.error("[ragStore] Failed to save RAG config:", e);
       set({ error: e instanceof Error ? e.message : String(e) });
@@ -140,6 +184,7 @@ export const useRagStore = create<RagState>((set) => ({
         }
       }
       await updateRagConfig(config);
+      await persistRagConfig(config);
     } catch (e) {
       console.error("[ragStore] Failed to save RAG config:", e);
       set({ error: e instanceof Error ? e.message : String(e) });

@@ -38,6 +38,24 @@ const DEFAULT_GROQ_CONFIG: GroqConfig = {
   segment_duration_secs: 5.0,
 };
 
+const DEFAULT_MODEL_PER_ENGINE: Record<string, string> = {
+  sherpa_onnx: "streaming-zipformer-en-20M",
+  ort_streaming: "zipformer-en-20M",
+  parakeet_tdt: "parakeet-tdt-0.6b-v3-int8",
+  gigaam_russian: "giga-am-v2-russian-2025-04-19",
+};
+
+const LIVE_LOCAL_STT_PROVIDERS = [
+  "sherpa_onnx",
+  "ort_streaming",
+  "parakeet_tdt",
+  "gigaam_russian",
+] as const;
+
+function isLiveLocalSTTProvider(provider: string): provider is typeof LIVE_LOCAL_STT_PROVIDERS[number] {
+  return (LIVE_LOCAL_STT_PROVIDERS as readonly string[]).includes(provider);
+}
+
 const STORE_FILE = "config.json";
 
 const DEFAULT_HOTKEYS: HotkeyConfig = {
@@ -305,6 +323,24 @@ export const useConfigStore = create<ConfigState>((set) => ({
   setSTTProvider: (provider) => {
     set({ sttProvider: provider });
     persistValue("sttProvider", provider);
+
+    const state = useConfigStore.getState();
+    if (state.meetingAudioConfig && isLiveLocalSTTProvider(provider)) {
+      const modelId =
+        state.activeModelPerEngine[provider] ??
+        DEFAULT_MODEL_PER_ENGINE[provider];
+      const cfg: MeetingAudioConfig = {
+        ...state.meetingAudioConfig,
+        them: {
+          ...state.meetingAudioConfig.them,
+          stt_provider: provider,
+          local_model_id: modelId,
+        },
+        preset_name: null,
+      };
+      set({ meetingAudioConfig: cfg });
+      persistValue("meetingAudioConfig", cfg);
+    }
   },
   setSTTLanguage: (language) => {
     set({ sttLanguage: language });
@@ -405,7 +441,10 @@ export const useConfigStore = create<ConfigState>((set) => ({
         `Model activated: ${engineId} → ${modelId ?? "none"}`
       );
     });
-    // Also update local_model_id on any party using this engine
+    // Also update local_model_id on any party using this engine.
+    // If the global STT provider is this local engine but Meeting Audio still
+    // points elsewhere, sync the primary live party ("Them") so STT Settings
+    // and live meeting startup do not drift apart.
     if (state.meetingAudioConfig && modelId) {
       const cfg = { ...state.meetingAudioConfig };
       let changed = false;
@@ -415,6 +454,15 @@ export const useConfigStore = create<ConfigState>((set) => ({
       }
       if (cfg.them.stt_provider === engineId) {
         cfg.them = { ...cfg.them, local_model_id: modelId };
+        changed = true;
+      }
+      if (!changed && state.sttProvider === engineId && isLiveLocalSTTProvider(engineId)) {
+        cfg.them = {
+          ...cfg.them,
+          stt_provider: engineId,
+          local_model_id: modelId,
+        };
+        cfg.preset_name = null;
         changed = true;
       }
       if (changed) {
@@ -807,12 +855,8 @@ export const useConfigStore = create<ConfigState>((set) => ({
       // Post-load: ensure local providers have a local_model_id so footer/backend use the right model
       if (resolvedMeetingConfig) {
         const amp = activeModelPerEngine ?? {};
-        const defaultModels: Record<string, string> = {
-          sherpa_onnx: "streaming-zipformer-en-20M",
-          ort_streaming: "zipformer-en-20M",
-          parakeet_tdt: "parakeet-tdt-0.6b-v3-int8",
-        };
-        const localProviders = ["sherpa_onnx", "ort_streaming", "parakeet_tdt", "whisper_cpp"];
+        const defaultModels = DEFAULT_MODEL_PER_ENGINE;
+        const localProviders = ["sherpa_onnx", "ort_streaming", "parakeet_tdt", "gigaam_russian", "whisper_cpp"];
         let needsPersist = false;
         for (const party of ["you", "them"] as const) {
           const p = resolvedMeetingConfig[party];

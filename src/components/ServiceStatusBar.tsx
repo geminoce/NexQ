@@ -38,6 +38,7 @@ const STT_LABELS: Record<string, string> = {
   sherpa_onnx: "Sherpa-ONNX",
   ort_streaming: "ORT Streaming",
   parakeet_tdt: "Parakeet TDT",
+  gigaam_russian: "GigaAM Russian",
   windows_native: "Windows Speech",
 };
 
@@ -57,6 +58,7 @@ const STT_PROVIDER_OPTIONS: {
   { value: "sherpa_onnx", label: "Sherpa-ONNX", IconComponent: HardDrive, requiresKey: false, isCloud: false, requiresDownload: "sherpa_onnx" },
   { value: "ort_streaming", label: "ORT Streaming", IconComponent: Zap, requiresKey: false, isCloud: false, requiresDownload: "ort_streaming" },
   { value: "parakeet_tdt", label: "Parakeet TDT", IconComponent: Cpu, requiresKey: false, isCloud: false, requiresDownload: "parakeet_tdt" },
+  { value: "gigaam_russian", label: "GigaAM Russian", IconComponent: Cpu, requiresKey: false, isCloud: false, requiresDownload: "gigaam_russian" },
   { value: "deepgram", label: "Deepgram", IconComponent: Cloud, requiresKey: true, isCloud: true },
   { value: "whisper_api", label: "Whisper API", IconComponent: Cloud, requiresKey: true, isCloud: true },
   { value: "azure_speech", label: "Azure Speech", IconComponent: Cloud, requiresKey: true, isCloud: true },
@@ -70,7 +72,7 @@ const EXCLUSIVE_PROVIDERS: STTProviderType[] = ["web_speech", "windows_native"];
 
 const EXCLUSIVE_FALLBACK_ORDER: STTProviderType[] = [
   "deepgram", "groq_whisper", "whisper_api", "azure_speech",
-  "sherpa_onnx", "ort_streaming", "parakeet_tdt",
+  "sherpa_onnx", "ort_streaming", "parakeet_tdt", "gigaam_russian",
 ];
 
 function isExclusiveProvider(provider: string): boolean {
@@ -114,7 +116,7 @@ function formatSttModel(modelId: string): string {
 
 function formatSttLabel(provider: string, localModelId?: string): { provider: string; model: string } {
   const providerLabel = STT_LABELS[provider] || provider;
-  const localProviders = ["whisper_cpp", "sherpa_onnx", "ort_streaming", "parakeet_tdt"];
+  const localProviders = ["whisper_cpp", "sherpa_onnx", "ort_streaming", "parakeet_tdt", "gigaam_russian"];
   if (localProviders.includes(provider) && localModelId) {
     return { provider: providerLabel, model: formatSttModel(localModelId) };
   }
@@ -169,6 +171,7 @@ export function ServiceStatusBar({ compact = false }: { compact?: boolean }) {
     sherpa_onnx: "streaming-zipformer-en-20M",
     ort_streaming: "zipformer-en-20M",
     parakeet_tdt: "parakeet-tdt-0.6b-v3-int8",
+    gigaam_russian: "giga-am-v2-russian-2025-04-19",
   };
 
   const youSttProvider = meetingAudioConfig?.you.stt_provider ?? "web_speech";
@@ -192,7 +195,12 @@ export function ServiceStatusBar({ compact = false }: { compact?: boolean }) {
   const handleProviderChange = useCallback((party: "you" | "them", provider: STTProviderType) => {
     if (!meetingAudioConfig) return;
     const updates: Partial<typeof meetingAudioConfig.you> = { stt_provider: provider };
-    if (provider === "sherpa_onnx" || provider === "ort_streaming" || provider === "parakeet_tdt") {
+    if (
+      provider === "sherpa_onnx"
+      || provider === "ort_streaming"
+      || provider === "parakeet_tdt"
+      || provider === "gigaam_russian"
+    ) {
       const activeModelPerEngine = useConfigStore.getState().activeModelPerEngine;
       const engineModel = activeModelPerEngine[provider]
         ?? DEFAULT_MODEL_PER_ENGINE[provider]

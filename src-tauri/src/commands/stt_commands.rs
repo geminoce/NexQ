@@ -61,7 +61,10 @@ pub async fn set_stt_provider(app: AppHandle, provider: String) -> Result<(), St
                 STTProviderType::WebSpeech => {
                     // Frontend-only — no API key needed
                 }
-                STTProviderType::SherpaOnnx | STTProviderType::OrtStreaming | STTProviderType::ParakeetTdt => {
+                STTProviderType::SherpaOnnx
+                | STTProviderType::OrtStreaming
+                | STTProviderType::ParakeetTdt
+                | STTProviderType::GigaAmRussian => {
                     // Local providers — no API key needed
                 }
             }
@@ -151,7 +154,10 @@ pub async fn test_stt_connection(app: AppHandle, provider: String) -> Result<boo
                 }
                 STTProviderType::WindowsNative | STTProviderType::WhisperCpp => {}
                 STTProviderType::WebSpeech => {}
-                STTProviderType::SherpaOnnx | STTProviderType::OrtStreaming | STTProviderType::ParakeetTdt => {
+                STTProviderType::SherpaOnnx
+                | STTProviderType::OrtStreaming
+                | STTProviderType::ParakeetTdt
+                | STTProviderType::GigaAmRussian => {
                     // Local providers — no API key needed
                 }
             }

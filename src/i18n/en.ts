@@ -651,6 +651,7 @@ export const en = {
         ortStreaming: "Local, GPU-accelerated",
         whisperCpp: "Batch transcription of recorded meetings",
         parakeetTdt: "Best accuracy, offline",
+        gigaamRussian: "Russian offline ASR",
         deepgram: "Real-time streaming, best quality",
         whisperApi: "OpenAI Whisper model",
         azureSpeech: "Azure Cognitive Services",

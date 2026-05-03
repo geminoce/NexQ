@@ -54,6 +54,7 @@ bzip2 = "0.5"
 ogg = "0.9"
 libopus_sys = { version = "0.3", features = ["static", "bundled"] }
 image = { version = "0.25", default-features = false, features = ["png"] }
+sherpa-onnx = { version = "1.13.0", default-features = false, features = ["shared"] }
 
 # Windows-specific
 [target.'cfg(windows)'.dependencies]

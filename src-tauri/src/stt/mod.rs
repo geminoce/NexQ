@@ -12,6 +12,7 @@ pub mod whisper_api;
 // STT Engine Overhaul: New streaming providers
 pub mod sherpa_sidecar;
 pub mod sherpa_offline;
+pub mod sherpa_nemo_transducer;
 pub mod ort_streaming;
 // Pause-based segment merging for all STT providers
 pub mod segment_accumulator;
@@ -222,7 +223,10 @@ impl STTRouter {
                 p.set_config(self.groq_config.clone());
                 Box::new(p)
             }
-            STTProviderType::SherpaOnnx | STTProviderType::OrtStreaming | STTProviderType::ParakeetTdt => {
+            STTProviderType::SherpaOnnx
+            | STTProviderType::OrtStreaming
+            | STTProviderType::ParakeetTdt
+            | STTProviderType::GigaAmRussian => {
                 // These are created per-party in start_capture_per_party, not via STTRouter.
                 self.active_provider = None;
                 log::info!("STTRouter: {:?} selected (provider created per-party)", provider_type);
@@ -532,7 +536,10 @@ impl STTRouter {
                     .await
                     .map_err(|e| format!("Connection test failed: {}", e))
             }
-            STTProviderType::SherpaOnnx | STTProviderType::OrtStreaming | STTProviderType::ParakeetTdt => {
+            STTProviderType::SherpaOnnx
+            | STTProviderType::OrtStreaming
+            | STTProviderType::ParakeetTdt
+            | STTProviderType::GigaAmRussian => {
                 // Local engines — always "available" if a model is downloaded.
                 // Model availability is checked at capture time in create_stt_provider_for_party.
                 Ok(true)
