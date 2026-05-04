@@ -1,11 +1,10 @@
 // src-tauri/src/commands/translation_commands.rs
-use tauri::{command, AppHandle, Emitter, Listener};
 use crate::state::AppState;
 use crate::translation::{
-    TranslationProviderType, TranslationResult, ConnectionStatus, Language,
-    DetectedLanguage,
+    ConnectionStatus, DetectedLanguage, Language, TranslationProviderType, TranslationResult,
 };
 use tauri::Manager;
+use tauri::{command, AppHandle, Emitter, Listener};
 
 #[command]
 pub async fn set_translation_provider(
@@ -18,9 +17,12 @@ pub async fn set_translation_provider(
     // Load credentials from CredentialManager into the router
     if let Some(ref cred_arc) = state.credentials {
         if let Ok(cred) = cred_arc.lock() {
-            let trans_arc = state.translation.as_ref()
+            let trans_arc = state
+                .translation
+                .as_ref()
                 .ok_or("Translation router not initialized")?;
-            let mut router = trans_arc.lock()
+            let mut router = trans_arc
+                .lock()
                 .map_err(|_| "Translation lock poisoned".to_string())?;
 
             if let Ok(Some(key)) = cred.get_key("translation_microsoft") {
@@ -44,12 +46,16 @@ pub async fn set_translation_provider(
         other => return Err(format!("Unknown translation provider: {}", other)),
     };
 
-    let trans_arc = state.translation.as_ref()
+    let trans_arc = state
+        .translation
+        .as_ref()
         .ok_or("Translation router not initialized")?;
-    let mut router = trans_arc.lock()
+    let mut router = trans_arc
+        .lock()
         .map_err(|_| "Translation lock poisoned".to_string())?;
 
-    router.set_provider(provider_type)
+    router
+        .set_provider(provider_type)
         .map_err(|e| e.to_string())
 }
 
@@ -62,14 +68,21 @@ pub async fn set_translation_languages(
     source_lang: Option<String>,
 ) -> Result<(), String> {
     let state = app.state::<AppState>();
-    let trans_arc = state.translation.as_ref()
+    let trans_arc = state
+        .translation
+        .as_ref()
         .ok_or("Translation router not initialized")?;
-    let mut router = trans_arc.lock()
+    let mut router = trans_arc
+        .lock()
         .map_err(|_| "Translation lock poisoned".to_string())?;
 
     router.set_default_target_lang(target_lang.clone());
     router.set_default_source_lang(source_lang.clone());
-    log::info!("Translation languages updated: target={}, source={:?}", target_lang, source_lang);
+    log::info!(
+        "Translation languages updated: target={}, source={:?}",
+        target_lang,
+        source_lang
+    );
     Ok(())
 }
 
@@ -81,7 +94,9 @@ pub async fn translate_text(
     source_lang: Option<String>,
 ) -> Result<TranslationResult, String> {
     let state = app.state::<AppState>();
-    let trans_arc = state.translation.as_ref()
+    let trans_arc = state
+        .translation
+        .as_ref()
         .ok_or("Translation router not initialized")?;
 
     let target = target_lang;
@@ -91,7 +106,11 @@ pub async fn translate_text(
     let (cached_result, provider_arc, provider_name) = {
         let router = trans_arc.lock().map_err(|_| "Lock poisoned")?;
         if let Some(cached) = router.cache().get(&text, &target) {
-            (Some(cached.to_string()), None, router.active_provider_name())
+            (
+                Some(cached.to_string()),
+                None,
+                router.active_provider_name(),
+            )
         } else {
             let p = router.get_provider().map_err(|e| e.to_string())?;
             let name = p.provider_name().to_string();
@@ -141,10 +160,13 @@ pub async fn translate_text(
                             let mut router = trans_arc.lock().map_err(|_| "Lock poisoned")?;
                             let count = router.record_failure();
                             if count >= 3 {
-                                let _ = app.emit("translation_error", serde_json::json!({
-                                    "error": "Translation paused — connection issue",
-                                    "consecutive_failures": count,
-                                }));
+                                let _ = app.emit(
+                                    "translation_error",
+                                    serde_json::json!({
+                                        "error": "Translation paused — connection issue",
+                                        "consecutive_failures": count,
+                                    }),
+                                );
                             }
                             return Err(e.to_string());
                         }
@@ -163,7 +185,9 @@ pub async fn translate_text(
     // Cache the result
     {
         let mut router = trans_arc.lock().map_err(|_| "Lock poisoned")?;
-        router.cache_mut().insert(&text, &target, translated.clone());
+        router
+            .cache_mut()
+            .insert(&text, &target, translated.clone());
     }
 
     Ok(TranslationResult {
@@ -189,7 +213,9 @@ pub async fn translate_segments(
     let target = target_lang.ok_or("target_lang is required")?;
     let source = source_lang.as_deref();
 
-    let trans_arc = state.translation.as_ref()
+    let trans_arc = state
+        .translation
+        .as_ref()
         .ok_or("Translation router not initialized")?;
 
     // Clone provider Arc out of lock scope — safe to .await
@@ -201,7 +227,9 @@ pub async fn translate_segments(
     };
 
     for (seg_id, text) in segment_ids.iter().zip(texts.iter()) {
-        let translated = provider_arc.translate(text, source, &target).await
+        let translated = provider_arc
+            .translate(text, source, &target)
+            .await
             .map_err(|e| e.to_string())?;
 
         // Save to DB
@@ -245,46 +273,58 @@ pub async fn translate_batch(
     let target = target_lang.ok_or("target_lang is required")?;
 
     // Count total segments and load only untranslated ones (skip already-translated to save API calls)
-    let (total, already_done, untranslated): (usize, usize, Vec<(String, String)>) = {
-        let db_arc = state.database.as_ref().ok_or("DB not initialized")?;
-        let db = db_arc.lock().map_err(|_| "DB lock poisoned")?;
+    let (total, already_done, untranslated): (usize, usize, Vec<(String, String)>) =
+        {
+            let db_arc = state.database.as_ref().ok_or("DB not initialized")?;
+            let db = db_arc.lock().map_err(|_| "DB lock poisoned")?;
 
-        let total: usize = db.connection().query_row(
+            let total: usize = db.connection().query_row(
             "SELECT COUNT(*) FROM transcript_segments WHERE meeting_id = ?1 AND is_final = 1",
             [&meeting_id],
             |row| row.get(0),
         ).map_err(|e| e.to_string())?;
 
-        let already_done = crate::db::translation::count_meeting_translations(
-            db.connection(), &meeting_id, &target,
-        ).map_err(|e| e.to_string())?;
+            let already_done = crate::db::translation::count_meeting_translations(
+                db.connection(),
+                &meeting_id,
+                &target,
+            )
+            .map_err(|e| e.to_string())?;
 
-        let mut stmt = db.connection().prepare(
-            "SELECT ts.id, ts.text FROM transcript_segments ts
+            let mut stmt = db
+                .connection()
+                .prepare(
+                    "SELECT ts.id, ts.text FROM transcript_segments ts
              WHERE ts.meeting_id = ?1 AND ts.is_final = 1
                AND ts.id NOT IN (
                  SELECT segment_id FROM transcript_translations
                  WHERE meeting_id = ?1 AND target_lang = ?2
                )
-             ORDER BY ts.timestamp_ms"
-        ).map_err(|e| e.to_string())?;
-        let rows = stmt.query_map([&meeting_id, &target], |row| {
-            Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
-        }).map_err(|e| e.to_string())?
-        .collect::<Result<Vec<_>, _>>()
-        .map_err(|e| e.to_string())?;
+             ORDER BY ts.timestamp_ms",
+                )
+                .map_err(|e| e.to_string())?;
+            let rows = stmt
+                .query_map([&meeting_id, &target], |row| {
+                    Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+                })
+                .map_err(|e| e.to_string())?
+                .collect::<Result<Vec<_>, _>>()
+                .map_err(|e| e.to_string())?;
 
-        (total, already_done, rows)
-    };
+            (total, already_done, rows)
+        };
 
     // Nothing to translate — emit completed and return
     if untranslated.is_empty() {
-        let _ = app.emit("batch_translation_progress", serde_json::json!({
-            "meetingId": meeting_id,
-            "completed": total,
-            "total": total,
-            "targetLang": target,
-        }));
+        let _ = app.emit(
+            "batch_translation_progress",
+            serde_json::json!({
+                "meetingId": meeting_id,
+                "completed": total,
+                "total": total,
+                "targetLang": target,
+            }),
+        );
         return Ok(serde_json::json!({
             "total": total,
             "alreadyDone": already_done,
@@ -294,12 +334,15 @@ pub async fn translate_batch(
 
     // Emit initial progress so UI shows the starting point (e.g. 10/24)
     if already_done > 0 {
-        let _ = app.emit("batch_translation_progress", serde_json::json!({
-            "meetingId": meeting_id,
-            "completed": already_done,
-            "total": total,
-            "targetLang": target,
-        }));
+        let _ = app.emit(
+            "batch_translation_progress",
+            serde_json::json!({
+                "meetingId": meeting_id,
+                "completed": already_done,
+                "total": total,
+                "targetLang": target,
+            }),
+        );
     }
 
     // Translate only untranslated segments in chunks of 10
@@ -309,14 +352,18 @@ pub async fn translate_batch(
 
         // Clone Arc out of lock before .await
         let (provider_arc, provider_name) = {
-            let trans_arc = state.translation.as_ref()
+            let trans_arc = state
+                .translation
+                .as_ref()
                 .ok_or("Translation router not initialized")?;
             let router = trans_arc.lock().map_err(|_| "Lock poisoned")?;
             let p = router.get_provider().map_err(|e| e.to_string())?;
             (p, router.active_provider_name())
         };
 
-        let translations = provider_arc.translate_batch(&texts, None, &target).await
+        let translations = provider_arc
+            .translate_batch(&texts, None, &target)
+            .await
             .map_err(|e| e.to_string())?;
 
         // Save each translation
@@ -324,8 +371,14 @@ pub async fn translate_batch(
             if let Some(ref db_arc) = state.database {
                 if let Ok(db) = db_arc.lock() {
                     let _ = crate::db::translation::save_translation(
-                        db.connection(), seg_id, &meeting_id,
-                        "auto", &target, orig_text, translated, &provider_name,
+                        db.connection(),
+                        seg_id,
+                        &meeting_id,
+                        "auto",
+                        &target,
+                        orig_text,
+                        translated,
+                        &provider_name,
                     );
                 }
             }
@@ -343,12 +396,15 @@ pub async fn translate_batch(
 
         // Emit progress
         completed += chunk.len();
-        let _ = app.emit("batch_translation_progress", serde_json::json!({
-            "meetingId": meeting_id,
-            "completed": completed.min(total),
-            "total": total,
-            "targetLang": target,
-        }));
+        let _ = app.emit(
+            "batch_translation_progress",
+            serde_json::json!({
+                "meetingId": meeting_id,
+                "completed": completed.min(total),
+                "total": total,
+                "targetLang": target,
+            }),
+        );
     }
 
     let newly_translated = completed - already_done;
@@ -360,19 +416,21 @@ pub async fn translate_batch(
 }
 
 #[command]
-pub async fn detect_language(
-    app: AppHandle,
-    text: String,
-) -> Result<DetectedLanguage, String> {
+pub async fn detect_language(app: AppHandle, text: String) -> Result<DetectedLanguage, String> {
     let state = app.state::<AppState>();
-    let trans_arc = state.translation.as_ref()
+    let trans_arc = state
+        .translation
+        .as_ref()
         .ok_or("Translation router not initialized")?;
     let provider_arc = {
         let router = trans_arc.lock().map_err(|_| "Lock poisoned")?;
         router.get_provider().map_err(|e| e.to_string())?
         // lock dropped here
     };
-    provider_arc.detect_language(&text).await.map_err(|e| e.to_string())
+    provider_arc
+        .detect_language(&text)
+        .await
+        .map_err(|e| e.to_string())
 }
 
 #[command]
@@ -381,29 +439,37 @@ pub async fn test_translation_connection(
     _provider: String,
 ) -> Result<ConnectionStatus, String> {
     let state = app.state::<AppState>();
-    let trans_arc = state.translation.as_ref()
+    let trans_arc = state
+        .translation
+        .as_ref()
         .ok_or("Translation router not initialized")?;
     let provider_arc = {
         let router = trans_arc.lock().map_err(|_| "Lock poisoned")?;
         router.get_provider().map_err(|e| e.to_string())?
         // lock dropped here
     };
-    provider_arc.test_connection().await.map_err(|e| e.to_string())
+    provider_arc
+        .test_connection()
+        .await
+        .map_err(|e| e.to_string())
 }
 
 #[command]
-pub async fn get_translation_languages(
-    app: AppHandle,
-) -> Result<Vec<Language>, String> {
+pub async fn get_translation_languages(app: AppHandle) -> Result<Vec<Language>, String> {
     let state = app.state::<AppState>();
-    let trans_arc = state.translation.as_ref()
+    let trans_arc = state
+        .translation
+        .as_ref()
         .ok_or("Translation router not initialized")?;
     let provider_arc = {
         let router = trans_arc.lock().map_err(|_| "Lock poisoned")?;
         router.get_provider().map_err(|e| e.to_string())?
         // lock dropped here
     };
-    provider_arc.supported_languages().await.map_err(|e| e.to_string())
+    provider_arc
+        .supported_languages()
+        .await
+        .map_err(|e| e.to_string())
 }
 
 #[command]
@@ -417,17 +483,23 @@ pub async fn get_meeting_translations(
     let db = db_arc.lock().map_err(|_| "DB lock poisoned")?;
 
     let rows = crate::db::translation::get_meeting_translations(
-        db.connection(), &meeting_id, &target_lang
-    ).map_err(|e| e.to_string())?;
+        db.connection(),
+        &meeting_id,
+        &target_lang,
+    )
+    .map_err(|e| e.to_string())?;
 
-    Ok(rows.into_iter().map(|r| TranslationResult {
-        segment_id: Some(r.segment_id),
-        original_text: r.original_text,
-        translated_text: r.translated_text,
-        source_lang: r.source_lang,
-        target_lang: r.target_lang,
-        provider: r.provider,
-    }).collect())
+    Ok(rows
+        .into_iter()
+        .map(|r| TranslationResult {
+            segment_id: Some(r.segment_id),
+            original_text: r.original_text,
+            translated_text: r.translated_text,
+            source_lang: r.source_lang,
+            target_lang: r.target_lang,
+            provider: r.provider,
+        })
+        .collect())
 }
 
 #[command]
@@ -439,18 +511,20 @@ pub async fn get_all_meeting_translations(
     let db_arc = state.database.as_ref().ok_or("DB not initialized")?;
     let db = db_arc.lock().map_err(|_| "DB lock poisoned")?;
 
-    let rows = crate::db::translation::get_all_meeting_translations(
-        db.connection(), &meeting_id
-    ).map_err(|e| e.to_string())?;
+    let rows = crate::db::translation::get_all_meeting_translations(db.connection(), &meeting_id)
+        .map_err(|e| e.to_string())?;
 
-    Ok(rows.into_iter().map(|r| TranslationResult {
-        segment_id: Some(r.segment_id),
-        original_text: r.original_text,
-        translated_text: r.translated_text,
-        source_lang: r.source_lang,
-        target_lang: r.target_lang,
-        provider: r.provider,
-    }).collect())
+    Ok(rows
+        .into_iter()
+        .map(|r| TranslationResult {
+            segment_id: Some(r.segment_id),
+            original_text: r.original_text,
+            translated_text: r.translated_text,
+            source_lang: r.source_lang,
+            target_lang: r.target_lang,
+            provider: r.provider,
+        })
+        .collect())
 }
 
 /// Helper: translate text using the configured LLM provider
@@ -483,7 +557,9 @@ async fn translate_via_llm(
 
     let provider_arc = {
         let router = llm_arc.lock().map_err(|_| "LLM lock poisoned")?;
-        router.get_provider().map_err(|e| format!("LLM not configured: {}", e))?
+        router
+            .get_provider()
+            .map_err(|e| format!("LLM not configured: {}", e))?
     };
 
     let model = {
@@ -497,7 +573,9 @@ async fn translate_via_llm(
 
     // Listen for stream tokens and collect them
     let listener_id = app.listen("llm_stream_token", move |event| {
-        if let Ok(payload) = serde_json::from_str::<crate::llm::provider::StreamTokenPayload>(event.payload()) {
+        if let Ok(payload) =
+            serde_json::from_str::<crate::llm::provider::StreamTokenPayload>(event.payload())
+        {
             if let Ok(mut buf) = buffer_clone.lock() {
                 buf.push_str(&payload.token);
             }
@@ -506,9 +584,9 @@ async fn translate_via_llm(
 
     let params = crate::llm::provider::GenerationParams::default();
     let provider = provider_arc.lock().await;
-    let result = provider.stream_completion(
-        messages, &model, params, app.clone()
-    ).await;
+    let result = provider
+        .stream_completion(messages, &model, params, app.clone())
+        .await;
 
     // Stop listening
     app.unlisten(listener_id);
@@ -517,7 +595,8 @@ async fn translate_via_llm(
     result.map_err(|e| format!("LLM translation failed: {}", e))?;
 
     // Extract collected text
-    let collected = buffer.lock()
+    let collected = buffer
+        .lock()
         .map_err(|_| "Buffer lock poisoned".to_string())?
         .clone();
 
@@ -540,10 +619,13 @@ pub async fn export_translated_transcript(
     let db = db_arc.lock().map_err(|_| "DB lock poisoned")?;
 
     // Load segments
-    let mut seg_stmt = db.connection().prepare(
-        "SELECT id, text, speaker, timestamp_ms FROM transcript_segments
-         WHERE meeting_id = ?1 AND is_final = 1 ORDER BY timestamp_ms"
-    ).map_err(|e| e.to_string())?;
+    let mut seg_stmt = db
+        .connection()
+        .prepare(
+            "SELECT id, text, speaker, timestamp_ms FROM transcript_segments
+         WHERE meeting_id = ?1 AND is_final = 1 ORDER BY timestamp_ms",
+        )
+        .map_err(|e| e.to_string())?;
 
     let segments: Vec<(String, String, String, i64)> = seg_stmt
         .query_map([&meeting_id], |row| {
@@ -560,8 +642,11 @@ pub async fn export_translated_transcript(
 
     // Load translations
     let translations = crate::db::translation::get_meeting_translations(
-        db.connection(), &meeting_id, &target_lang
-    ).map_err(|e| e.to_string())?;
+        db.connection(),
+        &meeting_id,
+        &target_lang,
+    )
+    .map_err(|e| e.to_string())?;
 
     let trans_map: std::collections::HashMap<String, String> = translations
         .into_iter()
@@ -573,13 +658,19 @@ pub async fn export_translated_transcript(
     match format.as_str() {
         "translated_txt" => {
             for (seg_id, _orig, speaker, _ts) in &segments {
-                let translated = trans_map.get(seg_id).cloned().unwrap_or_else(|| "[not translated]".into());
+                let translated = trans_map
+                    .get(seg_id)
+                    .cloned()
+                    .unwrap_or_else(|| "[not translated]".into());
                 output.push_str(&format!("{}: {}\n", speaker, translated));
             }
         }
         "bilingual_txt" => {
             for (seg_id, orig, speaker, _ts) in &segments {
-                let translated = trans_map.get(seg_id).cloned().unwrap_or_else(|| "[not translated]".into());
+                let translated = trans_map
+                    .get(seg_id)
+                    .cloned()
+                    .unwrap_or_else(|| "[not translated]".into());
                 output.push_str(&format!("{}: {}\n", speaker, orig));
                 output.push_str(&format!("  → {}\n\n", translated));
             }
@@ -589,8 +680,14 @@ pub async fn export_translated_transcript(
             for (seg_id, orig, speaker, ts) in &segments {
                 let minutes = ts / 60000;
                 let seconds = (ts % 60000) / 1000;
-                let translated = trans_map.get(seg_id).cloned().unwrap_or_else(|| "[not translated]".into());
-                output.push_str(&format!("**{}** _{:02}:{:02}_\n", speaker, minutes, seconds));
+                let translated = trans_map
+                    .get(seg_id)
+                    .cloned()
+                    .unwrap_or_else(|| "[not translated]".into());
+                output.push_str(&format!(
+                    "**{}** _{:02}:{:02}_\n",
+                    speaker, minutes, seconds
+                ));
                 output.push_str(&format!("> {}\n", orig));
                 output.push_str(&format!("> _{}_\n\n", translated));
             }

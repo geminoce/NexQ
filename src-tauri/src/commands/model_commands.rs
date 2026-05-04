@@ -17,8 +17,7 @@ pub async fn list_local_stt_engines(app: AppHandle) -> Result<String, String> {
         .map_err(|_| "Model manager lock poisoned".to_string())?;
 
     let engines = mgr.list_engines_with_status();
-    serde_json::to_string(&engines)
-        .map_err(|e| format!("Failed to serialize engine list: {}", e))
+    serde_json::to_string(&engines).map_err(|e| format!("Failed to serialize engine list: {}", e))
 }
 
 /// Start downloading a local STT model. Progress emitted via `model_download_progress` events.

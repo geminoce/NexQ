@@ -1,8 +1,8 @@
 use tauri::{command, AppHandle, State};
 
 use crate::db::meetings::{
-    self, MeetingActionItem, MeetingBookmark, MeetingSpeaker, MeetingTopicSection,
-    MeetingUpdate, TranscriptSegment,
+    self, MeetingActionItem, MeetingBookmark, MeetingSpeaker, MeetingTopicSection, MeetingUpdate,
+    TranscriptSegment,
 };
 use crate::state::AppState;
 
@@ -56,12 +56,8 @@ pub async fn start_meeting(
         .lock()
         .map_err(|e| format!("Failed to lock database: {}", e))?;
 
-    let title = title.unwrap_or_else(|| {
-        format!(
-            "Meeting {}",
-            chrono::Local::now().format("%Y-%m-%d %H:%M")
-        )
-    });
+    let title = title
+        .unwrap_or_else(|| format!("Meeting {}", chrono::Local::now().format("%Y-%m-%d %H:%M")));
 
     let meeting = meetings::create_meeting(db.connection(), &title)
         .map_err(|e| format!("Failed to create meeting: {}", e))?;
@@ -194,10 +190,7 @@ pub async fn list_meetings(
 }
 
 #[command]
-pub async fn get_meeting(
-    meeting_id: String,
-    state: State<'_, AppState>,
-) -> Result<String, String> {
+pub async fn get_meeting(meeting_id: String, state: State<'_, AppState>) -> Result<String, String> {
     let db = state
         .database
         .as_ref()
@@ -214,10 +207,7 @@ pub async fn get_meeting(
 }
 
 #[command]
-pub async fn delete_meeting(
-    meeting_id: String,
-    state: State<'_, AppState>,
-) -> Result<(), String> {
+pub async fn delete_meeting(meeting_id: String, state: State<'_, AppState>) -> Result<(), String> {
     let db = state
         .database
         .as_ref()
@@ -232,10 +222,7 @@ pub async fn delete_meeting(
 }
 
 #[command]
-pub async fn search_meetings(
-    query: String,
-    state: State<'_, AppState>,
-) -> Result<String, String> {
+pub async fn search_meetings(query: String, state: State<'_, AppState>) -> Result<String, String> {
     let db = state
         .database
         .as_ref()
@@ -498,10 +485,7 @@ pub async fn update_action_item(
 }
 
 #[command]
-pub async fn delete_action_item(
-    item_id: String,
-    state: State<'_, AppState>,
-) -> Result<(), String> {
+pub async fn delete_action_item(item_id: String, state: State<'_, AppState>) -> Result<(), String> {
     let db = state
         .database
         .as_ref()

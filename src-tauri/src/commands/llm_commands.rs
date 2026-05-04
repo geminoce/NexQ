@@ -1,14 +1,11 @@
 use tauri::{command, State};
 
-use crate::llm::{LLMRouter, ProviderConfig};
 use crate::llm::openrouter_models;
+use crate::llm::{LLMRouter, ProviderConfig};
 use crate::state::AppState;
 
 #[command]
-pub async fn set_llm_provider(
-    provider: String,
-    state: State<'_, AppState>,
-) -> Result<(), String> {
+pub async fn set_llm_provider(provider: String, state: State<'_, AppState>) -> Result<(), String> {
     // Parse the provider config from the JSON string, or create a simple one from the provider name
     let config: ProviderConfig = match serde_json::from_str(&provider) {
         Ok(config) => config,
@@ -43,10 +40,7 @@ pub async fn set_llm_provider(
 }
 
 #[command]
-pub async fn list_models(
-    provider: String,
-    state: State<'_, AppState>,
-) -> Result<String, String> {
+pub async fn list_models(provider: String, state: State<'_, AppState>) -> Result<String, String> {
     let llm = state
         .llm
         .as_ref()
@@ -140,8 +134,7 @@ pub async fn test_llm_connection(
 #[command]
 pub async fn get_llm_providers() -> Result<String, String> {
     let providers = LLMRouter::get_all_providers();
-    serde_json::to_string(&providers)
-        .map_err(|e| format!("Failed to serialize providers: {}", e))
+    serde_json::to_string(&providers).map_err(|e| format!("Failed to serialize providers: {}", e))
 }
 
 #[command]
@@ -178,7 +171,9 @@ pub async fn list_openrouter_models(
             .map_err(|e| format!("Failed to lock credential manager: {}", e))?;
         cred.get_key("openrouter")
             .map_err(|e| format!("Failed to get API key: {}", e))?
-            .ok_or_else(|| "OpenRouter API key not found. Please enter your API key first.".to_string())?
+            .ok_or_else(|| {
+                "OpenRouter API key not found. Please enter your API key first.".to_string()
+            })?
     };
 
     // Fetch from API

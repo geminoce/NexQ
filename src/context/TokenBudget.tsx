@@ -1,5 +1,6 @@
 import { useContextStore } from "../stores/contextStore";
 import { AlertTriangle } from "lucide-react";
+import { t } from "../i18n";
 
 export function TokenBudget() {
   const tokenBudget = useContextStore((s) => s.tokenBudget);
@@ -33,7 +34,7 @@ export function TokenBudget() {
       <div className="mb-2.5 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold text-muted-foreground">
-            Token Budget
+            {t("context.tokenBudget.title")}
           </span>
           {(isWarning || isCritical) && (
             <AlertTriangle
@@ -44,8 +45,11 @@ export function TokenBudget() {
           )}
         </div>
         <span className="text-xs tabular-nums text-muted-foreground">
-          {formatNumber(usedTokens)} / {formatNumber(limit)} tokens used (
-          {usagePercent.toFixed(0)}%)
+          {t("context.tokenBudget.used", {
+            used: formatNumber(usedTokens),
+            limit: formatNumber(limit),
+            percent: usagePercent.toFixed(0),
+          })}
         </span>
       </div>
 
@@ -53,7 +57,7 @@ export function TokenBudget() {
       <div
         className="h-2.5 w-full overflow-hidden rounded-full bg-muted/40"
         role="meter"
-        aria-label="Token budget usage"
+        aria-label={t("context.tokenBudget.aria")}
         aria-valuenow={usedTokens}
         aria-valuemin={0}
         aria-valuemax={limit}
@@ -71,7 +75,7 @@ export function TokenBudget() {
                   backgroundColor: segment.color,
                   minWidth: widthPercent > 0 ? "2px" : "0",
                 }}
-                title={`${segment.label}: ~${formatNumber(segment.tokens)} tokens`}
+                title={`${formatBudgetSegmentLabel(segment.label)}: ~${formatNumber(segment.tokens)} ${t("context.tokenBudget.tokens")}`}
               />
             );
           })}
@@ -91,7 +95,7 @@ export function TokenBudget() {
                 style={{ backgroundColor: segment.color }}
               />
               <span className="text-meta tabular-nums text-muted-foreground">
-                {segment.label}: ~{formatNumber(segment.tokens)}
+                {formatBudgetSegmentLabel(segment.label)}: ~{formatNumber(segment.tokens)}
               </span>
             </div>
           ))}
@@ -99,6 +103,19 @@ export function TokenBudget() {
       )}
     </div>
   );
+}
+
+function formatBudgetSegmentLabel(label: string): string {
+  if (/^Notes \(PDF\)/i.test(label)) {
+    return label.replace(/^Notes \(PDF\)/i, t("context.tokenBudget.labels.notesPdf"));
+  }
+  if (/^Custom Instructions/i.test(label)) {
+    return label.replace(/^Custom Instructions/i, t("context.tokenBudget.labels.customInstructions"));
+  }
+  if (/^System Prompt/i.test(label)) {
+    return label.replace(/^System Prompt/i, t("context.tokenBudget.labels.systemPrompt"));
+  }
+  return label;
 }
 
 function formatNumber(n: number): string {

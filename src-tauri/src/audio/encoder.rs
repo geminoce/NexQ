@@ -31,8 +31,7 @@ const MAX_PACKET_BYTES: usize = 4000;
 /// header packets, and returns the size (bytes) of the output file.
 pub fn encode_wav_to_opus(wav_path: &Path, opus_path: &Path) -> Result<u64, String> {
     // ── 1. Open + validate WAV ────────────────────────────────────────────────
-    let mut reader =
-        WavReader::open(wav_path).map_err(|e| format!("Failed to open WAV: {}", e))?;
+    let mut reader = WavReader::open(wav_path).map_err(|e| format!("Failed to open WAV: {}", e))?;
 
     let spec = reader.spec();
     if spec.channels != CHANNELS {
@@ -81,7 +80,8 @@ pub fn encode_wav_to_opus(wav_path: &Path, opus_path: &Path) -> Result<u64, Stri
     let _guard = EncoderGuard(encoder);
 
     // Set bitrate to 32 kbps
-    let rc = unsafe { opus_encoder_ctl(encoder, OPUS_SET_BITRATE_REQUEST as i32, TARGET_BITRATE_BPS) };
+    let rc =
+        unsafe { opus_encoder_ctl(encoder, OPUS_SET_BITRATE_REQUEST as i32, TARGET_BITRATE_BPS) };
     if rc != OPUS_OK as i32 {
         return Err(format!("Failed to set Opus bitrate (error {})", rc));
     }
@@ -179,8 +179,8 @@ pub fn encode_wav_to_opus(wav_path: &Path, opus_path: &Path) -> Result<u64, Stri
         .map_err(|e| format!("Failed to flush output: {}", e))?;
 
     // ── 7. Return output file size ────────────────────────────────────────────
-    let metadata = std::fs::metadata(opus_path)
-        .map_err(|e| format!("Failed to stat output file: {}", e))?;
+    let metadata =
+        std::fs::metadata(opus_path).map_err(|e| format!("Failed to stat output file: {}", e))?;
 
     log::info!(
         "Encoded {} samples ({:.1}s) → {} bytes OGG/Opus: {}",

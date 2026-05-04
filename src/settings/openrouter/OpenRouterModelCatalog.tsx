@@ -6,6 +6,7 @@ import { ModelCard } from "./ModelCard";
 import { FilterBar, type SortOption } from "./FilterBar";
 import { RecentlyUsedSection } from "./RecentlyUsedSection";
 import { FavoritesSection } from "./FavoritesSection";
+import { t } from "../../i18n";
 
 interface OpenRouterModelCatalogProps {
   models: OpenRouterModel[];
@@ -103,10 +104,10 @@ export function OpenRouterModelCatalog({ models }: OpenRouterModelCatalogProps) 
 
   // Active filter summary
   const activeFilters: string[] = [];
-  if (freeOnly) activeFilters.push("free");
-  if (filterTools) activeFilters.push("tools");
-  if (filterReasoning) activeFilters.push("reasoning");
-  if (filterWebSearch) activeFilters.push("web search");
+  if (freeOnly) activeFilters.push(t("settings.llm.openrouter.filters.free"));
+  if (filterTools) activeFilters.push(t("settings.llm.openrouter.filters.toolsLower"));
+  if (filterReasoning) activeFilters.push(t("settings.llm.openrouter.filters.reasoningLower"));
+  if (filterWebSearch) activeFilters.push(t("settings.llm.openrouter.filters.webSearchLower"));
 
   const resetFilters = () => {
     setSearch("");
@@ -156,23 +157,23 @@ export function OpenRouterModelCatalog({ models }: OpenRouterModelCatalogProps) 
       {/* All Models */}
       <div>
         <h4 className="text-[11px] uppercase tracking-wider text-muted-foreground/40 mb-1 pl-0.5">
-          All Models
+          {t("settings.llm.openrouter.allModels")}
         </h4>
         <p className="text-[11px] text-muted-foreground/30 mb-2 pl-0.5">
-          {filtered.length} models
-          {activeFilters.length > 0 && ` · filtered: ${activeFilters.join(", ")}`}
+          {t("settings.llm.openrouter.modelsCount", { count: filtered.length })}
+          {activeFilters.length > 0 && ` · ${t("settings.llm.openrouter.filtered", { filters: activeFilters.join(", ") })}`}
         </p>
 
         {filtered.length === 0 ? (
           <div className="rounded-lg border border-border/20 bg-accent/10 px-4 py-6 text-center">
             <p className="text-sm text-muted-foreground/50">
-              No models match your filters
+              {t("settings.llm.openrouter.noModelsMatch")}
             </p>
             <button
               onClick={resetFilters}
               className="mt-2 text-xs text-primary hover:underline cursor-pointer"
             >
-              Reset filters
+              {t("settings.llm.openrouter.resetFilters")}
             </button>
           </div>
         ) : (
@@ -192,7 +193,7 @@ export function OpenRouterModelCatalog({ models }: OpenRouterModelCatalogProps) 
                 onClick={() => setVisibleCount((c) => c + VISIBLE_BATCH)}
                 className="py-2 text-xs text-muted-foreground/40 hover:text-muted-foreground/60 cursor-pointer"
               >
-                Show more ({filtered.length - visibleCount} remaining)
+                {t("settings.llm.openrouter.showMore", { count: filtered.length - visibleCount })}
               </button>
             )}
           </div>

@@ -13,10 +13,7 @@ pub fn extract_text_from_pdf(file_path: &str) -> Result<String, String> {
         Ok(text) => {
             let trimmed = text.trim().to_string();
             if trimmed.is_empty() {
-                log::warn!(
-                    "PDF extraction returned empty text for: {}",
-                    file_path
-                );
+                log::warn!("PDF extraction returned empty text for: {}", file_path);
             }
             Ok(trimmed)
         }

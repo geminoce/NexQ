@@ -3,7 +3,7 @@ use std::path::Path;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WaveformData {
-    pub sample_rate: u32,   // peaks per minute
+    pub sample_rate: u32, // peaks per minute
     pub duration_ms: u64,
     pub peaks: Vec<[f32; 2]>, // [min, max] normalized to -1.0..1.0
 }
@@ -12,8 +12,8 @@ pub struct WaveformData {
 /// Resolution: ~50 peaks per second (3000 per minute).
 /// Uses RMS-weighted peaks for better visual representation of loudness.
 pub fn extract_peaks(wav_path: &Path) -> Result<WaveformData, String> {
-    let reader = hound::WavReader::open(wav_path)
-        .map_err(|e| format!("Failed to open WAV: {}", e))?;
+    let reader =
+        hound::WavReader::open(wav_path).map_err(|e| format!("Failed to open WAV: {}", e))?;
 
     let spec = reader.spec();
     let sample_rate = spec.sample_rate;
@@ -74,8 +74,8 @@ pub fn extract_peaks(wav_path: &Path) -> Result<WaveformData, String> {
 
 /// Write waveform data to a JSON file.
 pub fn write_waveform_json(data: &WaveformData, output_path: &Path) -> Result<(), String> {
-    let json = serde_json::to_string(data)
-        .map_err(|e| format!("Failed to serialize waveform: {}", e))?;
+    let json =
+        serde_json::to_string(data).map_err(|e| format!("Failed to serialize waveform: {}", e))?;
     std::fs::write(output_path, json)
         .map_err(|e| format!("Failed to write waveform file: {}", e))?;
     Ok(())

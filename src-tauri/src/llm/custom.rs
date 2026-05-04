@@ -52,11 +52,7 @@ impl CustomClient {
                 }
             }
             CustomAuthType::ApiKey => {
-                let header = self
-                    .config
-                    .auth_header
-                    .as_deref()
-                    .unwrap_or("x-api-key");
+                let header = self.config.auth_header.as_deref().unwrap_or("x-api-key");
                 if let Some(ref key) = self.config.auth_value {
                     builder.header(header, key.as_str())
                 } else {

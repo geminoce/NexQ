@@ -8,8 +8,8 @@ use crate::audio::device_manager;
 use crate::audio::session_monitor;
 use crate::audio::vad::{calculate_peak, calculate_rms, VoiceActivityDetector};
 use crate::audio::{AudioCaptureManager, AudioLevel, AudioSource};
-use crate::stt::provider::STTProvider;
 use crate::state::AppState;
+use crate::stt::provider::STTProvider;
 
 /// List all available audio input and output devices.
 #[command]
@@ -101,7 +101,9 @@ pub async fn start_capture(
                     }
                     STTProviderType::AzureSpeech => {
                         let mut p = match (ak.as_deref(), ar.as_deref()) {
-                            (Some(k), Some(r)) => crate::stt::azure_speech::AzureSpeechSTT::with_config(k, r),
+                            (Some(k), Some(r)) => {
+                                crate::stt::azure_speech::AzureSpeechSTT::with_config(k, r)
+                            }
                             _ => crate::stt::azure_speech::AzureSpeechSTT::new(),
                         };
                         p.set_language(&lang);
@@ -130,8 +132,7 @@ pub async fn start_capture(
     };
 
     // Start system STT if available
-    let (sys_stt_tx, mut sys_stt_rx) =
-        mpsc::channel::<crate::stt::provider::TranscriptResult>(256);
+    let (sys_stt_tx, mut sys_stt_rx) = mpsc::channel::<crate::stt::provider::TranscriptResult>(256);
     let mut system_stt_provider = system_stt;
     let has_system_stt = if let Some(ref mut provider) = system_stt_provider {
         match provider.start_stream(sys_stt_tx).await {
@@ -156,6 +157,7 @@ pub async fn start_capture(
         let stt_app = app.clone();
         let intel_arc = app.state::<AppState>().intelligence.clone();
         let pause_threshold = app.state::<AppState>().pause_threshold_ms.clone();
+        let system_result_muted_flag = app.state::<AppState>().them_muted.clone();
         tokio::spawn(async move {
             use std::sync::atomic::Ordering;
             let threshold = pause_threshold.load(Ordering::Relaxed);
@@ -163,6 +165,9 @@ pub async fn start_capture(
                 crate::stt::segment_accumulator::SegmentAccumulator::new(threshold);
 
             while let Some(result) = sys_stt_rx.recv().await {
+                if system_result_muted_flag.load(Ordering::Relaxed) {
+                    continue;
+                }
                 // Check for runtime threshold changes
                 let current_threshold = pause_threshold.load(Ordering::Relaxed);
                 accumulator.set_pause_threshold(current_threshold);
@@ -207,13 +212,17 @@ pub async fn start_capture(
 
     // Grab the recorder handle for WAV recording (with mic/system mixing)
     let recorder = {
-        let guard = state.audio.lock().map_err(|_| "lock poisoned".to_string())?;
+        let guard = state
+            .audio
+            .lock()
+            .map_err(|_| "lock poisoned".to_string())?;
         guard.as_ref().and_then(|mgr| mgr.get_recorder())
     };
 
     // Audio processing task: levels + recording + system STT feed
     // (Mic STT is handled by Web Speech API in the frontend)
     let app_handle = app.clone();
+    let system_muted_flag = state.them_muted.clone();
     tokio::spawn(async move {
         let mut vad = VoiceActivityDetector::new();
         let mut mic_emit_counter: u32 = 0;
@@ -258,7 +267,8 @@ pub async fn start_capture(
                 // Mix when both buffers have data
                 let mix_len = mix_mic.len().min(mix_sys.len());
                 if mix_len > 0 {
-                    let mixed: Vec<i16> = mix_mic[..mix_len].iter()
+                    let mixed: Vec<i16> = mix_mic[..mix_len]
+                        .iter()
                         .zip(&mix_sys[..mix_len])
                         .map(|(&m, &s)| ((m as i32 + s as i32) * 4).clamp(-32768, 32767) as i16)
                         .collect();
@@ -278,8 +288,10 @@ pub async fn start_capture(
 
             // Feed ONLY system audio to the cloud STT provider
             if chunk.source == AudioSource::System {
-                if let Some(ref mut provider) = system_stt_provider {
-                    let _ = provider.feed_audio(chunk).await;
+                if !system_muted_flag.load(Ordering::Relaxed) {
+                    if let Some(ref mut provider) = system_stt_provider {
+                        let _ = provider.feed_audio(chunk).await;
+                    }
                 }
             }
         }
@@ -288,7 +300,8 @@ pub async fn start_capture(
         if let Some(ref rec) = recorder {
             let mix_len = mix_mic.len().min(mix_sys.len());
             if mix_len > 0 {
-                let mixed: Vec<i16> = mix_mic[..mix_len].iter()
+                let mixed: Vec<i16> = mix_mic[..mix_len]
+                    .iter()
                     .zip(&mix_sys[..mix_len])
                     .map(|(&m, &s)| ((m as i32 + s as i32) * 4).clamp(-32768, 32767) as i16)
                     .collect();
@@ -296,8 +309,12 @@ pub async fn start_capture(
                 mix_mic.drain(..mix_len);
                 mix_sys.drain(..mix_len);
             }
-            if !mix_mic.is_empty() { rec.write_samples(&mix_mic); }
-            if !mix_sys.is_empty() { rec.write_samples(&mix_sys); }
+            if !mix_mic.is_empty() {
+                rec.write_samples(&mix_mic);
+            }
+            if !mix_sys.is_empty() {
+                rec.write_samples(&mix_sys);
+            }
         }
 
         // Clean shutdown
@@ -518,8 +535,8 @@ fn get_all_peak_levels_win() -> Result<Vec<DevicePeakLevel>, String> {
 #[cfg(target_os = "windows")]
 fn read_all_peaks_raw() -> Vec<DevicePeakLevel> {
     use windows::Win32::Media::Audio::{
-        Endpoints::IAudioMeterInformation,
-        IMMDeviceEnumerator, MMDeviceEnumerator, DEVICE_STATE_ACTIVE,
+        Endpoints::IAudioMeterInformation, IMMDeviceEnumerator, MMDeviceEnumerator,
+        DEVICE_STATE_ACTIVE,
     };
     use windows::Win32::System::Com::{CoCreateInstance, CLSCTX_ALL};
     unsafe {
@@ -552,7 +569,10 @@ fn read_all_peaks_raw() -> Vec<DevicePeakLevel> {
                 Err(_) => continue,
             };
             let peak = meter.GetPeakValue().unwrap_or(0.0);
-            results.push(DevicePeakLevel { device_id: name, level: peak });
+            results.push(DevicePeakLevel {
+                device_id: name,
+                level: peak,
+            });
         }
         results
     }
@@ -562,8 +582,8 @@ fn read_all_peaks_raw() -> Vec<DevicePeakLevel> {
 /// matching the format that cpal uses for device names.
 #[cfg(target_os = "windows")]
 fn get_device_friendly_name(device: &windows::Win32::Media::Audio::IMMDevice) -> Option<String> {
-    use windows::Win32::UI::Shell::PropertiesSystem::PROPERTYKEY;
     use windows::core::GUID;
+    use windows::Win32::UI::Shell::PropertiesSystem::PROPERTYKEY;
     unsafe {
         // PKEY_Device_FriendlyName = {a45c254e-df1c-4efd-8020-67d146a850e0}, 14
         let pkey = PROPERTYKEY {
@@ -575,7 +595,9 @@ fn get_device_friendly_name(device: &windows::Win32::Media::Audio::IMMDevice) ->
             ),
             pid: 14,
         };
-        let store = device.OpenPropertyStore(windows::Win32::System::Com::STGM(0)).ok()?;
+        let store = device
+            .OpenPropertyStore(windows::Win32::System::Com::STGM(0))
+            .ok()?;
         let prop = store.GetValue(&pkey).ok()?;
         let s = format!("{}", prop);
         if s.is_empty() || s == "VT_EMPTY" {
@@ -606,7 +628,8 @@ impl InputPeakActivator {
             let mut buf = std::ptr::null_mut();
             let mut frames = 0u32;
             let mut flags = 0u32;
-            if self.capture
+            if self
+                .capture
                 .GetBuffer(&mut buf, &mut frames, &mut flags, None, None)
                 .is_ok()
             {
@@ -807,8 +830,12 @@ pub async fn start_capture_per_party(
         if let Some(ref mut mgr) = *guard {
             if mgr.is_capturing() {
                 log::info!("start_capture_per_party: stopping existing capture for hot-swap");
-                crate::stt::emit_stt_debug(&app, "info", "stt",
-                    "Hot-swap: stopping existing audio capture + STT providers");
+                crate::stt::emit_stt_debug(
+                    &app,
+                    "info",
+                    "stt",
+                    "Hot-swap: stopping existing audio capture + STT providers",
+                );
                 mgr.stop_capture();
             }
         }
@@ -863,8 +890,15 @@ pub async fn start_capture_per_party(
                 &them.device_id
             };
 
-            crate::stt::emit_stt_debug(&app, "info", "audio",
-                &format!("IPolicyConfig: overriding default capture → '{}'", target_device));
+            crate::stt::emit_stt_debug(
+                &app,
+                "info",
+                "audio",
+                &format!(
+                    "IPolicyConfig: overriding default capture → '{}'",
+                    target_device
+                ),
+            );
 
             match crate::audio::device_default::override_default_capture_device(target_device) {
                 Ok(Some(original)) => {
@@ -873,31 +907,56 @@ pub async fn start_capture_per_party(
                         *guard = Some(original.clone());
                     }
                     // Also store the resolved target endpoint for ensure_ipolicy_override
-                    match crate::audio::device_default::find_capture_endpoint_id_by_name(target_device) {
+                    match crate::audio::device_default::find_capture_endpoint_id_by_name(
+                        target_device,
+                    ) {
                         Ok(target_ep) => {
                             if let Ok(mut guard) = state.ipolicy_target_endpoint.lock() {
                                 *guard = Some(target_ep.clone());
                             }
-                            crate::stt::emit_stt_debug(&app, "info", "ipolicy",
-                                &format!("IPolicyConfig: stored target endpoint '{}'", target_ep));
+                            crate::stt::emit_stt_debug(
+                                &app,
+                                "info",
+                                "ipolicy",
+                                &format!("IPolicyConfig: stored target endpoint '{}'", target_ep),
+                            );
                         }
                         Err(e) => {
-                            crate::stt::emit_stt_debug(&app, "warn", "ipolicy",
-                                &format!("IPolicyConfig: could not resolve target endpoint: {}", e));
+                            crate::stt::emit_stt_debug(
+                                &app,
+                                "warn",
+                                "ipolicy",
+                                &format!("IPolicyConfig: could not resolve target endpoint: {}", e),
+                            );
                         }
                     }
-                    crate::stt::emit_stt_debug(&app, "info", "audio",
-                        &format!("IPolicyConfig: saved original default '{}', override active", original));
+                    crate::stt::emit_stt_debug(
+                        &app,
+                        "info",
+                        "audio",
+                        &format!(
+                            "IPolicyConfig: saved original default '{}', override active",
+                            original
+                        ),
+                    );
 
                     // Verify the override took effect by reading back the current default
                     match crate::audio::device_default::get_default_capture_endpoint_id() {
                         Ok(current) => {
-                            crate::stt::emit_stt_debug(&app, "info", "ipolicy",
-                                &format!("Current default after override: '{}'", current));
+                            crate::stt::emit_stt_debug(
+                                &app,
+                                "info",
+                                "ipolicy",
+                                &format!("Current default after override: '{}'", current),
+                            );
                         }
                         Err(e) => {
-                            crate::stt::emit_stt_debug(&app, "warn", "ipolicy",
-                                &format!("Could not verify override: {}", e));
+                            crate::stt::emit_stt_debug(
+                                &app,
+                                "warn",
+                                "ipolicy",
+                                &format!("Could not verify override: {}", e),
+                            );
                         }
                     }
                 }
@@ -916,8 +975,15 @@ pub async fn start_capture_per_party(
                     }
                 }
                 Err(e) => {
-                    crate::stt::emit_stt_debug(&app, "warn", "audio",
-                        &format!("IPolicyConfig: override failed ({}). STT will use OS default mic.", e));
+                    crate::stt::emit_stt_debug(
+                        &app,
+                        "warn",
+                        "audio",
+                        &format!(
+                            "IPolicyConfig: override failed ({}). STT will use OS default mic.",
+                            e
+                        ),
+                    );
                 }
             }
         } else {
@@ -941,7 +1007,8 @@ pub async fn start_capture_per_party(
         let mgr = guard.get_or_insert_with(AudioCaptureManager::new);
         log::info!(
             "AudioCaptureManager::start_capture mic='{}', system='{}'",
-            mic_device, system_device
+            mic_device,
+            system_device
         );
         mgr.start_capture(&mic_device, &system_device, system_is_input, tx)?;
     }
@@ -953,8 +1020,7 @@ pub async fn start_capture_per_party(
     let them_stt = create_stt_provider_for_party(&them, &state, &app, "Them").await?;
 
     // Start STT streams
-    let (you_stt_tx, mut you_stt_rx) =
-        mpsc::channel::<crate::stt::provider::TranscriptResult>(256);
+    let (you_stt_tx, mut you_stt_rx) = mpsc::channel::<crate::stt::provider::TranscriptResult>(256);
     let (them_stt_tx, mut them_stt_rx) =
         mpsc::channel::<crate::stt::provider::TranscriptResult>(256);
 
@@ -962,48 +1028,78 @@ pub async fn start_capture_per_party(
     let mut them_stt_provider = them_stt;
 
     if let Some(ref mut provider) = you_stt_provider {
-        crate::stt::emit_stt_debug(&app, "info", "stt",
-            &format!("Starting 'You' STT ({})", you.stt_provider));
+        crate::stt::emit_stt_debug(
+            &app,
+            "info",
+            "stt",
+            &format!("Starting 'You' STT ({})", you.stt_provider),
+        );
         match provider.start_stream(you_stt_tx).await {
             Ok(()) => {
                 log::info!("'You' party STT started ({})", you.stt_provider);
-                crate::stt::emit_stt_debug(&app, "info", "stt",
-                    &format!("'You' STT started: {}", you.stt_provider));
+                crate::stt::emit_stt_debug(
+                    &app,
+                    "info",
+                    "stt",
+                    &format!("'You' STT started: {}", you.stt_provider),
+                );
             }
             Err(e) => {
                 log::warn!("Failed to start 'You' STT: {}", e);
-                crate::stt::emit_stt_debug(&app, "error", "stt",
-                    &format!("'You' STT failed to start: {}", e));
-                let _ = app.emit("stt_connection_status", serde_json::json!({
-                    "provider": you.stt_provider,
-                    "party": "You",
-                    "status": "error",
-                    "message": format!("Failed to start STT: {}", e)
-                }));
+                crate::stt::emit_stt_debug(
+                    &app,
+                    "error",
+                    "stt",
+                    &format!("'You' STT failed to start: {}", e),
+                );
+                let _ = app.emit(
+                    "stt_connection_status",
+                    serde_json::json!({
+                        "provider": you.stt_provider,
+                        "party": "You",
+                        "status": "error",
+                        "message": format!("Failed to start STT: {}", e)
+                    }),
+                );
                 you_stt_provider = None;
             }
         }
     }
 
     if let Some(ref mut provider) = them_stt_provider {
-        crate::stt::emit_stt_debug(&app, "info", "stt",
-            &format!("Starting 'Them' STT ({})", them.stt_provider));
+        crate::stt::emit_stt_debug(
+            &app,
+            "info",
+            "stt",
+            &format!("Starting 'Them' STT ({})", them.stt_provider),
+        );
         match provider.start_stream(them_stt_tx).await {
             Ok(()) => {
                 log::info!("'Them' party STT started ({})", them.stt_provider);
-                crate::stt::emit_stt_debug(&app, "info", "stt",
-                    &format!("'Them' STT started: {}", them.stt_provider));
+                crate::stt::emit_stt_debug(
+                    &app,
+                    "info",
+                    "stt",
+                    &format!("'Them' STT started: {}", them.stt_provider),
+                );
             }
             Err(e) => {
                 log::warn!("Failed to start 'Them' STT: {}", e);
-                crate::stt::emit_stt_debug(&app, "error", "stt",
-                    &format!("'Them' STT failed to start: {}", e));
-                let _ = app.emit("stt_connection_status", serde_json::json!({
-                    "provider": them.stt_provider,
-                    "party": "Them",
-                    "status": "error",
-                    "message": format!("Failed to start STT: {}", e)
-                }));
+                crate::stt::emit_stt_debug(
+                    &app,
+                    "error",
+                    "stt",
+                    &format!("'Them' STT failed to start: {}", e),
+                );
+                let _ = app.emit(
+                    "stt_connection_status",
+                    serde_json::json!({
+                        "provider": them.stt_provider,
+                        "party": "Them",
+                        "status": "error",
+                        "message": format!("Failed to start STT: {}", e)
+                    }),
+                );
                 them_stt_provider = None;
             }
         }
@@ -1012,10 +1108,14 @@ pub async fn start_capture_per_party(
     // Unique session prefix to avoid segment ID collisions across mid-meeting restarts.
     // Each restart of start_capture_per_party gets a distinct prefix, so segment IDs
     // like "you_a3_1" won't collide with "you_b7_1" from a previous session.
-    let session_prefix = format!("{:x}", std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_millis() % 0xFFFF);
+    let session_prefix = format!(
+        "{:x}",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_millis()
+            % 0xFFFF
+    );
 
     // Emit transcript events from "You" STT (speaker = "User")
     // Uses SegmentAccumulator for cloud providers (Deepgram, Groq, etc.)
@@ -1024,8 +1124,8 @@ pub async fn start_capture_per_party(
     if you_stt_provider.is_some() {
         let stt_app = app.clone();
         let prefix = session_prefix.clone();
-        let use_accumulator = you.stt_provider != "web_speech"
-            && you.stt_provider != "whisper_cpp";
+        let you_result_muted_flag = app.state::<AppState>().you_muted.clone();
+        let use_accumulator = you.stt_provider != "web_speech" && you.stt_provider != "whisper_cpp";
         let pause_threshold = if use_accumulator {
             Some(app.state::<AppState>().pause_threshold_ms.clone())
         } else {
@@ -1040,6 +1140,9 @@ pub async fn start_capture_per_party(
                     crate::stt::segment_accumulator::SegmentAccumulator::new(threshold);
 
                 while let Some(result) = you_stt_rx.recv().await {
+                    if you_result_muted_flag.load(Ordering::Relaxed) {
+                        continue;
+                    }
                     let current_threshold = pause_threshold.load(Ordering::Relaxed);
                     accumulator.set_pause_threshold(current_threshold);
 
@@ -1066,24 +1169,30 @@ pub async fn start_capture_per_party(
                 }
 
                 // Flush remaining accumulated segment on meeting end
-                if let Some(output) = accumulator.flush() {
-                    let seg_id = format!("you_{}_{}", prefix, output.id);
-                    let payload = serde_json::json!({
-                        "segment": {
-                            "id": seg_id,
-                            "text": output.text,
-                            "speaker": "User",
-                            "timestamp_ms": output.timestamp_ms,
-                            "is_final": true,
-                            "confidence": output.confidence
-                        }
-                    });
-                    let _ = stt_app.emit("transcript_final", &payload);
+                if !you_result_muted_flag.load(Ordering::Relaxed) {
+                    if let Some(output) = accumulator.flush() {
+                        let seg_id = format!("you_{}_{}", prefix, output.id);
+                        let payload = serde_json::json!({
+                            "segment": {
+                                "id": seg_id,
+                                "text": output.text,
+                                "speaker": "User",
+                                "timestamp_ms": output.timestamp_ms,
+                                "is_final": true,
+                                "confidence": output.confidence
+                            }
+                        });
+                        let _ = stt_app.emit("transcript_final", &payload);
+                    }
                 }
             } else {
                 // Direct path: web_speech / whisper_cpp handle their own segmentation
+                use std::sync::atomic::Ordering;
                 let mut counter = 0u64;
                 while let Some(result) = you_stt_rx.recv().await {
+                    if you_result_muted_flag.load(Ordering::Relaxed) {
+                        continue;
+                    }
                     let seg_id = if let Some(ref custom_id) = result.segment_id {
                         format!("you_{}_{}", prefix, custom_id)
                     } else {
@@ -1125,6 +1234,7 @@ pub async fn start_capture_per_party(
         let prefix = session_prefix.clone();
         let intel_arc = app.state::<AppState>().intelligence.clone();
         let pause_threshold = app.state::<AppState>().pause_threshold_ms.clone();
+        let them_result_muted_flag = app.state::<AppState>().them_muted.clone();
         tokio::spawn(async move {
             use std::sync::atomic::Ordering;
             let threshold = pause_threshold.load(Ordering::Relaxed);
@@ -1132,6 +1242,9 @@ pub async fn start_capture_per_party(
                 crate::stt::segment_accumulator::SegmentAccumulator::new(threshold);
 
             while let Some(result) = them_stt_rx.recv().await {
+                if them_result_muted_flag.load(Ordering::Relaxed) {
+                    continue;
+                }
                 // Live-update threshold from settings changes
                 let current_threshold = pause_threshold.load(Ordering::Relaxed);
                 accumulator.set_pause_threshold(current_threshold);
@@ -1182,35 +1295,37 @@ pub async fn start_capture_per_party(
             }
 
             // Flush remaining accumulated segment on meeting end
-            if let Some(output) = accumulator.flush() {
-                let seg_id = format!("them_{}_{}", prefix, output.id);
-                let speaker_id_val = if output.speaker.starts_with("speaker_") {
-                    Some(output.speaker.clone())
-                } else {
-                    None
-                };
-                let mut seg = serde_json::json!({
-                    "id": seg_id,
-                    "text": output.text,
-                    "speaker": "Them",
-                    "timestamp_ms": output.timestamp_ms,
-                    "is_final": output.is_final,
-                    "confidence": output.confidence
-                });
-                if let Some(ref sid) = speaker_id_val {
-                    seg["speaker_id"] = serde_json::json!(sid);
-                }
-                let payload = serde_json::json!({ "segment": seg });
-                let _ = stt_app.emit("transcript_final", &payload);
+            if !them_result_muted_flag.load(Ordering::Relaxed) {
+                if let Some(output) = accumulator.flush() {
+                    let seg_id = format!("them_{}_{}", prefix, output.id);
+                    let speaker_id_val = if output.speaker.starts_with("speaker_") {
+                        Some(output.speaker.clone())
+                    } else {
+                        None
+                    };
+                    let mut seg = serde_json::json!({
+                        "id": seg_id,
+                        "text": output.text,
+                        "speaker": "Them",
+                        "timestamp_ms": output.timestamp_ms,
+                        "is_final": output.is_final,
+                        "confidence": output.confidence
+                    });
+                    if let Some(ref sid) = speaker_id_val {
+                        seg["speaker_id"] = serde_json::json!(sid);
+                    }
+                    let payload = serde_json::json!({ "segment": seg });
+                    let _ = stt_app.emit("transcript_final", &payload);
 
-                if let Some(ref intel) = intel_arc {
-                    if let Ok(mut engine) = intel.lock() {
-                        engine.push_transcript(
-                            output.text.clone(),
-                            "Them".to_string(),
-                            output.timestamp_ms,
-                            true,
-                        );
+                    if let Some(ref intel) = intel_arc {
+                        if let Ok(mut engine) = intel.lock() {
+                            engine.push_transcript(
+                                output.text.clone(),
+                                "Them".to_string(),
+                                output.timestamp_ms,
+                                true,
+                            );
+                        }
                     }
                 }
             }
@@ -1219,7 +1334,10 @@ pub async fn start_capture_per_party(
 
     // Grab the recorder handle for WAV recording (with mic/system mixing)
     let recorder = {
-        let guard = state.audio.lock().map_err(|_| "lock poisoned".to_string())?;
+        let guard = state
+            .audio
+            .lock()
+            .map_err(|_| "lock poisoned".to_string())?;
         guard.as_ref().and_then(|mgr| mgr.get_recorder())
     };
 
@@ -1265,17 +1383,36 @@ pub async fn start_capture_per_party(
                 AudioSource::Mic | AudioSource::Room => {
                     mic_chunk_count += 1;
                     if mic_chunk_count == 1 {
-                        let label = if chunk.source == AudioSource::Room { "room" } else { "mic" };
+                        let label = if chunk.source == AudioSource::Room {
+                            "room"
+                        } else {
+                            "mic"
+                        };
                         log::info!("First {} audio chunk received", label);
-                        crate::stt::emit_stt_debug(&app_handle, "info", "audio",
-                            &format!("First {} chunk received — audio pipeline active", label));
+                        crate::stt::emit_stt_debug(
+                            &app_handle,
+                            "info",
+                            "audio",
+                            &format!("First {} chunk received — audio pipeline active", label),
+                        );
                     }
                     if last_mic_stats.elapsed() >= stats_interval {
                         let rms = calculate_rms(&chunk.pcm_data);
-                        let label = if chunk.source == AudioSource::Room { "Room" } else { "Mic" };
-                        crate::stt::emit_stt_debug_ex(&app_handle, "info", "audio",
-                            &format!("{}: {} chunks, speech={}, rms={:.0}", label, mic_chunk_count, chunk.is_speech, rms),
-                            Some("audio_mic_stats"));
+                        let label = if chunk.source == AudioSource::Room {
+                            "Room"
+                        } else {
+                            "Mic"
+                        };
+                        crate::stt::emit_stt_debug_ex(
+                            &app_handle,
+                            "info",
+                            "audio",
+                            &format!(
+                                "{}: {} chunks, speech={}, rms={:.0}",
+                                label, mic_chunk_count, chunk.is_speech, rms
+                            ),
+                            Some("audio_mic_stats"),
+                        );
                         last_mic_stats = std::time::Instant::now();
                     }
                 }
@@ -1283,14 +1420,25 @@ pub async fn start_capture_per_party(
                     system_chunk_count += 1;
                     if system_chunk_count == 1 {
                         log::info!("First system audio chunk received — 'Them' capture is active");
-                        crate::stt::emit_stt_debug(&app_handle, "info", "audio",
-                            "First system chunk received — system audio capture active");
+                        crate::stt::emit_stt_debug(
+                            &app_handle,
+                            "info",
+                            "audio",
+                            "First system chunk received — system audio capture active",
+                        );
                     }
                     if last_sys_stats.elapsed() >= stats_interval {
                         let rms = calculate_rms(&chunk.pcm_data);
-                        crate::stt::emit_stt_debug_ex(&app_handle, "info", "audio",
-                            &format!("System: {} chunks, speech={}, rms={:.0}", system_chunk_count, chunk.is_speech, rms),
-                            Some("audio_sys_stats"));
+                        crate::stt::emit_stt_debug_ex(
+                            &app_handle,
+                            "info",
+                            "audio",
+                            &format!(
+                                "System: {} chunks, speech={}, rms={:.0}",
+                                system_chunk_count, chunk.is_speech, rms
+                            ),
+                            Some("audio_sys_stats"),
+                        );
                         last_sys_stats = std::time::Instant::now();
                     }
                 }
@@ -1327,7 +1475,8 @@ pub async fn start_capture_per_party(
                 }
                 let mix_len = mix_mic.len().min(mix_sys.len());
                 if mix_len > 0 {
-                    let mixed: Vec<i16> = mix_mic[..mix_len].iter()
+                    let mixed: Vec<i16> = mix_mic[..mix_len]
+                        .iter()
                         .zip(&mix_sys[..mix_len])
                         .map(|(&m, &s)| ((m as i32 + s as i32) * 4).clamp(-32768, 32767) as i16)
                         .collect();
@@ -1353,8 +1502,12 @@ pub async fn start_capture_per_party(
                         if let Some(ref mut provider) = you_stt_provider {
                             if let Err(e) = provider.feed_audio(chunk).await {
                                 if !you_feed_error_emitted {
-                                    crate::stt::emit_stt_debug(&app_handle, "error", "stt",
-                                        &format!("'You' feed_audio error: {}", e));
+                                    crate::stt::emit_stt_debug(
+                                        &app_handle,
+                                        "error",
+                                        "stt",
+                                        &format!("'You' feed_audio error: {}", e),
+                                    );
                                     you_feed_error_emitted = true;
                                 }
                             }
@@ -1366,8 +1519,12 @@ pub async fn start_capture_per_party(
                         if let Some(ref mut provider) = them_stt_provider {
                             if let Err(e) = provider.feed_audio(chunk).await {
                                 if !them_feed_error_emitted {
-                                    crate::stt::emit_stt_debug(&app_handle, "error", "stt",
-                                        &format!("'Them' feed_audio error: {}", e));
+                                    crate::stt::emit_stt_debug(
+                                        &app_handle,
+                                        "error",
+                                        "stt",
+                                        &format!("'Them' feed_audio error: {}", e),
+                                    );
                                     them_feed_error_emitted = true;
                                 }
                             }
@@ -1381,8 +1538,12 @@ pub async fn start_capture_per_party(
                         if let Some(ref mut provider) = them_stt_provider {
                             if let Err(e) = provider.feed_audio(chunk).await {
                                 if !them_feed_error_emitted {
-                                    crate::stt::emit_stt_debug(&app_handle, "error", "stt",
-                                        &format!("'Room' feed_audio error: {}", e));
+                                    crate::stt::emit_stt_debug(
+                                        &app_handle,
+                                        "error",
+                                        "stt",
+                                        &format!("'Room' feed_audio error: {}", e),
+                                    );
                                     them_feed_error_emitted = true;
                                 }
                             }
@@ -1396,7 +1557,8 @@ pub async fn start_capture_per_party(
         if let Some(ref rec) = recorder {
             let mix_len = mix_mic.len().min(mix_sys.len());
             if mix_len > 0 {
-                let mixed: Vec<i16> = mix_mic[..mix_len].iter()
+                let mixed: Vec<i16> = mix_mic[..mix_len]
+                    .iter()
                     .zip(&mix_sys[..mix_len])
                     .map(|(&m, &s)| ((m as i32 + s as i32) * 4).clamp(-32768, 32767) as i16)
                     .collect();
@@ -1404,8 +1566,12 @@ pub async fn start_capture_per_party(
                 mix_mic.drain(..mix_len);
                 mix_sys.drain(..mix_len);
             }
-            if !mix_mic.is_empty() { rec.write_samples(&mix_mic); }
-            if !mix_sys.is_empty() { rec.write_samples(&mix_sys); }
+            if !mix_mic.is_empty() {
+                rec.write_samples(&mix_mic);
+            }
+            if !mix_sys.is_empty() {
+                rec.write_samples(&mix_sys);
+            }
         }
 
         // Clean shutdown
@@ -1451,10 +1617,17 @@ async fn create_stt_provider_for_party(
     let stt_type = STTProviderType::from_str(&config.stt_provider)
         .ok_or_else(|| format!("Unknown STT provider: {}", config.stt_provider))?;
 
-    crate::stt::emit_stt_debug(app, "info", "stt",
-        &format!("[{}] Creating provider: {} (model: {})",
-            party_role, config.stt_provider,
-            config.local_model_id.as_deref().unwrap_or("n/a")));
+    crate::stt::emit_stt_debug(
+        app,
+        "info",
+        "stt",
+        &format!(
+            "[{}] Creating provider: {} (model: {})",
+            party_role,
+            config.stt_provider,
+            config.local_model_id.as_deref().unwrap_or("n/a")
+        ),
+    );
 
     match stt_type {
         STTProviderType::WebSpeech => Ok(None), // Frontend handles this
@@ -1466,7 +1639,8 @@ async fn create_stt_provider_for_party(
                 Ok(model_path) => {
                     let lang = get_stt_language(state);
                     let whisper_config = state.whisper_config.clone();
-                    let mut p = crate::stt::whisper_cpp::WhisperCppSTT::new(model_path, whisper_config);
+                    let mut p =
+                        crate::stt::whisper_cpp::WhisperCppSTT::new(model_path, whisper_config);
                     p.set_language(&lang);
                     Ok(Some(Box::new(p)))
                 }
@@ -1497,7 +1671,11 @@ async fn create_stt_provider_for_party(
         STTProviderType::Deepgram => {
             let lang = get_stt_language(state);
             let key = get_credential_key(state, "deepgram");
-            log::info!("Deepgram key for '{}': {}", party_role, if key.is_some() { "present" } else { "MISSING" });
+            log::info!(
+                "Deepgram key for '{}': {}",
+                party_role,
+                if key.is_some() { "present" } else { "MISSING" }
+            );
             let dg_config = get_deepgram_config(state);
             let mut p = match key.as_deref() {
                 Some(k) => crate::stt::deepgram::DeepgramSTT::with_api_key(k),
@@ -1512,7 +1690,11 @@ async fn create_stt_provider_for_party(
         STTProviderType::WhisperApi => {
             let lang = get_stt_language(state);
             let key = get_credential_key(state, "whisper_api");
-            log::info!("WhisperApi key for '{}': {}", party_role, if key.is_some() { "present" } else { "MISSING" });
+            log::info!(
+                "WhisperApi key for '{}': {}",
+                party_role,
+                if key.is_some() { "present" } else { "MISSING" }
+            );
             let mut p = match key.as_deref() {
                 Some(k) => crate::stt::whisper_api::WhisperApiSTT::with_api_key(k),
                 None => crate::stt::whisper_api::WhisperApiSTT::new(),
@@ -1524,9 +1706,16 @@ async fn create_stt_provider_for_party(
             let lang = get_stt_language(state);
             let key = get_credential_key(state, "azure_speech");
             let region = get_credential_key(state, "azure_speech_region");
-            log::info!("Azure key for '{}': {}, region: {}", party_role,
+            log::info!(
+                "Azure key for '{}': {}, region: {}",
+                party_role,
                 if key.is_some() { "present" } else { "MISSING" },
-                if region.is_some() { "present" } else { "MISSING" });
+                if region.is_some() {
+                    "present"
+                } else {
+                    "MISSING"
+                }
+            );
             let mut p = match (key.as_deref(), region.as_deref()) {
                 (Some(k), Some(r)) => crate::stt::azure_speech::AzureSpeechSTT::with_config(k, r),
                 _ => crate::stt::azure_speech::AzureSpeechSTT::new(),
@@ -1537,7 +1726,11 @@ async fn create_stt_provider_for_party(
         STTProviderType::GroqWhisper => {
             let lang = get_stt_language(state);
             let key = get_credential_key(state, "groq_whisper");
-            log::info!("Groq key for '{}': {}", party_role, if key.is_some() { "present" } else { "MISSING" });
+            log::info!(
+                "Groq key for '{}': {}",
+                party_role,
+                if key.is_some() { "present" } else { "MISSING" }
+            );
             let mut p = match key.as_deref() {
                 Some(k) => crate::stt::groq_whisper::GroqWhisperSTT::with_api_key(k),
                 None => crate::stt::groq_whisper::GroqWhisperSTT::new(),
@@ -1555,7 +1748,10 @@ async fn create_stt_provider_for_party(
             let raw_model_id = config.local_model_id.as_deref();
             let model_id = match raw_model_id {
                 Some(id) if id.contains("parakeet") || id.contains("nemo") => {
-                    log::warn!("SherpaOnnx: ignoring cross-engine model_id '{}', using default", id);
+                    log::warn!(
+                        "SherpaOnnx: ignoring cross-engine model_id '{}', using default",
+                        id
+                    );
                     "streaming-zipformer-en-20M"
                 }
                 Some(id) => id,
@@ -1567,15 +1763,27 @@ async fn create_stt_provider_for_party(
                     let lang = get_stt_language(state);
                     // Check if this is a non-transducer model (SenseVoice, etc.)
                     // by trying offline discovery first.
-                    let offline_files = crate::stt::local_engines::model_discovery::discover_offline_model_files(&model_dir);
+                    let offline_files =
+                        crate::stt::local_engines::model_discovery::discover_offline_model_files(
+                            &model_dir,
+                        );
                     if let Ok(offline) = offline_files {
                         // Non-transducer model → use offline sidecar (sherpa-onnx-offline.exe)
                         let binary = find_offline_binary_for_state(state);
                         match binary {
                             Some(binary_path) => {
-                                crate::stt::emit_stt_debug(app, "info", "stt",
-                                    &format!("[{}] SherpaOnnx offline model '{}' from {} (lang={})",
-                                        party_role, model_id, model_dir.display(), lang));
+                                crate::stt::emit_stt_debug(
+                                    app,
+                                    "info",
+                                    "stt",
+                                    &format!(
+                                        "[{}] SherpaOnnx offline model '{}' from {} (lang={})",
+                                        party_role,
+                                        model_id,
+                                        model_dir.display(),
+                                        lang
+                                    ),
+                                );
                                 // Detect model type from model_id
                                 let model_type = if model_id.contains("sense-voice") {
                                     crate::stt::sherpa_offline::OfflineModelType::SenseVoice
@@ -1602,9 +1810,18 @@ async fn create_stt_provider_for_party(
                         }
                     } else {
                         // Transducer model → use in-process ORT engine
-                        crate::stt::emit_stt_debug(app, "info", "stt",
-                            &format!("[{}] SherpaOnnx loading model '{}' from {} (lang={})",
-                                party_role, model_id, model_dir.display(), lang));
+                        crate::stt::emit_stt_debug(
+                            app,
+                            "info",
+                            "stt",
+                            &format!(
+                                "[{}] SherpaOnnx loading model '{}' from {} (lang={})",
+                                party_role,
+                                model_id,
+                                model_dir.display(),
+                                lang
+                            ),
+                        );
                         let mut p = crate::stt::ort_streaming::OrtStreamingSTT::new(model_dir);
                         p.set_language(&lang);
                         p.set_app_handle(app.clone());
@@ -1612,31 +1829,55 @@ async fn create_stt_provider_for_party(
                     }
                 }
                 Err(e) => {
-                    crate::stt::emit_stt_debug(app, "error", "stt",
-                        &format!("[{}] SherpaOnnx model '{}' not found: {}. Download in Settings.",
-                            party_role, model_id, e));
+                    crate::stt::emit_stt_debug(
+                        app,
+                        "error",
+                        "stt",
+                        &format!(
+                            "[{}] SherpaOnnx model '{}' not found: {}. Download in Settings.",
+                            party_role, model_id, e
+                        ),
+                    );
                     Ok(None)
                 }
             }
         }
         STTProviderType::OrtStreaming => {
-            let model_id = config.local_model_id.as_deref().unwrap_or("zipformer-en-20M");
+            let model_id = config
+                .local_model_id
+                .as_deref()
+                .unwrap_or("zipformer-en-20M");
             let model_result = get_local_model_path(state, "ort_streaming", model_id);
             match model_result {
                 Ok(model_dir) => {
                     let lang = get_stt_language(state);
-                    crate::stt::emit_stt_debug(app, "info", "stt",
-                        &format!("[{}] ORT loading model '{}' from {} (lang={})",
-                            party_role, model_id, model_dir.display(), lang));
+                    crate::stt::emit_stt_debug(
+                        app,
+                        "info",
+                        "stt",
+                        &format!(
+                            "[{}] ORT loading model '{}' from {} (lang={})",
+                            party_role,
+                            model_id,
+                            model_dir.display(),
+                            lang
+                        ),
+                    );
                     let mut p = crate::stt::ort_streaming::OrtStreamingSTT::new(model_dir);
                     p.set_language(&lang);
                     p.set_app_handle(app.clone());
                     Ok(Some(Box::new(p)))
                 }
                 Err(e) => {
-                    crate::stt::emit_stt_debug(app, "error", "stt",
-                        &format!("[{}] ORT model '{}' not found: {}. Download in Settings.",
-                            party_role, model_id, e));
+                    crate::stt::emit_stt_debug(
+                        app,
+                        "error",
+                        "stt",
+                        &format!(
+                            "[{}] ORT model '{}' not found: {}. Download in Settings.",
+                            party_role, model_id, e
+                        ),
+                    );
                     Ok(None)
                 }
             }
@@ -1647,31 +1888,52 @@ async fn create_stt_provider_for_party(
             let model_id = match raw_model_id {
                 Some(id) if id.contains("parakeet") || id.contains("nemo") => id,
                 Some(id) => {
-                    log::warn!("ParakeetTdt: ignoring cross-engine model_id '{}', using default", id);
+                    log::warn!(
+                        "ParakeetTdt: ignoring cross-engine model_id '{}', using default",
+                        id
+                    );
                     "parakeet-tdt-0.6b-v3-int8"
                 }
                 None => "parakeet-tdt-0.6b-v3-int8",
             };
-            crate::stt::emit_stt_debug(app, "info", "stt",
-                &format!("[{}] Parakeet TDT: looking for model '{}' (local_model_id={:?})",
-                    party_role, model_id, config.local_model_id));
+            crate::stt::emit_stt_debug(
+                app,
+                "info",
+                "stt",
+                &format!(
+                    "[{}] Parakeet TDT: looking for model '{}' (local_model_id={:?})",
+                    party_role, model_id, config.local_model_id
+                ),
+            );
             let model_result = get_local_model_path(state, "parakeet_tdt", model_id)
                 .or_else(|_| find_any_downloaded_model(state, "parakeet_tdt"));
             match model_result {
                 Ok(model_dir) => {
                     let lang = get_stt_language(state);
                     // Auto-detect model type: transducer (encoder/decoder/joiner) vs CTC (model.onnx)
-                    let transducer = crate::stt::local_engines::model_discovery::discover_model_files(&model_dir);
+                    let transducer =
+                        crate::stt::local_engines::model_discovery::discover_model_files(
+                            &model_dir,
+                        );
                     if transducer.is_ok() {
                         // NeMo transducer model (e.g., Parakeet TDT v3) → use sherpa-onnx
                         // runtime while preserving NexQ's AudioChunk feed_audio pipeline.
-                        crate::stt::emit_stt_debug(app, "info", "stt",
-                            &format!("[{}] Parakeet TDT using SherpaNemoTransducerSTT from {} (lang={})",
-                                party_role, model_dir.display(), lang));
-                        let mut p = crate::stt::sherpa_nemo_transducer::SherpaNemoTransducerSTT::new(
-                            model_dir,
-                            STTProviderType::ParakeetTdt,
+                        crate::stt::emit_stt_debug(
+                            app,
+                            "info",
+                            "stt",
+                            &format!(
+                                "[{}] Parakeet TDT using SherpaNemoTransducerSTT from {} (lang={})",
+                                party_role,
+                                model_dir.display(),
+                                lang
+                            ),
                         );
+                        let mut p =
+                            crate::stt::sherpa_nemo_transducer::SherpaNemoTransducerSTT::new(
+                                model_dir,
+                                STTProviderType::ParakeetTdt,
+                            );
                         p.set_language(&lang);
                         p.set_app_handle(app.clone());
                         Ok(Some(Box::new(p)))
@@ -1683,9 +1945,17 @@ async fn create_stt_provider_for_party(
                                 let binary = find_offline_binary_for_state(state);
                                 match binary {
                                     Some(binary_path) => {
-                                        crate::stt::emit_stt_debug(app, "info", "stt",
-                                            &format!("[{}] Parakeet CTC offline model from {} (lang={})",
-                                                party_role, model_dir.display(), lang));
+                                        crate::stt::emit_stt_debug(
+                                            app,
+                                            "info",
+                                            "stt",
+                                            &format!(
+                                                "[{}] Parakeet CTC offline model from {} (lang={})",
+                                                party_role,
+                                                model_dir.display(),
+                                                lang
+                                            ),
+                                        );
                                         let mut p = crate::stt::sherpa_offline::SherpaOfflineSTT::new(
                                             binary_path, offline.model, offline.tokens,
                                             crate::stt::sherpa_offline::OfflineModelType::NemoCtc,
@@ -1696,24 +1966,44 @@ async fn create_stt_provider_for_party(
                                         Ok(Some(Box::new(p)))
                                     }
                                     None => {
-                                        crate::stt::emit_stt_debug(app, "error", "stt",
-                                            &format!("[{}] sherpa-onnx-offline.exe not found.", party_role));
+                                        crate::stt::emit_stt_debug(
+                                            app,
+                                            "error",
+                                            "stt",
+                                            &format!(
+                                                "[{}] sherpa-onnx-offline.exe not found.",
+                                                party_role
+                                            ),
+                                        );
                                         Ok(None)
                                     }
                                 }
                             }
                             Err(e) => {
-                                crate::stt::emit_stt_debug(app, "error", "stt",
-                                    &format!("[{}] Parakeet model discovery failed: {}", party_role, e));
+                                crate::stt::emit_stt_debug(
+                                    app,
+                                    "error",
+                                    "stt",
+                                    &format!(
+                                        "[{}] Parakeet model discovery failed: {}",
+                                        party_role, e
+                                    ),
+                                );
                                 Ok(None)
                             }
                         }
                     }
                 }
                 Err(e) => {
-                    crate::stt::emit_stt_debug(app, "error", "stt",
-                        &format!("[{}] Parakeet model '{}' not found: {}. Download in Settings.",
-                            party_role, model_id, e));
+                    crate::stt::emit_stt_debug(
+                        app,
+                        "error",
+                        "stt",
+                        &format!(
+                            "[{}] Parakeet model '{}' not found: {}. Download in Settings.",
+                            party_role, model_id, e
+                        ),
+                    );
                     Ok(None)
                 }
             }
@@ -1723,45 +2013,70 @@ async fn create_stt_provider_for_party(
             let model_id = match raw_model_id {
                 Some(id) if id.contains("giga-am") || id.contains("gigaam") => id,
                 Some(id) => {
-                    log::warn!("GigaAmRussian: ignoring cross-engine model_id '{}', using default", id);
+                    log::warn!(
+                        "GigaAmRussian: ignoring cross-engine model_id '{}', using default",
+                        id
+                    );
                     "giga-am-v2-russian-2025-04-19"
                 }
                 None => "giga-am-v2-russian-2025-04-19",
             };
-            crate::stt::emit_stt_debug(app, "info", "stt",
-                &format!("[{}] GigaAM Russian: looking for model '{}' (local_model_id={:?})",
-                    party_role, model_id, config.local_model_id));
+            crate::stt::emit_stt_debug(
+                app,
+                "info",
+                "stt",
+                &format!(
+                    "[{}] GigaAM Russian: looking for model '{}' (local_model_id={:?})",
+                    party_role, model_id, config.local_model_id
+                ),
+            );
             let model_result = get_local_model_path(state, "gigaam_russian", model_id)
                 .or_else(|_| find_any_downloaded_model(state, "gigaam_russian"));
             match model_result {
                 Ok(model_dir) => {
                     let lang = get_stt_language(state);
                     let transducer =
-                        crate::stt::local_engines::model_discovery::discover_model_files(&model_dir);
+                        crate::stt::local_engines::model_discovery::discover_model_files(
+                            &model_dir,
+                        );
                     match transducer {
                         Ok(_) => {
                             crate::stt::emit_stt_debug(app, "info", "stt",
                                 &format!("[{}] GigaAM Russian using SherpaNemoTransducerSTT from {} (lang={})",
                                     party_role, model_dir.display(), lang));
-                            let mut p = crate::stt::sherpa_nemo_transducer::SherpaNemoTransducerSTT::new(
-                                model_dir,
-                                STTProviderType::GigaAmRussian,
-                            );
+                            let mut p =
+                                crate::stt::sherpa_nemo_transducer::SherpaNemoTransducerSTT::new(
+                                    model_dir,
+                                    STTProviderType::GigaAmRussian,
+                                );
                             p.set_language(&lang);
                             p.set_app_handle(app.clone());
                             Ok(Some(Box::new(p)))
                         }
                         Err(e) => {
-                            crate::stt::emit_stt_debug(app, "error", "stt",
-                                &format!("[{}] GigaAM Russian model discovery failed: {}", party_role, e));
+                            crate::stt::emit_stt_debug(
+                                app,
+                                "error",
+                                "stt",
+                                &format!(
+                                    "[{}] GigaAM Russian model discovery failed: {}",
+                                    party_role, e
+                                ),
+                            );
                             Ok(None)
                         }
                     }
                 }
                 Err(e) => {
-                    crate::stt::emit_stt_debug(app, "error", "stt",
-                        &format!("[{}] GigaAM Russian model '{}' not found: {}. Download in Settings.",
-                            party_role, model_id, e));
+                    crate::stt::emit_stt_debug(
+                        app,
+                        "error",
+                        "stt",
+                        &format!(
+                            "[{}] GigaAM Russian model '{}' not found: {}. Download in Settings.",
+                            party_role, model_id, e
+                        ),
+                    );
                     Ok(None)
                 }
             }
@@ -1777,10 +2092,7 @@ fn find_offline_binary_for_state(state: &AppState) -> Option<std::path::PathBuf>
 }
 
 /// Find any downloaded model for an engine (fallback when requested model isn't available).
-fn find_any_downloaded_model(
-    state: &AppState,
-    engine: &str,
-) -> Result<std::path::PathBuf, String> {
+fn find_any_downloaded_model(state: &AppState, engine: &str) -> Result<std::path::PathBuf, String> {
     let model_mgr = state
         .model_manager
         .as_ref()
@@ -1837,7 +2149,9 @@ fn get_stt_language(state: &AppState) -> String {
 /// This bypasses the STTRouter, which only has keys when set_stt_provider() was called.
 /// Per-party mode never calls set_stt_provider(), so we read credentials directly.
 fn get_credential_key(state: &AppState, provider: &str) -> Option<String> {
-    state.credentials.as_ref()
+    state
+        .credentials
+        .as_ref()
         .and_then(|cred_arc| cred_arc.lock().ok())
         .and_then(|cred| cred.get_key(provider).ok().flatten())
 }
@@ -1870,7 +2184,8 @@ pub async fn ensure_ipolicy_override(app: AppHandle) -> Result<String, String> {
         return serde_json::to_string(&serde_json::json!({
             "active": false,
             "was_drifted": false
-        })).map_err(|e| e.to_string());
+        }))
+        .map_err(|e| e.to_string());
     }
 
     // 2. Get the target endpoint (peek, not take)
@@ -1886,7 +2201,8 @@ pub async fn ensure_ipolicy_override(app: AppHandle) -> Result<String, String> {
                 "active": true,
                 "was_drifted": false,
                 "current_device": ""
-            })).map_err(|e| e.to_string());
+            }))
+            .map_err(|e| e.to_string());
         }
     };
 
@@ -1906,7 +2222,11 @@ pub async fn ensure_ipolicy_override(app: AppHandle) -> Result<String, String> {
 
             let res = (|| -> Result<String, String> {
                 let current = crate::audio::device_default::get_default_capture_endpoint_id()?;
-                log::debug!("IPolicyConfig verify: current='{}', target='{}'", current, target);
+                log::debug!(
+                    "IPolicyConfig verify: current='{}', target='{}'",
+                    current,
+                    target
+                );
 
                 let was_drifted = current != target;
                 if was_drifted {
@@ -1915,8 +2235,15 @@ pub async fn ensure_ipolicy_override(app: AppHandle) -> Result<String, String> {
                         current, target
                     );
                     crate::audio::device_default::set_default_capture_endpoint(&target)?;
-                    crate::stt::emit_stt_debug(&app, "warn", "ipolicy",
-                        &format!("IPolicyConfig drift corrected: '{}' → '{}'", current, target));
+                    crate::stt::emit_stt_debug(
+                        &app,
+                        "warn",
+                        "ipolicy",
+                        &format!(
+                            "IPolicyConfig drift corrected: '{}' → '{}'",
+                            current, target
+                        ),
+                    );
                 } else {
                     log::info!("IPolicyConfig: no drift — default is still correct");
                 }
@@ -1925,7 +2252,8 @@ pub async fn ensure_ipolicy_override(app: AppHandle) -> Result<String, String> {
                     "active": true,
                     "was_drifted": was_drifted,
                     "current_device": target
-                })).map_err(|e| e.to_string())
+                }))
+                .map_err(|e| e.to_string())
             })();
 
             if we_initialized {
@@ -1941,7 +2269,8 @@ pub async fn ensure_ipolicy_override(app: AppHandle) -> Result<String, String> {
         serde_json::to_string(&serde_json::json!({
             "active": false,
             "was_drifted": false
-        })).map_err(|e| e.to_string())
+        }))
+        .map_err(|e| e.to_string())
     }
 }
 
@@ -1964,17 +2293,32 @@ fn restore_default_device_if_overridden(state: &AppState, app: &tauri::AppHandle
     }
 
     if let Some(ref original_id) = original {
-        crate::stt::emit_stt_debug(app, "info", "audio",
-            &format!("IPolicyConfig: restoring default capture → '{}'", original_id));
+        crate::stt::emit_stt_debug(
+            app,
+            "info",
+            "audio",
+            &format!(
+                "IPolicyConfig: restoring default capture → '{}'",
+                original_id
+            ),
+        );
 
         match crate::audio::device_default::restore_default_capture_device(original_id) {
             Ok(()) => {
-                crate::stt::emit_stt_debug(app, "info", "audio",
-                    "IPolicyConfig: default capture device restored");
+                crate::stt::emit_stt_debug(
+                    app,
+                    "info",
+                    "audio",
+                    "IPolicyConfig: default capture device restored",
+                );
             }
             Err(e) => {
-                crate::stt::emit_stt_debug(app, "error", "audio",
-                    &format!("IPolicyConfig: restore failed: {}", e));
+                crate::stt::emit_stt_debug(
+                    app,
+                    "error",
+                    "audio",
+                    &format!("IPolicyConfig: restore failed: {}", e),
+                );
             }
         }
     }
@@ -1987,22 +2331,29 @@ fn restore_default_device_if_overridden(state: &AppState, app: &tauri::AppHandle
 ///
 /// `source` must be "you" or "them".
 #[command]
-pub async fn set_source_muted(
-    app: AppHandle,
-    source: String,
-    muted: bool,
-) -> Result<(), String> {
+pub async fn set_source_muted(app: AppHandle, source: String, muted: bool) -> Result<(), String> {
     let state = app.state::<AppState>();
     match source.as_str() {
         "you" => {
             state.you_muted.store(muted, Ordering::Relaxed);
-            log::info!("'You' audio source {}", if muted { "muted" } else { "unmuted" });
+            log::info!(
+                "'You' audio source {}",
+                if muted { "muted" } else { "unmuted" }
+            );
         }
         "them" => {
             state.them_muted.store(muted, Ordering::Relaxed);
-            log::info!("'Them' audio source {}", if muted { "muted" } else { "unmuted" });
+            log::info!(
+                "'Them' audio source {}",
+                if muted { "muted" } else { "unmuted" }
+            );
         }
-        _ => return Err(format!("Unknown source: '{}' (expected 'you' or 'them')", source)),
+        _ => {
+            return Err(format!(
+                "Unknown source: '{}' (expected 'you' or 'them')",
+                source
+            ))
+        }
     }
     Ok(())
 }
@@ -2017,4 +2368,3 @@ pub async fn get_mute_status(app: AppHandle) -> Result<String, String> {
     });
     serde_json::to_string(&status).map_err(|e| format!("Failed to serialize: {}", e))
 }
-

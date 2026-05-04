@@ -17,21 +17,18 @@ impl DatabaseManager {
     /// and runs all migrations.
     pub fn new(app_data_dir: PathBuf) -> Result<Self, DatabaseError> {
         // Ensure directory exists
-        std::fs::create_dir_all(&app_data_dir).map_err(|e| {
-            DatabaseError::Init(format!("Failed to create data directory: {}", e))
-        })?;
+        std::fs::create_dir_all(&app_data_dir)
+            .map_err(|e| DatabaseError::Init(format!("Failed to create data directory: {}", e)))?;
 
         let db_path = app_data_dir.join("nexq.db");
         log::info!("Opening database at: {}", db_path.display());
 
-        let conn = Connection::open(&db_path).map_err(|e| {
-            DatabaseError::Init(format!("Failed to open database: {}", e))
-        })?;
+        let conn = Connection::open(&db_path)
+            .map_err(|e| DatabaseError::Init(format!("Failed to open database: {}", e)))?;
 
         // Run migrations
-        migrations::run(&conn).map_err(|e| {
-            DatabaseError::Migration(format!("Migration failed: {}", e))
-        })?;
+        migrations::run(&conn)
+            .map_err(|e| DatabaseError::Migration(format!("Migration failed: {}", e)))?;
 
         Ok(Self { conn })
     }

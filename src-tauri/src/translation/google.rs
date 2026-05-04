@@ -82,9 +82,15 @@ fn map_reqwest_err(e: reqwest::Error) -> TranslationError {
 
 #[async_trait]
 impl TranslationProvider for GoogleTranslator {
-    fn provider_name(&self) -> &str { "Google Cloud Translation" }
-    fn provider_type(&self) -> TranslationProviderType { TranslationProviderType::Google }
-    fn is_local(&self) -> bool { false }
+    fn provider_name(&self) -> &str {
+        "Google Cloud Translation"
+    }
+    fn provider_type(&self) -> TranslationProviderType {
+        TranslationProviderType::Google
+    }
+    fn is_local(&self) -> bool {
+        false
+    }
 
     async fn translate(
         &self,
@@ -247,7 +253,9 @@ impl TranslationProvider for GoogleTranslator {
         // Translate a short test string to validate the API key
         match self.translate("hello", None, "es").await {
             Ok(_) => {
-                let lang_count = self.supported_languages().await
+                let lang_count = self
+                    .supported_languages()
+                    .await
                     .map(|l| l.len())
                     .unwrap_or(0);
                 Ok(ConnectionStatus {

@@ -137,11 +137,13 @@ impl IntelligenceEngine {
         }
 
         // Extract actual messages for the call log
-        let system_msg = messages.iter()
+        let system_msg = messages
+            .iter()
             .find(|m| m.role == "system")
             .map(|m| m.content.clone())
             .unwrap_or_default();
-        let user_msg = messages.iter()
+        let user_msg = messages
+            .iter()
             .find(|m| m.role == "user")
             .map(|m| m.content.clone())
             .unwrap_or_default();

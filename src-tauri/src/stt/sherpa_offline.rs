@@ -144,10 +144,7 @@ impl STTProvider for SherpaOfflineSTT {
         let app_handle = self.app_handle.clone();
 
         // Working directory for DLL resolution
-        let working_dir = binary_path
-            .parent()
-            .unwrap_or(&binary_path)
-            .to_path_buf();
+        let working_dir = binary_path.parent().unwrap_or(&binary_path).to_path_buf();
 
         let batch_thread = std::thread::spawn(move || {
             let batch_samples = (BATCH_SECONDS * SAMPLE_RATE as f32) as usize;
@@ -190,10 +187,17 @@ impl STTProvider for SherpaOfflineSTT {
 
                     // Verify model file exists before calling sidecar
                     if !model_path.exists() {
-                        log::error!("SherpaOfflineSTT: Model file not found: {}", model_path.display());
+                        log::error!(
+                            "SherpaOfflineSTT: Model file not found: {}",
+                            model_path.display()
+                        );
                         if let Some(ref handle) = app_handle {
-                            crate::stt::emit_stt_debug(handle, "error", "sherpa_offline",
-                                &format!("Model file missing: {}", model_path.display()));
+                            crate::stt::emit_stt_debug(
+                                handle,
+                                "error",
+                                "sherpa_offline",
+                                &format!("Model file missing: {}", model_path.display()),
+                            );
                         }
                         let _ = std::fs::remove_file(&wav_path);
                         continue;
@@ -210,10 +214,14 @@ impl STTProvider for SherpaOfflineSTT {
                     let tokens_str = tokens_path.to_string_lossy().to_string();
 
                     let mut args: Vec<String> = vec![
-                        model_flag.to_string(), model_str,
-                        "--tokens".to_string(), tokens_str,
-                        "--num-threads".to_string(), "4".to_string(),
-                        "--provider".to_string(), "cpu".to_string(),
+                        model_flag.to_string(),
+                        model_str,
+                        "--tokens".to_string(),
+                        tokens_str,
+                        "--num-threads".to_string(),
+                        "4".to_string(),
+                        "--provider".to_string(),
+                        "cpu".to_string(),
                     ];
 
                     // SenseVoice-specific: set language and enable ITN
@@ -233,7 +241,11 @@ impl STTProvider for SherpaOfflineSTT {
 
                     args.push(wav_path.to_string_lossy().to_string());
 
-                    log::debug!("SherpaOfflineSTT: cmd={} args={:?}", binary_path.display(), args);
+                    log::debug!(
+                        "SherpaOfflineSTT: cmd={} args={:?}",
+                        binary_path.display(),
+                        args
+                    );
 
                     // Run sherpa-onnx-offline
                     match std::process::Command::new(&binary_path)
@@ -268,7 +280,8 @@ impl STTProvider for SherpaOfflineSTT {
                                 let timestamp_ms = std::time::SystemTime::now()
                                     .duration_since(std::time::UNIX_EPOCH)
                                     .unwrap_or_default()
-                                    .as_millis() as u64;
+                                    .as_millis()
+                                    as u64;
 
                                 let result = TranscriptResult {
                                     text: text.clone(),
@@ -281,10 +294,7 @@ impl STTProvider for SherpaOfflineSTT {
                                 };
 
                                 if let Err(e) = result_tx.blocking_send(result) {
-                                    log::error!(
-                                        "SherpaOfflineSTT: Failed to send result: {}",
-                                        e
-                                    );
+                                    log::error!("SherpaOfflineSTT: Failed to send result: {}", e);
                                     break;
                                 }
 
@@ -308,12 +318,19 @@ impl STTProvider for SherpaOfflineSTT {
                                     raw_stderr, raw_stdout
                                 );
                                 if let Some(ref handle) = app_handle {
-                                    let snippet = if !raw_stderr.is_empty() { &raw_stderr } else { &raw_stdout };
+                                    let snippet = if !raw_stderr.is_empty() {
+                                        &raw_stderr
+                                    } else {
+                                        &raw_stdout
+                                    };
                                     crate::stt::emit_stt_debug(
                                         handle,
                                         "warn",
                                         "sherpa_offline",
-                                        &format!("No text in output: {}", snippet.chars().take(300).collect::<String>()),
+                                        &format!(
+                                            "No text in output: {}",
+                                            snippet.chars().take(300).collect::<String>()
+                                        ),
                                     );
                                 }
                             }
@@ -330,18 +347,17 @@ impl STTProvider for SherpaOfflineSTT {
                                         handle,
                                         "error",
                                         "sherpa_offline",
-                                        &format!("Sidecar failed ({}): {}",
+                                        &format!(
+                                            "Sidecar failed ({}): {}",
                                             output.status,
-                                            err.chars().take(150).collect::<String>()),
+                                            err.chars().take(150).collect::<String>()
+                                        ),
                                     );
                                 }
                             }
                         }
                         Err(e) => {
-                            log::error!(
-                                "SherpaOfflineSTT: Failed to run binary: {}",
-                                e
-                            );
+                            log::error!("SherpaOfflineSTT: Failed to run binary: {}", e);
                             if let Some(ref handle) = app_handle {
                                 crate::stt::emit_stt_debug(
                                     handle,
@@ -370,10 +386,14 @@ impl STTProvider for SherpaOfflineSTT {
                     let tokens_str = tokens_path.to_string_lossy().to_string();
 
                     let mut args: Vec<String> = vec![
-                        model_flag.to_string(), model_str,
-                        "--tokens".to_string(), tokens_str,
-                        "--num-threads".to_string(), "4".to_string(),
-                        "--provider".to_string(), "cpu".to_string(),
+                        model_flag.to_string(),
+                        model_str,
+                        "--tokens".to_string(),
+                        tokens_str,
+                        "--num-threads".to_string(),
+                        "4".to_string(),
+                        "--provider".to_string(),
+                        "cpu".to_string(),
                     ];
 
                     if matches!(model_type, OfflineModelType::SenseVoice) {
@@ -392,7 +412,11 @@ impl STTProvider for SherpaOfflineSTT {
 
                     args.push(wav_path.to_string_lossy().to_string());
 
-                    log::debug!("SherpaOfflineSTT: final cmd={} args={:?}", binary_path.display(), args);
+                    log::debug!(
+                        "SherpaOfflineSTT: final cmd={} args={:?}",
+                        binary_path.display(),
+                        args
+                    );
 
                     if let Ok(output) = std::process::Command::new(&binary_path)
                         .args(&args)

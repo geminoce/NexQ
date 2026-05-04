@@ -55,17 +55,13 @@ impl ContextManager {
     /// Get the context storage directory path.
     fn get_context_dir() -> PathBuf {
         if let Some(appdata) = std::env::var_os("APPDATA") {
-            PathBuf::from(appdata)
-                .join("com.nexq.app")
-                .join("context")
+            PathBuf::from(appdata).join("com.nexq.app").join("context")
         } else {
             // Fallback for non-Windows or if APPDATA is not set
             let home = std::env::var("HOME")
                 .or_else(|_| std::env::var("USERPROFILE"))
                 .unwrap_or_else(|_| ".".to_string());
-            PathBuf::from(home)
-                .join(".nexq")
-                .join("context")
+            PathBuf::from(home).join(".nexq").join("context")
         }
     }
 
@@ -116,18 +112,12 @@ impl ContextManager {
             .map_err(|e| format!("Failed to copy file to context directory: {}", e))?;
 
         // Get file size
-        let size_bytes = fs::metadata(&dest_path)
-            .map(|m| m.len())
-            .unwrap_or(0);
+        let size_bytes = fs::metadata(&dest_path).map(|m| m.len()).unwrap_or(0);
 
         // Extract text based on file type
         let text = match file_type {
-            "pdf" => pdf_extractor::extract_text_from_pdf(
-                dest_path.to_str().unwrap_or(file_path),
-            )?,
-            "txt" | "md" => file_loader::load_text_file(
-                dest_path.to_str().unwrap_or(file_path),
-            )?,
+            "pdf" => pdf_extractor::extract_text_from_pdf(dest_path.to_str().unwrap_or(file_path))?,
+            "txt" | "md" => file_loader::load_text_file(dest_path.to_str().unwrap_or(file_path))?,
             "docx" => crate::rag::file_processor::extract_docx_text(
                 dest_path.to_str().unwrap_or(file_path),
             )?,
@@ -157,10 +147,7 @@ impl ContextManager {
             id: resource_id.clone(),
             name: file_name,
             file_type: file_type.to_string(),
-            file_path: dest_path
-                .to_str()
-                .unwrap_or("")
-                .to_string(),
+            file_path: dest_path.to_str().unwrap_or("").to_string(),
             size_bytes,
             token_count,
             preview,
@@ -197,7 +184,10 @@ impl ContextManager {
     pub fn restore_resource(&mut self, resource: ContextResource) -> Result<(), String> {
         let path = Path::new(&resource.file_path);
         if !path.exists() {
-            return Err(format!("Context file missing from disk: {}", resource.file_path));
+            return Err(format!(
+                "Context file missing from disk: {}",
+                resource.file_path
+            ));
         }
 
         // Re-extract text (needed for context-stuffing mode and token budget)

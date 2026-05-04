@@ -83,8 +83,7 @@ impl FbankExtractor {
         let window: Vec<f32> = (0..FRAME_LENGTH_SAMPLES)
             .map(|i| {
                 0.5 * (1.0
-                    - (2.0 * std::f32::consts::PI * i as f32
-                        / (FRAME_LENGTH_SAMPLES - 1) as f32)
+                    - (2.0 * std::f32::consts::PI * i as f32 / (FRAME_LENGTH_SAMPLES - 1) as f32)
                         .cos())
             })
             .collect();

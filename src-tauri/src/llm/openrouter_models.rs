@@ -141,7 +141,10 @@ pub fn parse_models_response(body: &serde_json::Value) -> Vec<OpenRouterModel> {
             // Pricing — use fallbacks to avoid dropping models with missing fields
             let pricing_obj = m.get("pricing")?;
             let prompt_price = pricing_obj.get("prompt").map(parse_price).unwrap_or(0.0);
-            let completion_price = pricing_obj.get("completion").map(parse_price).unwrap_or(0.0);
+            let completion_price = pricing_obj
+                .get("completion")
+                .map(parse_price)
+                .unwrap_or(0.0);
             let is_free = prompt_price == 0.0 && completion_price == 0.0;
 
             // Supported parameters → capabilities
@@ -157,8 +160,7 @@ pub fn parse_models_response(body: &serde_json::Value) -> Vec<OpenRouterModel> {
 
             let supports_tools = supported_params.contains(&"tools".to_string());
             let supports_reasoning = supported_params.contains(&"reasoning".to_string());
-            let supports_web_search =
-                supported_params.contains(&"web_search_options".to_string());
+            let supports_web_search = supported_params.contains(&"web_search_options".to_string());
 
             // Top provider info
             let top_provider = m.get("top_provider");
@@ -199,9 +201,7 @@ pub fn parse_models_response(body: &serde_json::Value) -> Vec<OpenRouterModel> {
 }
 
 /// Fetch models from the OpenRouter API.
-pub async fn fetch_openrouter_models(
-    api_key: &str,
-) -> Result<Vec<OpenRouterModel>, String> {
+pub async fn fetch_openrouter_models(api_key: &str) -> Result<Vec<OpenRouterModel>, String> {
     let client = reqwest::Client::new();
     let response = client
         .get("https://openrouter.ai/api/v1/models")

@@ -145,7 +145,10 @@ impl AzureSpeechSTT {
         let response = client
             .post(endpoint_url)
             .header("Ocp-Apim-Subscription-Key", subscription_key)
-            .header("Content-Type", "audio/wav; codecs=audio/pcm; samplerate=16000")
+            .header(
+                "Content-Type",
+                "audio/wav; codecs=audio/pcm; samplerate=16000",
+            )
             .header("Accept", "application/json")
             .body(wav_data)
             .send()
@@ -156,10 +159,7 @@ impl AzureSpeechSTT {
                 if resp.status().is_success() {
                     match resp.json::<AzureRecognitionResult>().await {
                         Ok(azure_resp) => {
-                            let status = azure_resp
-                                .recognition_status
-                                .as_deref()
-                                .unwrap_or("");
+                            let status = azure_resp.recognition_status.as_deref().unwrap_or("");
 
                             if status == "Success" {
                                 if let Some(text) = azure_resp.display_text {
@@ -180,10 +180,7 @@ impl AzureSpeechSTT {
                             } else if status == "NoMatch" {
                                 log::debug!("AzureSpeechSTT: No speech recognized in segment");
                             } else {
-                                log::warn!(
-                                    "AzureSpeechSTT: Recognition status: {}",
-                                    status
-                                );
+                                log::warn!("AzureSpeechSTT: Recognition status: {}", status);
                             }
                         }
                         Err(e) => {
@@ -193,11 +190,7 @@ impl AzureSpeechSTT {
                 } else {
                     let status = resp.status();
                     let body = resp.text().await.unwrap_or_default();
-                    log::error!(
-                        "AzureSpeechSTT: API returned status {}: {}",
-                        status,
-                        body
-                    );
+                    log::error!("AzureSpeechSTT: API returned status {}: {}", status, body);
                 }
             }
             Err(e) => {
@@ -351,10 +344,7 @@ impl STTProvider for AzureSpeechSTT {
                     .await;
                 });
                 // Wait for the final segment to be sent (with timeout)
-                let _ = tokio::time::timeout(
-                    std::time::Duration::from_secs(10),
-                    handle,
-                ).await;
+                let _ = tokio::time::timeout(std::time::Duration::from_secs(10), handle).await;
             }
         }
 

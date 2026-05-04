@@ -15,6 +15,8 @@ import { TestSearchDialog } from "../context/TestSearchDialog";
 import { NEXQ_VERSION, NEXQ_DEVELOPER } from "../lib/version";
 import { ServiceStatusBar } from "../components/ServiceStatusBar";
 import type { MeetingSummary, AudioMode, AIScenario } from "../lib/types";
+import { t } from "../i18n";
+import { getScenarioById } from "../lib/scenarios";
 import {
   Settings,
   Search,
@@ -56,6 +58,14 @@ function useFavorites() {
 }
 
 type MeetingFilter = "all" | "favorites" | "with_summary" | "online" | "in_person";
+
+function formatLauncherAudioMode(mode: AudioMode): string {
+  return mode === "online" ? t("launcher.filters.online") : t("launcher.filters.inPerson");
+}
+
+function formatLauncherScenario(id: string): string {
+  return getScenarioById(id)?.name ?? id.replace("_", " ");
+}
 
 // ════════════════════════════════════════════════════════════════
 //  NEXQ DASHBOARD
@@ -131,9 +141,9 @@ export function LauncherView() {
     setStartError(null);
     try {
       await startMeetingFlow(undefined, audioMode, scenario);
-      showToast("Meeting started", "success");
+      showToast(t("launcher.start.startedToast"), "success");
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Failed to start meeting";
+      const msg = err instanceof Error ? err.message : t("launcher.start.failedToast");
       setStartError(msg);
       showToast(msg, "error");
     } finally {
@@ -149,9 +159,9 @@ export function LauncherView() {
     try {
       await endMeetingFlow();
       await startMeetingFlow(undefined, setup?.audioMode, setup?.scenario);
-      showToast("New meeting started", "success");
+      showToast(t("launcher.start.newStartedToast"), "success");
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Failed to start";
+      const msg = err instanceof Error ? err.message : t("launcher.start.failedShort");
       setStartError(msg);
     } finally {
       setIsStarting(false);
@@ -169,8 +179,8 @@ export function LauncherView() {
       await deleteMeeting(meetingId);
       await loadRecentMeetings();
       if (searchResults) setSearchResults((p) => p?.filter((m) => m.id !== meetingId) ?? null);
-      showToast("Meeting deleted", "info");
-    } catch { showToast("Couldn't delete meeting", "error"); }
+      showToast(t("launcher.meetingDeletedToast"), "info");
+    } catch { showToast(t("launcher.meetingDeleteFailedToast"), "error"); }
   }, [loadRecentMeetings, searchResults]);
 
   const handleDeleteAll = useCallback(() => {
@@ -182,7 +192,7 @@ export function LauncherView() {
     try {
       for (const m of recentMeetings) { try { await deleteMeeting(m.id); } catch {} }
       await loadRecentMeetings();
-      showToast("All meetings deleted", "info");
+      showToast(t("launcher.deleteAll.deletedToast"), "info");
     } finally {
       setIsDeletingAll(false);
       setShowDeleteAllConfirm(false);
@@ -248,7 +258,7 @@ export function LauncherView() {
               {activeMeeting.title}
             </span>
             <span className="flex items-center gap-0.5 rounded-full bg-success/20 px-1.5 py-0.5 text-meta font-semibold text-success">
-              RETURN <ArrowRight className="h-2.5 w-2.5" />
+              {t("launcher.start.return")} <ArrowRight className="h-2.5 w-2.5" />
             </span>
           </button>
         )}
@@ -275,12 +285,12 @@ export function LauncherView() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
-                placeholder="Search meetings..."
-                aria-label="Search meetings"
+                placeholder={t("launcher.searchMeetings")}
+                aria-label={t("launcher.searchMeetings")}
                 className="w-full rounded-lg border border-border/20 bg-background/40 py-2 pl-9 pr-8 text-sm text-foreground placeholder:text-muted-foreground/40 transition-all focus:border-primary/40 focus:bg-background/60 focus:outline-none focus:ring-1 focus:ring-primary/20"
               />
               {searchQuery && (
-                <button onClick={() => handleSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-sm p-0.5 text-muted-foreground/40 transition-colors hover:text-foreground cursor-pointer" aria-label="Clear search">
+                <button onClick={() => handleSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-sm p-0.5 text-muted-foreground/40 transition-colors hover:text-foreground cursor-pointer" aria-label={t("launcher.clearSearch")}>
                   <X className="h-3 w-3" aria-hidden="true" />
                 </button>
               )}
@@ -291,11 +301,11 @@ export function LauncherView() {
           <div className="flex items-center justify-between px-3 pb-2">
             <div className="flex items-center gap-0.5 flex-wrap">
               {([
-                { key: "all", label: "All" },
-                { key: "favorites", label: "Starred" },
-                { key: "with_summary", label: "Summary" },
-                { key: "online", label: "Online" },
-                { key: "in_person", label: "In-Person" },
+                { key: "all", label: t("launcher.filters.all") },
+                { key: "favorites", label: t("launcher.filters.starred") },
+                { key: "with_summary", label: t("launcher.filters.summary") },
+                { key: "online", label: t("launcher.filters.online") },
+                { key: "in_person", label: t("launcher.filters.inPerson") },
               ] as const).map(({ key, label }) => (
                 <button
                   key={key}
@@ -316,7 +326,7 @@ export function LauncherView() {
               ))}
             </div>
             {recentMeetings.length > 0 && (
-              <button onClick={handleDeleteAll} className="rounded p-1 text-muted-foreground/50 transition-all duration-150 hover:text-destructive hover:bg-destructive/10 active:scale-90 cursor-pointer" aria-label="Delete all meetings">
+              <button onClick={handleDeleteAll} className="rounded p-1 text-muted-foreground/50 transition-all duration-150 hover:text-destructive hover:bg-destructive/10 active:scale-90 cursor-pointer" aria-label={t("launcher.deleteAllMeetings")}>
                 <Trash2 className="h-3 w-3" aria-hidden="true" />
               </button>
             )}
@@ -325,7 +335,10 @@ export function LauncherView() {
           {/* Count */}
           <div className="px-3 pb-1.5">
             <span className="text-meta font-semibold uppercase tracking-wider text-muted-foreground/60">
-              {displayedMeetings.length} meeting{displayedMeetings.length !== 1 ? "s" : ""}
+              {t("launcher.meetingsCount", {
+                count: displayedMeetings.length,
+                plural: displayedMeetings.length === 1 ? "" : "s",
+              })}
             </span>
           </div>
 
@@ -363,11 +376,11 @@ export function LauncherView() {
                 </div>
                 <div className="text-left">
                   <div className="text-sm font-bold tracking-tight">
-                    {isStarting ? "Starting..." : "Start Meeting"}
+                    {isStarting ? t("launcher.start.starting") : t("launcher.start.button")}
                   </div>
                   <div className="text-meta font-normal text-white/50">
                     {rememberedMeetingSetup
-                      ? `${rememberedMeetingSetup.audioMode === "online" ? "Online" : "In-Person"} · ${rememberedMeetingSetup.scenario.replace("_", " ")}`
+                      ? `${formatLauncherAudioMode(rememberedMeetingSetup.audioMode)} · ${formatLauncherScenario(rememberedMeetingSetup.scenario)}`
                       : "Ctrl+M"
                     }
                   </div>
@@ -385,7 +398,7 @@ export function LauncherView() {
             <div className="dash-section-enter flex items-center gap-2 pt-1">
               <Database className="h-3 w-3 text-muted-foreground/60" />
               <span className="text-meta font-semibold uppercase tracking-wider text-muted-foreground/60">
-                Meeting Context
+                {t("launcher.context.title")}
               </span>
               <div className="flex-1 border-t border-border/20" />
             </div>
@@ -416,17 +429,17 @@ export function LauncherView() {
                       {settingsStale ? (
                         <>
                           <AlertTriangle className="mr-1 inline h-3 w-3" />
-                          Settings Changed — Rebuild Knowledge Base
+                          {t("launcher.context.settingsChanged")}
                         </>
                       ) : isFirstBuild ? (
                         <>
                           <Zap className="mr-1 inline h-3 w-3" />
-                          Build Knowledge Base
+                          {t("launcher.context.buildKnowledgeBase")}
                         </>
                       ) : (
                         <>
                           <CheckCircle2 className="mr-1 inline h-3 w-3" />
-                          Update Knowledge Base
+                          {t("launcher.context.updateKnowledgeBase")}
                         </>
                       )}
                     </button>
@@ -435,7 +448,7 @@ export function LauncherView() {
                 {ragStatus === "updating" && (
                   <div className="flex items-center justify-center gap-2 rounded-lg border border-warning/20 bg-warning/5 px-3 py-2 text-xs text-warning">
                     <Loader2 className="h-3 w-3 animate-spin" />
-                    Building knowledge base...
+                    {t("launcher.context.buildingKnowledgeBase")}
                   </div>
                 )}
 
@@ -443,13 +456,13 @@ export function LauncherView() {
                 {isAutoIndexing && ragStatus === "idle" && (
                   <div className="flex items-center gap-2 rounded-lg border border-border/20 bg-accent/20 px-3 py-1.5 text-meta text-muted-foreground/70">
                     <Loader2 className="h-2.5 w-2.5 animate-spin" />
-                    Indexing file...
+                    {t("launcher.context.indexingFile")}
                   </div>
                 )}
                 {ragStatus === "done" && (
                   <div className="flex items-center justify-center gap-2 rounded-lg border border-success/20 bg-success/5 px-3 py-2 text-xs text-success">
                     <CheckCircle2 className="h-3 w-3" />
-                    Knowledge base updated
+                    {t("launcher.context.knowledgeBaseUpdated")}
                   </div>
                 )}
 
@@ -460,7 +473,7 @@ export function LauncherView() {
                     className="w-full rounded-lg border border-dashed border-border/30 bg-card/30 px-3 py-2 text-xs font-medium text-muted-foreground transition-all duration-150 hover:bg-accent/30 hover:text-foreground hover:border-border/50 active:scale-[0.98] cursor-pointer"
                   >
                     <FlaskConical className="mr-1 inline h-3 w-3" />
-                    Test Knowledge Base
+                    {t("launcher.context.testKnowledgeBase")}
                   </button>
                 )}
               </div>
@@ -473,7 +486,7 @@ export function LauncherView() {
             {resources.length > 0 && (
               <div>
                 <div className="mb-2 text-meta font-semibold uppercase tracking-wider text-muted-foreground/60">
-                  Sources ({resources.length})
+                  {t("launcher.context.sources", { count: resources.length })}
                 </div>
                 <div className="space-y-2">
                   {resources.map((r) => (
@@ -518,14 +531,14 @@ export function LauncherView() {
 
       {/* ═══ DELETE ALL CONFIRMATION ═══ */}
       {showDeleteAllConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Delete all meetings confirmation">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label={t("launcher.deleteAllMeetings")}>
           <div className="w-[380px] rounded-2xl border border-border/40 bg-card p-5 shadow-2xl">
             <div className="mb-1 flex items-center gap-2">
               <Trash2 className="h-4.5 w-4.5 text-destructive" aria-hidden="true" />
-              <h3 className="text-sm font-semibold text-foreground">Delete All Meetings</h3>
+              <h3 className="text-sm font-semibold text-foreground">{t("launcher.deleteAll.title")}</h3>
             </div>
             <p className="mb-5 text-xs text-muted-foreground">
-              This will permanently delete all <span className="font-semibold text-foreground">{recentMeetings.length}</span> meetings and their transcripts. This action cannot be undone.
+              {t("launcher.deleteAll.description", { count: recentMeetings.length })}
             </p>
             <div className="flex flex-col gap-2">
               <button
@@ -537,10 +550,10 @@ export function LauncherView() {
                 {isDeletingAll ? (
                   <span className="flex items-center justify-center gap-2">
                     <Loader2 className="h-3 w-3 animate-spin" />
-                    Deleting...
+                    {t("launcher.deleteAll.deleting")}
                   </span>
                 ) : (
-                  `Delete All ${recentMeetings.length} Meetings`
+                  t("launcher.deleteAll.confirm", { count: recentMeetings.length })
                 )}
               </button>
               <button
@@ -548,7 +561,7 @@ export function LauncherView() {
                 disabled={isDeletingAll}
                 className="w-full rounded-xl border border-border/40 bg-secondary/30 px-4 py-2 text-xs font-medium text-foreground transition-all duration-150 hover:bg-secondary/50 active:scale-[0.98] disabled:opacity-60 cursor-pointer"
               >
-                Cancel
+                {t("common.cancel")}
               </button>
             </div>
           </div>
@@ -557,24 +570,24 @@ export function LauncherView() {
 
       {/* ═══ CONFLICT MODAL ═══ */}
       {showConflictPrompt && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Meeting in progress conflict">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label={t("launcher.conflict.title")}>
           <div className="w-[380px] rounded-2xl border border-border/40 bg-card p-5 shadow-2xl">
             <div className="mb-1 flex items-center gap-2">
               <AlertTriangle className="h-4.5 w-4.5 text-warning" aria-hidden="true" />
-              <h3 className="text-sm font-semibold text-foreground">Meeting in Progress</h3>
+              <h3 className="text-sm font-semibold text-foreground">{t("launcher.conflict.title")}</h3>
             </div>
             <p className="mb-5 text-xs text-muted-foreground">
-              &ldquo;{activeMeeting?.title}&rdquo; is still active.
+              {t("launcher.conflict.description", { title: activeMeeting?.title ?? "" })}
             </p>
             <div className="flex flex-col gap-2">
               <button autoFocus onClick={handleEndAndStartNew} className="w-full rounded-xl bg-primary px-4 py-2 text-xs font-medium text-primary-foreground transition-all duration-150 hover:bg-primary/90 hover:-translate-y-px active:translate-y-px active:scale-[0.98] cursor-pointer">
-                End Current & Start New
+                {t("launcher.conflict.endAndStart")}
               </button>
               <button onClick={() => { setShowConflictPrompt(false); setCurrentView("overlay"); }} className="w-full rounded-xl border border-border/40 bg-secondary/30 px-4 py-2 text-xs font-medium text-foreground transition-all duration-150 hover:bg-secondary/50 active:scale-[0.98] cursor-pointer">
-                Return to Current Meeting
+                {t("launcher.conflict.returnCurrent")}
               </button>
               <button onClick={() => setShowConflictPrompt(false)} className="w-full rounded-xl px-4 py-1.5 text-xs text-muted-foreground hover:text-foreground cursor-pointer">
-                Cancel
+                {t("common.cancel")}
               </button>
             </div>
           </div>

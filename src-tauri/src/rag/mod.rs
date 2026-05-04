@@ -1,22 +1,22 @@
-pub mod config;
 pub mod chunker;
+pub mod config;
 pub mod embedder;
-pub mod vector_store;
-pub mod fts_store;
-pub mod search;
-pub mod prompt_builder;
 pub mod file_processor;
+pub mod fts_store;
+pub mod prompt_builder;
+pub mod search;
 pub mod transcript_indexer;
+pub mod vector_store;
 
-use std::sync::{Arc, Mutex};
-use config::RagConfig;
-use embedder::OllamaEmbedder;
-use search::ScoredChunk;
-use transcript_indexer::TranscriptIndexer;
 use crate::db::rag as rag_db;
 use crate::db::DatabaseManager;
+use config::RagConfig;
+use embedder::OllamaEmbedder;
 use rusqlite::Connection;
+use search::ScoredChunk;
+use std::sync::{Arc, Mutex};
 use tauri::{AppHandle, Emitter};
+use transcript_indexer::TranscriptIndexer;
 use uuid::Uuid;
 
 /// Progress event payload emitted during file indexing.
@@ -231,8 +231,7 @@ impl RagManager {
 
     /// Clear the entire RAG index (all chunks, embeddings, and FTS data).
     pub fn clear_index(conn: &Connection) -> Result<(), String> {
-        rag_db::clear_all_chunks(conn)
-            .map_err(|e| format!("Failed to clear RAG index: {}", e))?;
+        rag_db::clear_all_chunks(conn).map_err(|e| format!("Failed to clear RAG index: {}", e))?;
         Ok(())
     }
 
@@ -290,8 +289,7 @@ impl RagManager {
 
     /// Get the current RAG index status (chunk counts, file counts, etc.).
     pub fn get_status(conn: &Connection) -> Result<rag_db::RagIndexStatus, String> {
-        rag_db::get_index_status(conn)
-            .map_err(|e| format!("Failed to get RAG index status: {}", e))
+        rag_db::get_index_status(conn).map_err(|e| format!("Failed to get RAG index status: {}", e))
     }
 }
 

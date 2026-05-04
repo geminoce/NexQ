@@ -17,7 +17,9 @@
 #[cfg(target_os = "windows")]
 pub fn get_default_capture_endpoint_id() -> Result<String, String> {
     use std::ffi::c_void;
-    use windows::Win32::Media::Audio::{eCapture, eConsole, IMMDeviceEnumerator, MMDeviceEnumerator};
+    use windows::Win32::Media::Audio::{
+        eCapture, eConsole, IMMDeviceEnumerator, MMDeviceEnumerator,
+    };
     use windows::Win32::System::Com::{CoCreateInstance, CLSCTX_ALL};
 
     unsafe {
@@ -29,9 +31,7 @@ pub fn get_default_capture_endpoint_id() -> Result<String, String> {
             .GetDefaultAudioEndpoint(eCapture, eConsole)
             .map_err(|e| format!("GetDefaultAudioEndpoint(eCapture) failed: {}", e))?;
 
-        let id_pwstr = device
-            .GetId()
-            .map_err(|e| format!("GetId failed: {}", e))?;
+        let id_pwstr = device.GetId().map_err(|e| format!("GetId failed: {}", e))?;
 
         let id_str = id_pwstr
             .to_string()
@@ -79,9 +79,7 @@ pub fn find_capture_endpoint_id_by_name(cpal_name: &str) -> Result<String, Strin
             let name = get_device_friendly_name_internal(&device);
 
             if name.as_deref() == Some(cpal_name) {
-                let id_pwstr = device
-                    .GetId()
-                    .map_err(|e| format!("GetId failed: {}", e))?;
+                let id_pwstr = device.GetId().map_err(|e| format!("GetId failed: {}", e))?;
                 let id_str = id_pwstr
                     .to_string()
                     .map_err(|e| format!("PWSTR conversion: {}", e))?;
@@ -177,7 +175,8 @@ pub fn set_default_capture_endpoint(endpoint_id: &str) -> Result<(), String> {
             if hr.is_err() {
                 log::error!(
                     "IPolicyConfig::SetDefaultEndpoint({}) HRESULT=0x{:08X}",
-                    role_names[idx], hr.0
+                    role_names[idx],
+                    hr.0
                 );
                 last_error = Some(format!(
                     "SetDefaultEndpoint failed for {} (role {}): 0x{:08X}",
@@ -186,7 +185,8 @@ pub fn set_default_capture_endpoint(endpoint_id: &str) -> Result<(), String> {
             } else {
                 log::debug!(
                     "IPolicyConfig::SetDefaultEndpoint({}) OK (0x{:08X})",
-                    role_names[idx], hr.0
+                    role_names[idx],
+                    hr.0
                 );
             }
         }
@@ -220,9 +220,9 @@ pub fn override_default_capture_device(cpal_device_name: &str) -> Result<Option<
     unsafe {
         let hr = CoInitializeEx(None, COINIT_MULTITHREADED);
         let we_initialized = hr.0 == 0; // S_OK only — don't CoUninitialize if S_FALSE
-        // RPC_E_CHANGED_MODE (0x80010106): COM already initialized with a different
-        // threading model (e.g. APARTMENTTHREADED). COM is still usable — just don't
-        // uninitialize it. S_FALSE (0x01): already initialized same mode — also usable.
+                                        // RPC_E_CHANGED_MODE (0x80010106): COM already initialized with a different
+                                        // threading model (e.g. APARTMENTTHREADED). COM is still usable — just don't
+                                        // uninitialize it. S_FALSE (0x01): already initialized same mode — also usable.
         if hr.is_err() && hr.0 as u32 != 0x80010106 {
             return Err(format!("CoInitializeEx failed: 0x{:08X}", hr.0));
         }
@@ -230,10 +230,7 @@ pub fn override_default_capture_device(cpal_device_name: &str) -> Result<Option<
         let result = (|| -> Result<Option<String>, String> {
             // Save current default
             let original = get_default_capture_endpoint_id()?;
-            log::info!(
-                "IPolicyConfig: Current default capture = '{}'",
-                original
-            );
+            log::info!("IPolicyConfig: Current default capture = '{}'", original);
 
             // Find the endpoint ID for the user's selected device
             let target = find_capture_endpoint_id_by_name(cpal_device_name)?;
@@ -271,7 +268,7 @@ pub fn restore_default_capture_device(original_endpoint_id: &str) -> Result<(), 
     unsafe {
         let hr = CoInitializeEx(None, COINIT_MULTITHREADED);
         let we_initialized = hr.0 == 0; // S_OK only
-        // RPC_E_CHANGED_MODE: COM already initialized with different threading model — still usable
+                                        // RPC_E_CHANGED_MODE: COM already initialized with different threading model — still usable
         if hr.is_err() && hr.0 as u32 != 0x80010106 {
             return Err(format!("CoInitializeEx failed: 0x{:08X}", hr.0));
         }
@@ -298,8 +295,8 @@ pub fn restore_default_capture_device(original_endpoint_id: &str) -> Result<(), 
 fn get_device_friendly_name_internal(
     device: &windows::Win32::Media::Audio::IMMDevice,
 ) -> Option<String> {
-    use windows::Win32::UI::Shell::PropertiesSystem::PROPERTYKEY;
     use windows::core::GUID;
+    use windows::Win32::UI::Shell::PropertiesSystem::PROPERTYKEY;
 
     unsafe {
         // PKEY_Device_FriendlyName = {a45c254e-df1c-4efd-8020-67d146a850e0}, 14

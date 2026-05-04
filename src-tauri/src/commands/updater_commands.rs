@@ -16,7 +16,9 @@ pub struct UpdateInfo {
 /// app is already up-to-date.
 #[command]
 pub async fn check_for_update(app: AppHandle) -> Result<Option<UpdateInfo>, String> {
-    let updater = app.updater().map_err(|e| format!("Failed to get updater: {}", e))?;
+    let updater = app
+        .updater()
+        .map_err(|e| format!("Failed to get updater: {}", e))?;
 
     let update = updater
         .check()
@@ -40,7 +42,9 @@ pub async fn check_for_update(app: AppHandle) -> Result<Option<UpdateInfo>, Stri
 /// completion.
 #[command]
 pub async fn download_and_install_update(app: AppHandle) -> Result<(), String> {
-    let updater = app.updater().map_err(|e| format!("Failed to get updater: {}", e))?;
+    let updater = app
+        .updater()
+        .map_err(|e| format!("Failed to get updater: {}", e))?;
 
     let update = updater
         .check()
@@ -69,10 +73,7 @@ pub async fn download_and_install_update(app: AppHandle) -> Result<(), String> {
         .await
         .map_err(|e| format!("Failed to download and install update: {}", e))?;
 
-    let _ = app.emit(
-        "update_ready",
-        serde_json::json!({ "version": version }),
-    );
+    let _ = app.emit("update_ready", serde_json::json!({ "version": version }));
 
     log::info!("Update v{} downloaded and installed successfully", version);
 

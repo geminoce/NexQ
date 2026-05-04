@@ -22,9 +22,15 @@ impl MicrosoftTranslator {
 
 #[async_trait]
 impl TranslationProvider for MicrosoftTranslator {
-    fn provider_name(&self) -> &str { "Microsoft Translator" }
-    fn provider_type(&self) -> TranslationProviderType { TranslationProviderType::Microsoft }
-    fn is_local(&self) -> bool { false }
+    fn provider_name(&self) -> &str {
+        "Microsoft Translator"
+    }
+    fn provider_type(&self) -> TranslationProviderType {
+        TranslationProviderType::Microsoft
+    }
+    fn is_local(&self) -> bool {
+        false
+    }
 
     async fn translate(
         &self,
@@ -42,7 +48,8 @@ impl TranslationProvider for MicrosoftTranslator {
 
         let body = serde_json::json!([{ "text": text }]);
 
-        let resp = self.client
+        let resp = self
+            .client
             .post(&url)
             .header("Ocp-Apim-Subscription-Key", &self.api_key)
             .header("Ocp-Apim-Subscription-Region", &self.region)
@@ -56,11 +63,14 @@ impl TranslationProvider for MicrosoftTranslator {
             let status = resp.status();
             let body_text = resp.text().await.unwrap_or_default();
             return Err(TranslationError::Failed(format!(
-                "Microsoft API returned {}: {}", status, body_text
+                "Microsoft API returned {}: {}",
+                status, body_text
             )));
         }
 
-        let json: Value = resp.json().await
+        let json: Value = resp
+            .json()
+            .await
             .map_err(|e| TranslationError::Failed(e.to_string()))?;
 
         json[0]["translations"][0]["text"]
@@ -84,11 +94,13 @@ impl TranslationProvider for MicrosoftTranslator {
             url.push_str(&format!("&from={}", src));
         }
 
-        let body: Vec<Value> = texts.iter()
+        let body: Vec<Value> = texts
+            .iter()
             .map(|t| serde_json::json!({ "text": t }))
             .collect();
 
-        let resp = self.client
+        let resp = self
+            .client
             .post(&url)
             .header("Ocp-Apim-Subscription-Key", &self.api_key)
             .header("Ocp-Apim-Subscription-Region", &self.region)
@@ -102,11 +114,14 @@ impl TranslationProvider for MicrosoftTranslator {
             let status = resp.status();
             let body_text = resp.text().await.unwrap_or_default();
             return Err(TranslationError::Failed(format!(
-                "Microsoft batch API returned {}: {}", status, body_text
+                "Microsoft batch API returned {}: {}",
+                status, body_text
             )));
         }
 
-        let json: Vec<Value> = resp.json().await
+        let json: Vec<Value> = resp
+            .json()
+            .await
             .map_err(|e| TranslationError::Failed(e.to_string()))?;
 
         json.iter()
@@ -114,7 +129,9 @@ impl TranslationProvider for MicrosoftTranslator {
                 item["translations"][0]["text"]
                     .as_str()
                     .map(|s| s.to_string())
-                    .ok_or_else(|| TranslationError::Failed("Unexpected batch response format".into()))
+                    .ok_or_else(|| {
+                        TranslationError::Failed("Unexpected batch response format".into())
+                    })
             })
             .collect()
     }
@@ -122,7 +139,8 @@ impl TranslationProvider for MicrosoftTranslator {
     async fn detect_language(&self, text: &str) -> Result<DetectedLanguage, TranslationError> {
         let body = serde_json::json!([{ "text": text }]);
 
-        let resp = self.client
+        let resp = self
+            .client
             .post("https://api.cognitive.microsofttranslator.com/detect?api-version=3.0")
             .header("Ocp-Apim-Subscription-Key", &self.api_key)
             .header("Ocp-Apim-Subscription-Region", &self.region)
@@ -132,11 +150,16 @@ impl TranslationProvider for MicrosoftTranslator {
             .await
             .map_err(|e| TranslationError::Http(e.to_string()))?;
 
-        let json: Value = resp.json().await
+        let json: Value = resp
+            .json()
+            .await
             .map_err(|e| TranslationError::Failed(e.to_string()))?;
 
         Ok(DetectedLanguage {
-            lang: json[0]["language"].as_str().unwrap_or("unknown").to_string(),
+            lang: json[0]["language"]
+                .as_str()
+                .unwrap_or("unknown")
+                .to_string(),
             confidence: json[0]["score"].as_f64().unwrap_or(0.0),
         })
     }
@@ -148,19 +171,23 @@ impl TranslationProvider for MicrosoftTranslator {
             .await
             .map_err(|e| TranslationError::Http(e.to_string()))?;
 
-        let json: Value = resp.json().await
+        let json: Value = resp
+            .json()
+            .await
             .map_err(|e| TranslationError::Failed(e.to_string()))?;
 
-        let translation_map = json["translation"].as_object()
+        let translation_map = json["translation"]
+            .as_object()
             .ok_or_else(|| TranslationError::Failed("No translation languages".into()))?;
 
-        Ok(translation_map.iter().map(|(code, info)| {
-            Language {
+        Ok(translation_map
+            .iter()
+            .map(|(code, info)| Language {
                 code: code.clone(),
                 name: info["name"].as_str().unwrap_or(code).to_string(),
                 native_name: info["nativeName"].as_str().map(|s| s.to_string()),
-            }
-        }).collect())
+            })
+            .collect())
     }
 
     async fn test_connection(&self) -> Result<ConnectionStatus, TranslationError> {
@@ -171,7 +198,9 @@ impl TranslationProvider for MicrosoftTranslator {
         match self.translate("hello", None, "es").await {
             Ok(_) => {
                 // Key works — now get the language count
-                let lang_count = self.supported_languages().await
+                let lang_count = self
+                    .supported_languages()
+                    .await
                     .map(|l| l.len())
                     .unwrap_or(0);
                 Ok(ConnectionStatus {

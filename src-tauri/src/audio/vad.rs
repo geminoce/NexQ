@@ -114,7 +114,8 @@ impl VoiceActivityDetector {
             }
         }
 
-        let is_speech = self.state == SpeechState::Speech || self.state == SpeechState::SpeechEnding;
+        let is_speech =
+            self.state == SpeechState::Speech || self.state == SpeechState::SpeechEnding;
 
         // Normalize energy to 0.0-1.0 range (i16 max RMS ~= 23170)
         let normalized_energy = (self.smoothed_energy / 23170.0).clamp(0.0, 1.0);
@@ -150,10 +151,7 @@ pub fn calculate_rms(samples: &[i16]) -> f32 {
         return 0.0;
     }
 
-    let sum_sq: f64 = samples
-        .iter()
-        .map(|&s| (s as f64) * (s as f64))
-        .sum();
+    let sum_sq: f64 = samples.iter().map(|&s| (s as f64) * (s as f64)).sum();
 
     (sum_sq / samples.len() as f64).sqrt() as f32
 }
@@ -164,7 +162,11 @@ pub fn calculate_peak(samples: &[i16]) -> f32 {
         return 0.0;
     }
 
-    let max_abs = samples.iter().map(|s| s.unsigned_abs() as u32).max().unwrap_or(0);
+    let max_abs = samples
+        .iter()
+        .map(|s| s.unsigned_abs() as u32)
+        .max()
+        .unwrap_or(0);
     max_abs as f32 / i16::MAX as f32
 }
 

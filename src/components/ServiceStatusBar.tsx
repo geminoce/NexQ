@@ -15,6 +15,7 @@ import { useAudioLevel } from "../hooks/useAudioLevel";
 import { hasApiKey, listLocalSTTEngines, setLLMProvider, setActiveModel, getApiKey } from "../lib/ipc";
 import type { STTProviderType, LLMProviderType, LocalSTTEngineInfo } from "../lib/types";
 import { showToast } from "../stores/toastStore";
+import { t } from "../i18n";
 
 // ── Human-friendly provider labels ──
 const LLM_LABELS: Record<string, string> = {
@@ -269,12 +270,12 @@ export function ServiceStatusBar({ compact = false }: { compact?: boolean }) {
               model={themStt.model}
               active={themActive || youActive}
               color="purple"
-              label="ROOM"
+              label={t("overlay.transcript.room").toUpperCase()}
               muted={mutedThem}
               interactive={isRecording}
               pickerOpen={pickerOpen === "them"}
               onClick={() => setPickerOpen(pickerOpen === "them" ? null : "them")}
-              tooltip={`Room STT: ${themStt.provider}${themStt.model ? ` / ${themStt.model}` : ""}`}
+              tooltip={`${t("overlay.transcript.room")} STT: ${themStt.provider}${themStt.model ? ` / ${themStt.model}` : ""}`}
             />
             {pickerOpen === "them" && (
               <STTPickerDropdown
@@ -283,13 +284,16 @@ export function ServiceStatusBar({ compact = false }: { compact?: boolean }) {
                 onSelect={(p) => handleProviderChange("them", p)}
                 onClose={() => setPickerOpen(null)}
                 otherPartyProvider={meetingAudioConfig?.you.stt_provider ?? null}
-                otherPartyLabel="You"
+                otherPartyLabel={t("overlay.transcript.you")}
               />
             )}
           </div>
           <span className="text-xs text-muted-foreground/60">
             {speakerOrder.length > 0
-              ? `${speakerOrder.length} speaker${speakerOrder.length !== 1 ? "s" : ""} detected`
+              ? t("overlay.transcript.speakersDetected", {
+                count: speakerOrder.length,
+                plural: speakerOrder.length === 1 ? "" : "s",
+              })
               : ""}
           </span>
         </div>
@@ -304,12 +308,12 @@ export function ServiceStatusBar({ compact = false }: { compact?: boolean }) {
                 model={youStt.model}
                 active={youActive}
                 color="sky"
-                label="You"
+                label={t("overlay.transcript.you")}
                 muted={mutedYou}
                 interactive={isRecording}
                 pickerOpen={pickerOpen === "you"}
                 onClick={() => setPickerOpen(pickerOpen === "you" ? null : "you")}
-                tooltip={`Your STT: ${youStt.provider}${youStt.model ? ` / ${youStt.model}` : ""}`}
+                tooltip={`${t("overlay.transcript.you")} STT: ${youStt.provider}${youStt.model ? ` / ${youStt.model}` : ""}`}
               />
               {pickerOpen === "you" && (
                 <STTPickerDropdown
@@ -318,12 +322,12 @@ export function ServiceStatusBar({ compact = false }: { compact?: boolean }) {
                   onSelect={(p) => handleProviderChange("you", p)}
                   onClose={() => setPickerOpen(null)}
                   otherPartyProvider={meetingAudioConfig?.them.stt_provider ?? null}
-                  otherPartyLabel="Them"
+                  otherPartyLabel={t("overlay.transcript.them")}
                 />
               )}
             </div>
             {isRecording && (
-              <MuteButton type="mic" muted={mutedYou} onToggle={toggleMuteYou} label="You" />
+              <MuteButton type="mic" muted={mutedYou} onToggle={toggleMuteYou} label={t("overlay.transcript.you")} />
             )}
           </div>
 
@@ -338,12 +342,12 @@ export function ServiceStatusBar({ compact = false }: { compact?: boolean }) {
                 model={themStt.model}
                 active={themActive}
                 color="amber"
-                label="Them"
+                label={t("overlay.transcript.them")}
                 muted={mutedThem}
                 interactive={isRecording}
                 pickerOpen={pickerOpen === "them"}
                 onClick={() => setPickerOpen(pickerOpen === "them" ? null : "them")}
-                tooltip={`Their STT: ${themStt.provider}${themStt.model ? ` / ${themStt.model}` : ""}`}
+                tooltip={`${t("overlay.transcript.them")} STT: ${themStt.provider}${themStt.model ? ` / ${themStt.model}` : ""}`}
           />
           {pickerOpen === "them" && (
             <STTPickerDropdown
@@ -352,12 +356,12 @@ export function ServiceStatusBar({ compact = false }: { compact?: boolean }) {
               onSelect={(p) => handleProviderChange("them", p)}
               onClose={() => setPickerOpen(null)}
               otherPartyProvider={meetingAudioConfig?.you.stt_provider ?? null}
-              otherPartyLabel="You"
+              otherPartyLabel={t("overlay.transcript.you")}
             />
           )}
             </div>
             {isRecording && (
-              <MuteButton type="speaker" muted={mutedThem} onToggle={toggleMuteThem} label="Them" />
+              <MuteButton type="speaker" muted={mutedThem} onToggle={toggleMuteThem} label={t("overlay.transcript.them")} />
             )}
           </div>
         </>
@@ -718,7 +722,7 @@ function STTPickerDropdown({
 
     const fallback = findExclusiveFallback();
     if (!fallback) {
-      showToast("No fallback STT engine available. Configure an API key or download a local model first.", "error");
+      showToast(t("overlay.toasts.noFallbackStt"), "error");
       setStealTarget(null);
       return;
     }
@@ -739,7 +743,12 @@ function STTPickerDropdown({
     const stealLabel = STT_PROVIDER_OPTIONS.find((o) => o.value === stealTarget)?.label ?? stealTarget;
     const fallbackLabel = STT_PROVIDER_OPTIONS.find((o) => o.value === fallback)?.label ?? fallback;
     showToast(
-      `${stealLabel} moved to ${thisRole === "you" ? "You" : "Them"}. ${otherRole === "you" ? "You" : "Them"} fell back to ${fallbackLabel}.`,
+      t("overlay.toasts.providerMoved", {
+        provider: stealLabel,
+        party: thisRole === "you" ? t("overlay.transcript.you") : t("overlay.transcript.them"),
+        otherParty: otherRole === "you" ? t("overlay.transcript.you") : t("overlay.transcript.them"),
+        fallback: fallbackLabel,
+      }),
       "info"
     );
 
@@ -756,7 +765,7 @@ function STTPickerDropdown({
       className="absolute bottom-full left-0 mb-2 min-w-[200px] rounded-xl border border-border/30 bg-popover/90 backdrop-blur-md shadow-2xl z-50 overflow-hidden animate-in slide-in-from-bottom-2 fade-in duration-150"
     >
       {loading ? (
-        <div className="px-4 py-3 text-xs text-muted-foreground">Loading providers...</div>
+        <div className="px-4 py-3 text-xs text-muted-foreground">{t("overlay.serviceStatus.loadingProviders")}</div>
       ) : (
         <>
           {localOpts.length > 0 && (
@@ -764,7 +773,7 @@ function STTPickerDropdown({
               <div className="flex items-center gap-1.5 bg-muted/20 px-3 py-1.5 border-b border-border/20">
                 <HardDrive className="h-2.5 w-2.5 text-emerald-400" />
                 <span className="text-meta font-semibold uppercase tracking-wider text-muted-foreground/70">
-                  Local & Built-in
+                  {t("overlay.serviceStatus.localBuiltIn")}
                 </span>
               </div>
               {localOpts.map((opt) => {
@@ -791,7 +800,7 @@ function STTPickerDropdown({
                     <span className="flex-1 text-left font-medium">
                       {opt.label}
                       {locked && (
-                        <span className="block text-meta text-muted-foreground/50">In use by {otherPartyLabel}</span>
+                        <span className="block text-meta text-muted-foreground/50">{t("overlay.serviceStatus.inUseBy", { party: otherPartyLabel })}</span>
                       )}
                     </span>
                     {selected && !locked && <CheckCircle className="h-3 w-3 shrink-0 text-primary" />}
@@ -806,7 +815,7 @@ function STTPickerDropdown({
               <div className="flex items-center gap-1.5 bg-muted/20 px-3 py-1.5 border-b border-border/20">
                 <Cloud className="h-2.5 w-2.5 text-blue-400" />
                 <span className="text-meta font-semibold uppercase tracking-wider text-muted-foreground/70">
-                  Cloud
+                  {t("overlay.serviceStatus.cloud")}
                 </span>
               </div>
               {cloudOpts.map((opt) => {
@@ -833,7 +842,7 @@ function STTPickerDropdown({
                     <span className="flex-1 text-left font-medium">
                       {opt.label}
                       {locked && (
-                        <span className="block text-meta text-muted-foreground/50">In use by {otherPartyLabel}</span>
+                        <span className="block text-meta text-muted-foreground/50">{t("overlay.serviceStatus.inUseBy", { party: otherPartyLabel })}</span>
                       )}
                     </span>
                     {selected && !locked && <CheckCircle className="h-3 w-3 shrink-0 text-primary" />}
@@ -845,24 +854,20 @@ function STTPickerDropdown({
 
           {localOpts.length === 0 && cloudOpts.length === 0 && (
             <p className="px-4 py-3 text-meta text-muted-foreground/60">
-              No providers available — configure in Settings
+              {t("overlay.serviceStatus.noProviders")}
             </p>
           )}
 
           {stealTarget && (
             <div className="border-t border-border/20 bg-amber-500/5 px-3 py-2.5">
               <p className="text-meta leading-relaxed text-amber-200/80 mb-2">
-                <span className="font-semibold text-amber-400">
-                  {STT_PROVIDER_OPTIONS.find((o) => o.value === stealTarget)?.label}
-                </span>{" "}
-                can only run on one source at a time. Switch to this party?
-                The other party will fall back to{" "}
-                <span className="font-medium">
-                  {(() => {
+                {t("overlay.serviceStatus.exclusivePrompt", {
+                  provider: STT_PROVIDER_OPTIONS.find((o) => o.value === stealTarget)?.label ?? stealTarget,
+                  fallback: (() => {
                     const fb = findExclusiveFallback();
-                    return fb ? (STT_PROVIDER_OPTIONS.find((o) => o.value === fb)?.label ?? fb) : "no available engine";
-                  })()}
-                </span>.
+                    return fb ? (STT_PROVIDER_OPTIONS.find((o) => o.value === fb)?.label ?? fb) : t("overlay.serviceStatus.noAvailableEngine");
+                  })(),
+                })}
               </p>
               <div className="flex gap-2">
                 <button
@@ -870,14 +875,14 @@ function STTPickerDropdown({
                   onClick={handleStealConfirm}
                   className="rounded-lg bg-amber-500/20 border border-amber-500/30 px-3 py-1 text-meta font-semibold text-amber-400 hover:bg-amber-500/30 cursor-pointer"
                 >
-                  Switch
+                  {t("overlay.serviceStatus.switch")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setStealTarget(null)}
                   className="rounded-lg bg-muted/30 px-3 py-1 text-meta font-medium text-muted-foreground hover:bg-muted/50 cursor-pointer"
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
               </div>
             </div>
@@ -984,7 +989,7 @@ function LLMPickerDropdown({
         <div>
           <div className="flex items-center gap-1.5 bg-muted/20 px-3 py-1.5 border-b border-border/20">
             <HardDrive className="h-2.5 w-2.5 text-emerald-400" />
-            <span className="text-meta font-semibold uppercase tracking-wider text-muted-foreground/70">Local</span>
+            <span className="text-meta font-semibold uppercase tracking-wider text-muted-foreground/70">{t("overlay.serviceStatus.local")}</span>
           </div>
           {localOpts.map((opt) => {
             const Icon = opt.IconComponent;
@@ -1000,7 +1005,7 @@ function LLMPickerDropdown({
               >
                 <Icon className={`h-3.5 w-3.5 shrink-0 ${isPending ? "text-primary" : "text-emerald-400"}`} />
                 <span className="flex-1 text-left font-medium">{opt.label}</span>
-                {isActive && <span className="text-meta text-primary/80">active</span>}
+                {isActive && <span className="text-meta text-primary/80">{t("overlay.serviceStatus.active")}</span>}
               </button>
             );
           })}
@@ -1011,7 +1016,7 @@ function LLMPickerDropdown({
         <div className={localOpts.length > 0 ? "border-t border-border/20" : ""}>
           <div className="flex items-center gap-1.5 bg-muted/20 px-3 py-1.5 border-b border-border/20">
             <Cloud className="h-2.5 w-2.5 text-blue-400" />
-            <span className="text-meta font-semibold uppercase tracking-wider text-muted-foreground/70">Cloud</span>
+            <span className="text-meta font-semibold uppercase tracking-wider text-muted-foreground/70">{t("overlay.serviceStatus.cloud")}</span>
           </div>
           {cloudOpts.map((opt) => {
             const Icon = opt.IconComponent;
@@ -1027,7 +1032,7 @@ function LLMPickerDropdown({
               >
                 <Icon className={`h-3.5 w-3.5 shrink-0 ${isPending ? "text-primary" : "text-blue-400"}`} />
                 <span className="flex-1 text-left font-medium">{opt.label}</span>
-                {isActive && <span className="text-meta text-primary/80">active</span>}
+                {isActive && <span className="text-meta text-primary/80">{t("overlay.serviceStatus.active")}</span>}
               </button>
             );
           })}
@@ -1036,7 +1041,7 @@ function LLMPickerDropdown({
 
       {available.length === 0 && (
         <div className="px-4 py-3 text-meta text-muted-foreground/60">
-          No verified providers — test connection in Settings first
+          {t("overlay.serviceStatus.noVerifiedProviders")}
         </div>
       )}
 
@@ -1045,10 +1050,10 @@ function LLMPickerDropdown({
         <div className="flex items-center gap-1.5 bg-muted/20 px-3 py-1.5 border-b border-border/20">
           <Brain className="h-2.5 w-2.5 text-violet-400" />
           <span className="text-meta font-semibold uppercase tracking-wider text-muted-foreground/70">
-            Model — {LLM_LABELS[pendingProvider] || pendingProvider}
+            {t("overlay.serviceStatus.model")} — {LLM_LABELS[pendingProvider] || pendingProvider}
           </span>
           {modelsLoading && (
-            <span className="text-meta text-muted-foreground/60 animate-pulse ml-auto">loading...</span>
+            <span className="text-meta text-muted-foreground/60 animate-pulse ml-auto">{t("overlay.serviceStatus.loading")}</span>
           )}
         </div>
         {models.length > 0 ? (
@@ -1071,7 +1076,7 @@ function LLMPickerDropdown({
           </div>
         ) : !modelsLoading ? (
           <div className="px-3 py-2 text-meta text-muted-foreground/60">
-            No models available
+            {t("overlay.serviceStatus.noModels")}
           </div>
         ) : null}
       </div>

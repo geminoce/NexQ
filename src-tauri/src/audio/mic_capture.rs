@@ -154,7 +154,10 @@ pub fn start_mic_capture_dual(
                 .map_err(|e| format!("Failed to build dual f32 stream: {}", e))?
         }
         _ => {
-            return Err(format!("Unsupported sample format for dual capture: {:?}", sample_format));
+            return Err(format!(
+                "Unsupported sample format for dual capture: {:?}",
+                sample_format
+            ));
         }
     };
 
@@ -172,7 +175,9 @@ fn handle_dual_data_i16(
     channels: u16,
     tx: &mpsc::Sender<AudioChunk>,
 ) {
-    if data.is_empty() { return; }
+    if data.is_empty() {
+        return;
+    }
     let pcm_data = resample(data, sample_rate, TARGET_SAMPLE_RATE, channels);
     let ts = current_timestamp_ms();
 
@@ -198,7 +203,9 @@ fn handle_dual_data_f32(
     channels: u16,
     tx: &mpsc::Sender<AudioChunk>,
 ) {
-    if data.is_empty() { return; }
+    if data.is_empty() {
+        return;
+    }
     let i16_data: Vec<i16> = data
         .iter()
         .map(|&s| (s.clamp(-1.0, 1.0) * i16::MAX as f32) as i16)
@@ -296,10 +303,7 @@ fn handle_mic_data_u16(
     }
 
     // Convert u16 [0, 65535] to i16 [-32768, 32767]
-    let i16_data: Vec<i16> = data
-        .iter()
-        .map(|&s| (s as i32 - 32768) as i16)
-        .collect();
+    let i16_data: Vec<i16> = data.iter().map(|&s| (s as i32 - 32768) as i16).collect();
 
     let pcm_data = resample(&i16_data, sample_rate, TARGET_SAMPLE_RATE, channels);
 

@@ -30,9 +30,7 @@ impl GeminiClient {
 
     /// Convert standard LLM messages to Gemini format.
     /// Gemini uses "user" and "model" roles, with a separate systemInstruction field.
-    fn convert_messages(
-        messages: &[LLMMessage],
-    ) -> (Option<String>, Vec<serde_json::Value>) {
+    fn convert_messages(messages: &[LLMMessage]) -> (Option<String>, Vec<serde_json::Value>) {
         let mut system_instruction: Option<String> = None;
         let mut contents: Vec<serde_json::Value> = Vec::new();
 
@@ -68,10 +66,7 @@ impl LLMProvider for GeminiClient {
     }
 
     async fn list_models(&self) -> Result<Vec<ModelInfo>, LLMError> {
-        let url = format!(
-            "{}/v1beta/models?key={}",
-            self.base_url, self.api_key
-        );
+        let url = format!("{}/v1beta/models?key={}", self.base_url, self.api_key);
 
         let response = self.client.get(&url).send().await?;
 
@@ -122,14 +117,9 @@ impl LLMProvider for GeminiClient {
                         }
 
                         // Extract model ID from "models/gemini-pro" -> "gemini-pro"
-                        let id = name
-                            .strip_prefix("models/")
-                            .unwrap_or(&name)
-                            .to_string();
+                        let id = name.strip_prefix("models/").unwrap_or(&name).to_string();
 
-                        let context_window = m
-                            .get("inputTokenLimit")
-                            .and_then(|c| c.as_u64());
+                        let context_window = m.get("inputTokenLimit").and_then(|c| c.as_u64());
 
                         Some(ModelInfo {
                             id,

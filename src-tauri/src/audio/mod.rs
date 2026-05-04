@@ -403,10 +403,7 @@ impl AudioCaptureManager {
         }
 
         let detected = self.test_audio_detected.load(Ordering::SeqCst);
-        log::info!(
-            "Audio test stopped, audio detected: {}",
-            detected
-        );
+        log::info!("Audio test stopped, audio detected: {}", detected);
         detected
     }
 
@@ -606,17 +603,15 @@ pub async fn process_recording(
     let db_result = {
         let db_guard = db.lock();
         match db_guard {
-            Ok(guard) => {
-                crate::db::meetings::update_meeting_recording(
-                    guard.connection(),
-                    &meeting_id_clone,
-                    &recording_path_str,
-                    recording_size,
-                    &waveform_path_str,
-                    recording_offset_ms,
-                )
-                .map_err(|e| e.to_string())
-            }
+            Ok(guard) => crate::db::meetings::update_meeting_recording(
+                guard.connection(),
+                &meeting_id_clone,
+                &recording_path_str,
+                recording_size,
+                &waveform_path_str,
+                recording_offset_ms,
+            )
+            .map_err(|e| e.to_string()),
             Err(e) => Err(format!("DB lock poisoned: {}", e)),
         }
     };

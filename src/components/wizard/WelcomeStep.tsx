@@ -9,6 +9,7 @@ import {
   Loader2,
   Sparkles,
 } from "lucide-react";
+import { t } from "../../i18n";
 
 interface DetectionResult {
   audioDevices: AudioDeviceList | null;
@@ -147,11 +148,10 @@ export function WelcomeStep({ onDetectionComplete }: WelcomeStepProps) {
           <Sparkles className="h-8 w-8 text-primary" />
         </div>
         <h2 className="text-2xl font-semibold text-foreground">
-          Welcome to NexQ
+          {t("wizard.welcome.title")}
         </h2>
         <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
-          Let's get your AI meeting assistant set up. This will only take a
-          minute.
+          {t("wizard.welcome.description")}
         </p>
       </div>
 
@@ -160,7 +160,7 @@ export function WelcomeStep({ onDetectionComplete }: WelcomeStepProps) {
         {/* Audio detection */}
         <DetectionRow
           icon={<Mic className="h-4 w-4" />}
-          label="Audio Devices"
+          label={t("wizard.welcome.audioDevices")}
           status={
             phaseIndex < 1
               ? "pending"
@@ -170,7 +170,7 @@ export function WelcomeStep({ onDetectionComplete }: WelcomeStepProps) {
           }
           detail={
             phaseIndex > 1
-              ? `${inputCount} microphone${inputCount !== 1 ? "s" : ""}, ${outputCount} speaker${outputCount !== 1 ? "s" : ""}`
+              ? t("wizard.welcome.audioDetected", { inputs: inputCount, outputs: outputCount })
               : undefined
           }
           found={phaseIndex > 1 && (inputCount > 0 || outputCount > 0)}
@@ -190,8 +190,8 @@ export function WelcomeStep({ onDetectionComplete }: WelcomeStepProps) {
           detail={
             phaseIndex > 2
               ? result.ollamaRunning
-                ? `Running with ${result.ollamaModels.length} model${result.ollamaModels.length !== 1 ? "s" : ""}`
-                : "Not detected"
+                ? t("wizard.welcome.runningWithModels", { count: result.ollamaModels.length })
+                : t("wizard.welcome.notDetected")
               : undefined
           }
           found={phaseIndex > 2 && result.ollamaRunning}
@@ -211,8 +211,8 @@ export function WelcomeStep({ onDetectionComplete }: WelcomeStepProps) {
           detail={
             phaseIndex > 3
               ? result.lmStudioRunning
-                ? `Running with ${result.lmStudioModels.length} model${result.lmStudioModels.length !== 1 ? "s" : ""}`
-                : "Not detected"
+                ? t("wizard.welcome.runningWithModels", { count: result.lmStudioModels.length })
+                : t("wizard.welcome.notDetected")
               : undefined
           }
           found={phaseIndex > 3 && result.lmStudioRunning}
@@ -226,13 +226,11 @@ export function WelcomeStep({ onDetectionComplete }: WelcomeStepProps) {
             <p className="text-sm text-muted-foreground leading-relaxed">
               {result.ollamaRunning || result.lmStudioRunning ? (
                 <span className="text-success">
-                  Local LLM detected! You can use AI features without an
-                  internet connection.
+                  {t("wizard.welcome.localDetected")}
                 </span>
               ) : (
                 <span>
-                  No local LLM found. You can configure a cloud provider in the
-                  next steps, or install Ollama later.
+                  {t("wizard.welcome.noLocalFound")}
                 </span>
               )}
             </p>

@@ -10,12 +10,31 @@ import {
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { getModeLabel } from "../lib/utils";
 import type { AIResponse } from "../lib/types";
 import { useConfigStore } from "../stores/configStore";
 import { ColorPickerButton } from "../components/ColorPickerButton";
+import { t } from "../i18n";
 
 type TabId = "current" | "history-0" | "history-1" | string;
+
+function getModeDisplayLabel(mode: string): string {
+  switch (mode) {
+    case "Assist":
+      return t("overlay.ai.modes.Assist");
+    case "WhatToSay":
+      return t("overlay.ai.modes.WhatToSay");
+    case "Shorten":
+      return t("overlay.ai.modes.Shorten");
+    case "FollowUp":
+      return t("overlay.ai.modes.FollowUp");
+    case "Recap":
+      return t("overlay.ai.modes.Recap");
+    case "AskQuestion":
+      return t("overlay.ai.modes.AskQuestion");
+    default:
+      return mode;
+  }
+}
 
 // Sub-PRD 6: Streaming markdown, response history tabs, pin/copy
 export function AIResponsePanel() {
@@ -110,16 +129,16 @@ export function AIResponsePanel() {
     <div className="flex flex-1 min-h-0 flex-col">
       {/* Tabs row */}
       {hasTabs && (
-        <div className="mb-2 flex shrink-0 items-center gap-1.5 overflow-x-auto pb-1.5" role="tablist" aria-label="AI response tabs">
+        <div className="mb-2 flex shrink-0 items-center gap-1.5 overflow-x-auto pb-1.5" role="tablist" aria-label={t("overlay.ai.tabs")}>
           <TabButton
-            label="Current"
+            label={t("overlay.ai.current")}
             active={activeTab === "current"}
             onClick={() => setActiveTab("current")}
           />
           {previousResponses.map((resp, idx) => (
             <TabButton
               key={resp.id}
-              label={getModeLabel(resp.mode)}
+              label={getModeDisplayLabel(resp.mode)}
               active={activeTab === `history-${idx}`}
               onClick={() => setActiveTab(`history-${idx}`)}
               secondary
@@ -128,7 +147,7 @@ export function AIResponsePanel() {
           {pinnedResponses.map((resp) => (
             <TabButton
               key={resp.id}
-              label={`${getModeLabel(resp.mode)}`}
+              label={`${getModeDisplayLabel(resp.mode)}`}
               active={activeTab === `pinned-${resp.id}`}
               onClick={() => setActiveTab(`pinned-${resp.id}`)}
               pinned
@@ -139,14 +158,14 @@ export function AIResponsePanel() {
 
       {/* Content area */}
       <div className="relative flex-1 min-h-0">
-      <div ref={scrollRef} className="absolute inset-0 overflow-y-auto" role="tabpanel" aria-label="AI response content">
+      <div ref={scrollRef} className="absolute inset-0 overflow-y-auto" role="tabpanel" aria-label={t("overlay.ai.content")}>
         {/* Active streaming state */}
         {activeTab === "current" && isStreaming && (
           <div className="space-y-2.5" aria-live="polite" aria-atomic="false">
             <div className="flex items-center gap-2">
               <Loader2 className="h-3 w-3 animate-spin text-primary/50" />
               <span className="text-meta font-medium text-primary">
-                {currentMode ? getModeLabel(currentMode) : "Generating"}...
+                {currentMode ? getModeDisplayLabel(currentMode) : t("overlay.ai.generating")}...
               </span>
             </div>
             <div className="prose prose-sm prose-invert max-w-none leading-relaxed" style={{ fontSize: `${aiResponseFontSize}px`, color: aiResponseTextColor }}>
@@ -164,12 +183,12 @@ export function AIResponsePanel() {
             {currentMode && (
               <div className="flex items-center justify-between">
                 <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-meta font-medium text-primary/80">
-                  {getModeLabel(currentMode)}
+                  {getModeDisplayLabel(currentMode)}
                 </span>
                 <div className="flex items-center gap-1">
                   <ActionButton
                     icon={copiedId === "current" ? Check : Copy}
-                    title="Copy to clipboard"
+                    title={t("overlay.ai.copy")}
                     onClick={() => handleCopy(currentContent, "current")}
                     active={copiedId === "current"}
                   />
@@ -186,8 +205,8 @@ export function AIResponsePanel() {
                         pinnedResponses.some(
                           (r) => r.id === responseHistory[0].id
                         )
-                          ? "Unpin"
-                          : "Pin response"
+                          ? t("overlay.ai.unpin")
+                          : t("overlay.ai.pin")
                       }
                       onClick={() => handlePin(responseHistory[0].id)}
                     />
@@ -208,12 +227,12 @@ export function AIResponsePanel() {
           <div className="space-y-2.5">
             <div className="flex items-center justify-between">
               <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-meta font-medium text-primary/80">
-                {getModeLabel(displayResponse.mode)}
+                {getModeDisplayLabel(displayResponse.mode)}
               </span>
               <div className="flex items-center gap-1">
                 <ActionButton
                   icon={copiedId === displayResponse.id ? Check : Copy}
-                  title="Copy to clipboard"
+                  title={t("overlay.ai.copy")}
                   onClick={() =>
                     handleCopy(displayContent!, displayResponse!.id)
                   }
@@ -227,8 +246,8 @@ export function AIResponsePanel() {
                   }
                   title={
                     pinnedResponses.some((r) => r.id === displayResponse!.id)
-                      ? "Unpin"
-                      : "Pin response"
+                      ? t("overlay.ai.unpin")
+                      : t("overlay.ai.pin")
                   }
                   onClick={() => handlePin(displayResponse!.id)}
                 />
@@ -247,7 +266,7 @@ export function AIResponsePanel() {
           <div className="flex h-full flex-col items-center justify-center gap-2">
             <Sparkles className="h-5 w-5 text-primary/30" />
             <p className="text-xs text-muted-foreground/50">
-              Press <kbd className="mx-0.5 rounded border border-border/30 bg-secondary/30 px-1.5 py-0.5 font-mono text-meta text-foreground/70">Space</kbd> for AI assistance
+              {t("overlay.ai.pressForAssistance", { key: "Пробел" })}
             </p>
           </div>
         )}
@@ -256,13 +275,13 @@ export function AIResponsePanel() {
 
       {/* Typeset controls */}
       <div className="flex shrink-0 items-center gap-3 px-1 pt-1.5 border-t border-border/10">
-        <span className="text-[0.6rem] uppercase tracking-widest text-muted-foreground/40 font-medium">AI Text</span>
+        <span className="text-[0.6rem] uppercase tracking-widest text-muted-foreground/40 font-medium">{t("overlay.ai.aiText")}</span>
         <div className="flex items-center gap-1">
-          <button onClick={() => setAiResponseFontSize(Math.max(10, aiResponseFontSize - 1))} className="h-5 w-5 flex items-center justify-center rounded text-[0.6rem] text-muted-foreground/50 hover:bg-accent/40 hover:text-foreground/70 transition-colors" title="Smaller">A</button>
+          <button onClick={() => setAiResponseFontSize(Math.max(10, aiResponseFontSize - 1))} className="h-5 w-5 flex items-center justify-center rounded text-[0.6rem] text-muted-foreground/50 hover:bg-accent/40 hover:text-foreground/70 transition-colors" title={t("overlay.ai.smaller")}>A</button>
           <span className="text-[0.6rem] tabular-nums text-muted-foreground/50 w-6 text-center">{aiResponseFontSize}</span>
-          <button onClick={() => setAiResponseFontSize(Math.min(20, aiResponseFontSize + 1))} className="h-5 w-5 flex items-center justify-center rounded text-[0.75rem] font-medium text-muted-foreground/50 hover:bg-accent/40 hover:text-foreground/70 transition-colors" title="Larger">A</button>
+          <button onClick={() => setAiResponseFontSize(Math.min(20, aiResponseFontSize + 1))} className="h-5 w-5 flex items-center justify-center rounded text-[0.75rem] font-medium text-muted-foreground/50 hover:bg-accent/40 hover:text-foreground/70 transition-colors" title={t("overlay.ai.larger")}>A</button>
         </div>
-        <ColorPickerButton value={aiResponseTextColor} onChange={setAiResponseTextColor} label="AI text color" />
+        <ColorPickerButton value={aiResponseTextColor} onChange={setAiResponseTextColor} label={t("overlay.ai.aiTextColor")} />
       </div>
     </div>
   );

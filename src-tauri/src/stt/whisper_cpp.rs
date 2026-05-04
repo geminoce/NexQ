@@ -13,8 +13,8 @@
 //   - Queue limit: drop stale fast passes if inference falls behind
 
 use async_trait::async_trait;
-use std::collections::BinaryHeap;
 use std::cmp::Ordering;
+use std::collections::BinaryHeap;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering as AtomicOrdering};
 use std::sync::{Arc, RwLock};
@@ -54,9 +54,15 @@ fn clean_whisper_text(text: &str) -> String {
     for ch in trimmed.chars() {
         match ch {
             '[' => in_bracket += 1,
-            ']' if in_bracket > 0 => { in_bracket -= 1; continue; }
+            ']' if in_bracket > 0 => {
+                in_bracket -= 1;
+                continue;
+            }
             '(' => in_paren += 1,
-            ')' if in_paren > 0 => { in_paren -= 1; continue; }
+            ')' if in_paren > 0 => {
+                in_paren -= 1;
+                continue;
+            }
             _ if in_bracket > 0 || in_paren > 0 => continue,
             _ => result.push(ch),
         }
@@ -301,11 +307,9 @@ impl STTProvider for WhisperCppSTT {
         }
 
         if !self.model_path.exists() {
-            return Err(format!(
-                "Whisper model not found at: {}",
-                self.model_path.display()
-            )
-            .into());
+            return Err(
+                format!("Whisper model not found at: {}", self.model_path.display()).into(),
+            );
         }
 
         let config = self.config.read().unwrap().clone();
@@ -358,45 +362,43 @@ impl STTProvider for WhisperCppSTT {
             let mut seq_counter = 0u64;
             let mut last_emitted_text = String::new();
 
-            let run_whisper = |state: &mut whisper_rs::WhisperState,
-                               samples: &[f32],
-                               lang: &str|
-             -> String {
-                let mut params = FullParams::new(SamplingStrategy::Greedy { best_of: 1 });
-                let lang_code = lang.split('-').next().unwrap_or(lang);
-                params.set_language(Some(lang_code));
-                params.set_print_special(false);
-                params.set_print_progress(false);
-                params.set_print_realtime(false);
-                params.set_print_timestamps(false);
-                params.set_n_threads(4);
-                params.set_no_context(true);
-                // Suppress blank/silence hallucinations
-                params.set_suppress_blank(true);
-                params.set_suppress_nst(true);
-                // Higher no-speech threshold to avoid transcribing silence
-                params.set_no_speech_thold(0.6);
+            let run_whisper =
+                |state: &mut whisper_rs::WhisperState, samples: &[f32], lang: &str| -> String {
+                    let mut params = FullParams::new(SamplingStrategy::Greedy { best_of: 1 });
+                    let lang_code = lang.split('-').next().unwrap_or(lang);
+                    params.set_language(Some(lang_code));
+                    params.set_print_special(false);
+                    params.set_print_progress(false);
+                    params.set_print_realtime(false);
+                    params.set_print_timestamps(false);
+                    params.set_n_threads(4);
+                    params.set_no_context(true);
+                    // Suppress blank/silence hallucinations
+                    params.set_suppress_blank(true);
+                    params.set_suppress_nst(true);
+                    // Higher no-speech threshold to avoid transcribing silence
+                    params.set_no_speech_thold(0.6);
 
-                match state.full(params, samples) {
-                    Ok(()) => {
-                        let n = state.full_n_segments();
-                        let mut text = String::new();
-                        for i in 0..n {
-                            if let Some(seg) = state.get_segment(i) {
-                                if let Ok(t) = seg.to_str() {
-                                    text.push_str(t);
+                    match state.full(params, samples) {
+                        Ok(()) => {
+                            let n = state.full_n_segments();
+                            let mut text = String::new();
+                            for i in 0..n {
+                                if let Some(seg) = state.get_segment(i) {
+                                    if let Ok(t) = seg.to_str() {
+                                        text.push_str(t);
+                                    }
                                 }
                             }
+                            // Apply hallucination filter
+                            clean_whisper_text(&text)
                         }
-                        // Apply hallucination filter
-                        clean_whisper_text(&text)
+                        Err(e) => {
+                            log::error!("WhisperCppSTT: Inference failed: {}", e);
+                            String::new()
+                        }
                     }
-                    Err(e) => {
-                        log::error!("WhisperCppSTT: Inference failed: {}", e);
-                        String::new()
-                    }
-                }
-            };
+                };
 
             loop {
                 // Check stop flag FIRST — exit immediately if stopped
@@ -473,9 +475,7 @@ impl STTProvider for WhisperCppSTT {
                     } => {
                         let text = run_whisper(&mut state, &samples, &language);
                         if !text.is_empty() {
-                            let _ = fb_tx.send(FastPassFeedback {
-                                text: text.clone(),
-                            });
+                            let _ = fb_tx.send(FastPassFeedback { text: text.clone() });
 
                             if text != last_emitted_text {
                                 last_emitted_text = text.clone();
@@ -505,8 +505,7 @@ impl STTProvider for WhisperCppSTT {
 
                         let correction_words: Vec<&str> =
                             correction_text.split_whitespace().collect();
-                        let old_words: Vec<&str> =
-                            fast_words.iter().map(|s| s.as_str()).collect();
+                        let old_words: Vec<&str> = fast_words.iter().map(|s| s.as_str()).collect();
 
                         let merged = word_diff::merge_correction(&old_words, &correction_words);
 

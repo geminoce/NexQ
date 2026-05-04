@@ -21,6 +21,7 @@ import {
   Brain,
   RefreshCw,
 } from "lucide-react";
+import { t } from "../../i18n";
 
 interface LLMSetupStepProps {
   ollamaRunning: boolean;
@@ -44,7 +45,7 @@ const CLOUD_PROVIDERS: ProviderCard[] = [
   {
     type: "anthropic",
     label: "Anthropic",
-    description: "Claude Sonnet, Opus, Haiku",
+    description: t("wizard.llm.providers.anthropic"),
     icon: <Brain className="h-5 w-5" />,
     recommended: true,
     requiresKey: true,
@@ -52,14 +53,14 @@ const CLOUD_PROVIDERS: ProviderCard[] = [
   {
     type: "openai",
     label: "OpenAI",
-    description: "GPT-4o, GPT-4, etc.",
+    description: t("wizard.llm.providers.openai"),
     icon: <Sparkles className="h-5 w-5" />,
     requiresKey: true,
   },
   {
     type: "groq",
     label: "Groq",
-    description: "Ultra-fast inference",
+    description: t("wizard.llm.providers.groq"),
     icon: <Zap className="h-5 w-5" />,
     requiresKey: true,
   },
@@ -152,17 +153,17 @@ export function LLMSetupStep({
       const success = await testLLMConnection(configJson);
       if (success) {
         setConnectionStatus("success");
-        setConnectionMessage("Connected successfully");
+        setConnectionMessage(t("wizard.llm.connectedSuccessfully"));
         await setLLMProvider(configJson).catch(() => {});
         setConfigProvider(selectedProvider);
       } else {
         setConnectionStatus("error");
-        setConnectionMessage("Connection failed");
+        setConnectionMessage(t("wizard.llm.connectionFailed"));
       }
     } catch (err) {
       setConnectionStatus("error");
       setConnectionMessage(
-        err instanceof Error ? err.message : "Connection failed"
+        err instanceof Error ? err.message : t("wizard.llm.connectionFailed")
       );
     }
   }
@@ -193,9 +194,9 @@ export function LLMSetupStep({
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 shadow-md shadow-primary/10">
           <Brain className="h-7 w-7 text-primary" />
         </div>
-        <h2 className="text-2xl font-bold text-foreground">LLM Configuration</h2>
+        <h2 className="text-2xl font-bold text-foreground">{t("wizard.llm.title")}</h2>
         <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-          Choose an AI model to power your meeting assistant.
+          {t("wizard.llm.description")}
         </p>
       </div>
 
@@ -206,15 +207,15 @@ export function LLMSetupStep({
             <div className="flex items-center gap-2">
               <Server className="h-4 w-4 text-success" />
               <p className="text-sm font-medium text-success">
-                Local LLM Detected
+                {t("wizard.llm.localDetected")}
               </p>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
               {ollamaRunning &&
-                `Ollama is running with ${ollamaModels.length} model${ollamaModels.length !== 1 ? "s" : ""}. `}
+                t("wizard.llm.localRunning", { provider: "Ollama", count: ollamaModels.length })}
               {lmStudioRunning &&
-                `LM Studio is running with ${lmStudioModels.length} model${lmStudioModels.length !== 1 ? "s" : ""}. `}
-              Your data stays on your machine.
+                t("wizard.llm.localRunning", { provider: "LM Studio", count: lmStudioModels.length })}
+              {t("wizard.llm.dataStaysLocal")}
             </p>
           </div>
         )}
@@ -223,13 +224,13 @@ export function LLMSetupStep({
         {hasLocalLLM && (
           <div className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Local Providers
+              {t("wizard.llm.localProviders")}
             </p>
             <div className="grid gap-2">
               {ollamaRunning && (
                 <ProviderButton
                   label="Ollama"
-                  description={`${ollamaModels.length} model${ollamaModels.length !== 1 ? "s" : ""} available`}
+                  description={t("wizard.llm.modelsAvailable", { count: ollamaModels.length })}
                   icon={<Server className="h-5 w-5" />}
                   selected={selectedProvider === "ollama"}
                   recommended
@@ -239,7 +240,7 @@ export function LLMSetupStep({
               {lmStudioRunning && (
                 <ProviderButton
                   label="LM Studio"
-                  description={`${lmStudioModels.length} model${lmStudioModels.length !== 1 ? "s" : ""} available`}
+                  description={t("wizard.llm.modelsAvailable", { count: lmStudioModels.length })}
                   icon={<Server className="h-5 w-5" />}
                   selected={selectedProvider === "lm_studio"}
                   onClick={() => handleProviderSelect("lm_studio")}
@@ -252,7 +253,7 @@ export function LLMSetupStep({
         {/* Cloud Provider Cards */}
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Cloud Providers
+            {t("wizard.llm.cloudProviders")}
           </p>
           <div className="grid gap-2">
             {CLOUD_PROVIDERS.map((p) => (
@@ -273,7 +274,7 @@ export function LLMSetupStep({
         {requiresApiKey && (
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">
-              API Key
+              {t("settings.llm.apiKey.title")}
             </label>
             <div className="relative">
               <input
@@ -281,13 +282,15 @@ export function LLMSetupStep({
                 value={apiKey}
                 onChange={(e) => setApiKeyValue(e.target.value)}
                 onBlur={handleSaveApiKey}
-                placeholder={`Enter your ${selectedProvider === "anthropic" ? "Anthropic" : selectedProvider === "openai" ? "OpenAI" : "Groq"} API key`}
-                aria-label="API key"
+                placeholder={t("settings.llm.apiKey.placeholder", {
+                  provider: selectedProvider === "anthropic" ? "Anthropic" : selectedProvider === "openai" ? "OpenAI" : "Groq",
+                })}
+                aria-label={t("settings.llm.apiKey.title")}
                 className="w-full rounded-xl border border-border/40 bg-background px-4 py-3 pr-11 text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20"
               />
               <button
                 onClick={() => setShowApiKey(!showApiKey)}
-                aria-label={showApiKey ? "Hide API key" : "Show API key"}
+                aria-label={showApiKey ? t("settings.llm.apiKey.hideAria") : t("settings.llm.apiKey.showAria")}
                 aria-pressed={showApiKey}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
               >
@@ -299,7 +302,7 @@ export function LLMSetupStep({
               </button>
             </div>
             <p className="text-xs text-muted-foreground">
-              Stored securely in your system keychain
+              {t("settings.llm.apiKey.storedSecurely")}
             </p>
           </div>
         )}
@@ -319,7 +322,7 @@ export function LLMSetupStep({
             ) : (
               <CheckCircle className="h-3.5 w-3.5" />
             )}
-            Test Connection
+            {t("settings.llm.connection.test")}
           </button>
           <button
             onClick={handleLoadModels}
@@ -331,7 +334,7 @@ export function LLMSetupStep({
             ) : (
               <RefreshCw className="h-3 w-3" />
             )}
-            Load Models
+            {t("settings.llm.connection.loadModels")}
           </button>
           {connectionStatus === "success" && (
             <span className="flex items-center gap-1 text-xs text-success">
@@ -351,14 +354,14 @@ export function LLMSetupStep({
         {models.length > 0 && (
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">
-              Select Model
+              {t("wizard.llm.selectModel")}
             </label>
             <select
               value={selectedModel}
               onChange={(e) => handleModelSelect(e.target.value)}
               className="w-full rounded-xl border border-border/40 bg-background px-4 py-3 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20"
             >
-              <option value="">Choose a model...</option>
+              <option value="">{t("settings.llm.models.select")}</option>
               {models.map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.name}
@@ -374,10 +377,10 @@ export function LLMSetupStep({
         {/* Recommendation */}
         <div className="rounded-xl border border-border/20 bg-secondary/20 px-5 py-4">
           <p className="text-xs text-muted-foreground leading-relaxed">
-            <span className="font-medium text-foreground">Tip: </span>
+            <span className="font-medium text-foreground">{t("wizard.llm.tipPrefix")} </span>
             {hasLocalLLM
-              ? "For privacy and speed, we recommend using Ollama with llama3.2. Your conversations never leave your machine."
-              : "For the best experience, we recommend Anthropic Claude. For local privacy, install Ollama and run it before starting NexQ."}
+              ? t("wizard.llm.tipLocal")
+              : t("wizard.llm.tipCloud")}
           </p>
         </div>
       </div>
@@ -424,7 +427,7 @@ function ProviderButton({
       </div>
       {recommended && (
         <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-meta font-medium text-primary">
-          Recommended
+          {t("wizard.recommended")}
         </span>
       )}
       {selected && (

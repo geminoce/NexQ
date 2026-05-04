@@ -99,9 +99,7 @@ impl LLMProvider for OpenAICompatClient {
                             context_window: m
                                 .get("context_window")
                                 .and_then(|c| c.as_u64())
-                                .or_else(|| {
-                                    m.get("context_length").and_then(|c| c.as_u64())
-                                }),
+                                .or_else(|| m.get("context_length").and_then(|c| c.as_u64())),
                         })
                     })
                     .collect()
@@ -292,9 +290,7 @@ pub fn create_openrouter_client(api_key: &str) -> OpenAICompatClient {
 pub fn create_lm_studio_client(base_url: Option<&str>) -> OpenAICompatClient {
     OpenAICompatClient::new(OpenAICompatConfig {
         provider_name: "lm_studio".to_string(),
-        base_url: base_url
-            .unwrap_or("http://localhost:1234/v1")
-            .to_string(),
+        base_url: base_url.unwrap_or("http://localhost:1234/v1").to_string(),
         auth_header: None,
         auth_value: None,
         extra_headers: vec![],

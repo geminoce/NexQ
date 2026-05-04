@@ -3,6 +3,7 @@ import { useStreamStore } from "../stores/streamStore";
 import { generateAssist } from "../lib/ipc";
 import { showToast } from "../stores/toastStore";
 import { Send, X } from "lucide-react";
+import { t } from "../i18n";
 
 interface AskInputProps {
   visible: boolean;
@@ -28,7 +29,7 @@ export function AskInput({ visible, onClose }: AskInputProps) {
 
     // Send question via generateAssist in AskQuestion mode
     generateAssist("AskQuestion", text).catch((err) => {
-      const msg = err instanceof Error ? err.message : "Failed to send question";
+      const msg = err instanceof Error ? err.message : t("overlay.toasts.sendQuestionFailed");
       showToast(msg, "error");
     });
     setInputText("");
@@ -61,8 +62,8 @@ export function AskInput({ visible, onClose }: AskInputProps) {
         value={inputText}
         onChange={(e) => setInputText(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="Ask about the meeting..."
-        aria-label="Ask a question"
+        placeholder={t("overlay.ai.askPlaceholder")}
+        aria-label={t("overlay.ai.askAria")}
         disabled={isStreaming}
         maxLength={2000}
         className="flex-1 bg-transparent text-xs text-foreground/90 placeholder:text-muted-foreground/50 outline-none"
@@ -72,7 +73,7 @@ export function AskInput({ visible, onClose }: AskInputProps) {
         disabled={!inputText.trim() || isStreaming}
         className="rounded-lg p-1.5 text-primary transition-colors duration-150 hover:bg-primary/10 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
         title="Send (Enter)"
-        aria-label="Send question"
+        aria-label={t("overlay.ai.sendQuestion")}
       >
         <Send className="h-3.5 w-3.5" />
       </button>
@@ -80,7 +81,7 @@ export function AskInput({ visible, onClose }: AskInputProps) {
         onClick={onClose}
         className="rounded-lg p-1.5 text-muted-foreground/60 transition-colors duration-150 hover:bg-accent hover:text-muted-foreground"
         title="Close (Esc)"
-        aria-label="Close ask input"
+        aria-label={t("overlay.ai.closeQuestion")}
       >
         <X className="h-3.5 w-3.5" />
       </button>

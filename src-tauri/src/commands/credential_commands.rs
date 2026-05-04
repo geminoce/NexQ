@@ -38,10 +38,7 @@ pub async fn get_api_key(
 }
 
 #[command]
-pub async fn delete_api_key(
-    provider: String,
-    state: State<'_, AppState>,
-) -> Result<(), String> {
+pub async fn delete_api_key(provider: String, state: State<'_, AppState>) -> Result<(), String> {
     let cred_mgr = state
         .credentials
         .as_ref()
@@ -55,10 +52,7 @@ pub async fn delete_api_key(
 }
 
 #[command]
-pub async fn has_api_key(
-    provider: String,
-    state: State<'_, AppState>,
-) -> Result<bool, String> {
+pub async fn has_api_key(provider: String, state: State<'_, AppState>) -> Result<bool, String> {
     let cred_mgr = state
         .credentials
         .as_ref()

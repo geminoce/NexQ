@@ -11,13 +11,9 @@ pub fn enumerate_devices() -> Result<AudioDeviceList, String> {
     let host = cpal::default_host();
 
     // Get default devices for marking
-    let default_input_name = host
-        .default_input_device()
-        .and_then(|d| d.name().ok());
+    let default_input_name = host.default_input_device().and_then(|d| d.name().ok());
 
-    let default_output_name = host
-        .default_output_device()
-        .and_then(|d| d.name().ok());
+    let default_output_name = host.default_output_device().and_then(|d| d.name().ok());
 
     // Enumerate input devices
     let mut inputs = Vec::new();
@@ -162,7 +158,11 @@ pub fn test_device(device_id: &str) -> Result<bool, String> {
     if let Ok(device) = find_output_device(device_id) {
         match device.default_output_config() {
             Ok(config) => {
-                log::info!("Output device '{}' supports config: {:?}", device_id, config);
+                log::info!(
+                    "Output device '{}' supports config: {:?}",
+                    device_id,
+                    config
+                );
                 return Ok(true);
             }
             Err(e) => {

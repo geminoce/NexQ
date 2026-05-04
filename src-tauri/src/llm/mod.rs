@@ -136,21 +136,14 @@ impl LLMRouter {
     }
 
     /// Set the active provider, creating the appropriate client.
-    pub fn set_provider(
-        &mut self,
-        config: ProviderConfig,
-    ) -> Result<(), LLMError> {
+    pub fn set_provider(&mut self, config: ProviderConfig) -> Result<(), LLMError> {
         let provider_type = ProviderType::from_str(&config.provider_type)?;
 
         let provider: Box<dyn LLMProvider> = match &provider_type {
-            ProviderType::Ollama => {
-                Box::new(ollama::OllamaClient::new(config.base_url.as_deref()))
-            }
-            ProviderType::LmStudio => {
-                Box::new(openai_compat::create_lm_studio_client(
-                    config.base_url.as_deref(),
-                ))
-            }
+            ProviderType::Ollama => Box::new(ollama::OllamaClient::new(config.base_url.as_deref())),
+            ProviderType::LmStudio => Box::new(openai_compat::create_lm_studio_client(
+                config.base_url.as_deref(),
+            )),
             ProviderType::Openai => {
                 let api_key = config.api_key.as_deref().ok_or_else(|| {
                     LLMError::NotConfigured("OpenAI API key required".to_string())
@@ -167,9 +160,10 @@ impl LLMRouter {
                 ))
             }
             ProviderType::Groq => {
-                let api_key = config.api_key.as_deref().ok_or_else(|| {
-                    LLMError::NotConfigured("Groq API key required".to_string())
-                })?;
+                let api_key = config
+                    .api_key
+                    .as_deref()
+                    .ok_or_else(|| LLMError::NotConfigured("Groq API key required".to_string()))?;
                 Box::new(openai_compat::create_groq_client(api_key))
             }
             ProviderType::Gemini => {

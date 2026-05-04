@@ -62,11 +62,7 @@ impl TranscriptBuffer {
             return String::new();
         }
 
-        let latest_ts = self
-            .segments
-            .back()
-            .map(|s| s.timestamp_ms)
-            .unwrap_or(0);
+        let latest_ts = self.segments.back().map(|s| s.timestamp_ms).unwrap_or(0);
         let cutoff_ms = latest_ts.saturating_sub(window_seconds * 1000);
 
         let mut parts: Vec<String> = Vec::new();

@@ -213,8 +213,7 @@ pub async fn update_whisper_dual_pass_config(
 #[command]
 pub async fn get_available_stt_providers() -> Result<String, String> {
     let providers = provider::list_available_providers();
-    serde_json::to_string(&providers)
-        .map_err(|e| format!("Failed to serialize providers: {}", e))
+    serde_json::to_string(&providers).map_err(|e| format!("Failed to serialize providers: {}", e))
 }
 
 /// Ensure the STTRouter is initialized in the app state.
@@ -313,6 +312,5 @@ pub async fn estimate_deepgram_cost(duration_minutes: f32) -> Result<String, Str
         "streams": streams,
         "rate_per_min": rate,
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Failed to serialize cost estimate: {}", e))
+    serde_json::to_string(&result).map_err(|e| format!("Failed to serialize cost estimate: {}", e))
 }

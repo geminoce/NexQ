@@ -7,9 +7,16 @@ import { STTSetupStep } from "./STTSetupStep";
 import { LLMSetupStep } from "./LLMSetupStep";
 import { ReadyStep } from "./ReadyStep";
 import { ChevronLeft, ChevronRight, SkipForward } from "lucide-react";
+import { t } from "../../i18n";
 
 const STEP_COUNT = 5;
-const STEP_LABELS = ["Welcome", "Audio", "STT", "LLM", "Ready"];
+const STEP_LABELS = [
+  t("wizard.steps.welcome"),
+  t("wizard.steps.audio"),
+  t("wizard.steps.stt"),
+  t("wizard.steps.llm"),
+  t("wizard.steps.ready"),
+];
 
 interface DetectionData {
   ollamaRunning: boolean;
@@ -121,7 +128,7 @@ export function FirstRunWizard() {
             NexQ
           </span>
           <span className="text-sm text-muted-foreground/60 font-medium">
-            Setup
+            {t("wizard.setup")}
           </span>
         </div>
 
@@ -137,7 +144,7 @@ export function FirstRunWizard() {
                 }
               }}
               className="group flex items-center gap-1"
-              aria-label={`Step ${i + 1}`}
+              aria-label={t("wizard.stepAria", { step: i + 1, label: STEP_LABELS[i] })}
               aria-current={currentStep === i ? "step" : undefined}
             >
               <div
@@ -155,7 +162,7 @@ export function FirstRunWizard() {
 
         {/* Step label */}
         <span className="text-xs font-medium text-muted-foreground/70">
-          Step {currentStep + 1} of {STEP_COUNT}
+          {t("wizard.stepCounter", { current: currentStep + 1, total: STEP_COUNT })}
         </span>
       </header>
 
@@ -204,7 +211,7 @@ export function FirstRunWizard() {
               className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
               <ChevronLeft className="h-4 w-4" />
-              Back
+              {t("common.back")}
             </button>
           )}
         </div>
@@ -217,7 +224,7 @@ export function FirstRunWizard() {
               className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
               <SkipForward className="h-3.5 w-3.5" />
-              Skip
+              {t("wizard.skip")}
             </button>
           )}
 
@@ -228,7 +235,7 @@ export function FirstRunWizard() {
               disabled={!canNext}
               className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Next
+              {t("wizard.next")}
               <ChevronRight className="h-4 w-4" />
             </button>
           )}

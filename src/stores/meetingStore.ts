@@ -11,6 +11,7 @@ import {
 } from "../lib/ipc";
 import { useConfigStore } from "./configStore";
 import { useTranscriptStore } from "./transcriptStore";
+import { t } from "../i18n";
 
 interface MeetingState {
   // View state
@@ -72,6 +73,18 @@ interface MeetingState {
   stopTimer: () => void;
 }
 
+function buildDefaultMeetingTitle(audioMode: AudioMode): string {
+  const date = new Date().toLocaleString("ru-RU", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  return t(audioMode === "online" ? "overlay.meetingTitle.online" : "overlay.meetingTitle.inPerson", { date });
+}
+
 export const useMeetingStore = create<MeetingState>((set, get) => ({
   currentView: "launcher",
   previousView: null,
@@ -125,7 +138,7 @@ export const useMeetingStore = create<MeetingState>((set, get) => ({
       const resolvedScenario: AIScenario = scenario ?? get().aiScenario;
 
       // 1. Create meeting record in SQLite
-      const meeting = await ipcStartMeeting(title);
+      const meeting = await ipcStartMeeting(title ?? buildDefaultMeetingTitle(resolvedMode));
 
       // 1b. Store mode/scenario in state and persist to DB
       set({ audioMode: resolvedMode, aiScenario: resolvedScenario });
@@ -152,7 +165,7 @@ export const useMeetingStore = create<MeetingState>((set, get) => ({
           if (!hasDiarization) {
             const { showToast } = await import("../stores/toastStore");
             showToast(
-              "Local STT doesn't support speaker separation — all speech labeled as Room.",
+              t("overlay.toasts.noSpeakerSeparation"),
               "info"
             );
           }

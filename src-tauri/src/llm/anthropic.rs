@@ -21,9 +21,7 @@ impl AnthropicClient {
     pub fn new(api_key: &str, base_url: Option<&str>) -> Self {
         Self {
             api_key: api_key.to_string(),
-            base_url: base_url
-                .unwrap_or("https://api.anthropic.com")
-                .to_string(),
+            base_url: base_url.unwrap_or("https://api.anthropic.com").to_string(),
             client: reqwest::Client::new(),
         }
     }
@@ -90,7 +88,11 @@ impl AnthropicClient {
                 if let Ok(val) = serde_json::from_str::<serde_json::Value>(data) {
                     let event_type = current_event_type
                         .clone()
-                        .or_else(|| val.get("type").and_then(|t| t.as_str()).map(|s| s.to_string()))
+                        .or_else(|| {
+                            val.get("type")
+                                .and_then(|t| t.as_str())
+                                .map(|s| s.to_string())
+                        })
                         .unwrap_or_default();
 
                     events.push(AnthropicEvent {
@@ -237,8 +239,11 @@ impl LLMProvider for AnthropicClient {
                     match event.event_type.as_str() {
                         "message_start" => {
                             // Extract input token count from usage
-                            if let Some(usage) = event.data.get("message").and_then(|m| m.get("usage")) {
-                                if let Some(it) = usage.get("input_tokens").and_then(|v| v.as_u64()) {
+                            if let Some(usage) =
+                                event.data.get("message").and_then(|m| m.get("usage"))
+                            {
+                                if let Some(it) = usage.get("input_tokens").and_then(|v| v.as_u64())
+                                {
                                     input_tokens = it;
                                 }
                             }
@@ -259,7 +264,9 @@ impl LLMProvider for AnthropicClient {
                         "message_delta" => {
                             // Extract output token count
                             if let Some(usage) = event.data.get("usage") {
-                                if let Some(ot) = usage.get("output_tokens").and_then(|v| v.as_u64()) {
+                                if let Some(ot) =
+                                    usage.get("output_tokens").and_then(|v| v.as_u64())
+                                {
                                     output_tokens = ot;
                                 }
                             }

@@ -94,7 +94,12 @@ fn run_cpal_loopback(
     let sample_rate = config.sample_rate().0;
     let channels = config.channels();
     let sample_format = config.sample_format();
-    log::info!("System capture: {}Hz, {}ch, {:?}", sample_rate, channels, sample_format);
+    log::info!(
+        "System capture: {}Hz, {}ch, {:?}",
+        sample_rate,
+        channels,
+        sample_format
+    );
 
     let err_fn = |err: cpal::StreamError| {
         log::error!("System capture error: {}", err);
@@ -108,8 +113,11 @@ fn run_cpal_loopback(
         cpal::SampleFormat::F32 => device.build_input_stream(
             &config.into(),
             move |data: &[f32], _: &cpal::InputCallbackInfo| {
-                if stop.load(Ordering::Relaxed) { return; }
-                let pcm: Vec<i16> = data.iter()
+                if stop.load(Ordering::Relaxed) {
+                    return;
+                }
+                let pcm: Vec<i16> = data
+                    .iter()
                     .map(|&s| (s.clamp(-1.0, 1.0) * i16::MAX as f32) as i16)
                     .collect();
                 send_system_chunk(&pcm, sample_rate, channels, &tx2);
@@ -120,7 +128,9 @@ fn run_cpal_loopback(
         cpal::SampleFormat::I16 => device.build_input_stream(
             &config.into(),
             move |data: &[i16], _: &cpal::InputCallbackInfo| {
-                if stop.load(Ordering::Relaxed) { return; }
+                if stop.load(Ordering::Relaxed) {
+                    return;
+                }
                 send_system_chunk(data, sample_rate, channels, &tx2);
             },
             err_fn,
@@ -129,10 +139,10 @@ fn run_cpal_loopback(
         cpal::SampleFormat::U16 => device.build_input_stream(
             &config.into(),
             move |data: &[u16], _: &cpal::InputCallbackInfo| {
-                if stop.load(Ordering::Relaxed) { return; }
-                let pcm: Vec<i16> = data.iter()
-                    .map(|&s| (s as i32 - 32768) as i16)
-                    .collect();
+                if stop.load(Ordering::Relaxed) {
+                    return;
+                }
+                let pcm: Vec<i16> = data.iter().map(|&s| (s as i32 - 32768) as i16).collect();
                 send_system_chunk(&pcm, sample_rate, channels, &tx2);
             },
             err_fn,
@@ -140,9 +150,16 @@ fn run_cpal_loopback(
         ),
         _ => return Err(format!("Unsupported format: {:?}", sample_format)),
     }
-    .map_err(|e| format!("Failed to build loopback stream on '{}': {}", actual_name, e))?;
+    .map_err(|e| {
+        format!(
+            "Failed to build loopback stream on '{}': {}",
+            actual_name, e
+        )
+    })?;
 
-    stream.play().map_err(|e| format!("Failed to play loopback stream: {}", e))?;
+    stream
+        .play()
+        .map_err(|e| format!("Failed to play loopback stream: {}", e))?;
     log::info!("System audio loopback ACTIVE on '{}'", actual_name);
 
     // Keep stream alive until stop flag

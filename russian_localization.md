@@ -189,19 +189,19 @@ tray.*
 
 Идти вкладками, по одной за раз:
 
-1. `GeneralSettings`
-2. `HotkeySettings`
-3. `MeetingAudioSettings`
-4. `STTSettings`
-5. `LLMSettings`
-6. `TranslationSettings`
-7. `ContextStrategySettings`
+1. `GeneralSettings` - готово: видимые строки и переключатели используют i18n-ключи
+2. `HotkeySettings` - готово: заголовки, таблица, подсказки, aria-label и toast-сообщения используют i18n-ключи
+3. `MeetingAudioSettings` - готово: пресеты, роли, источники, мониторинг, аудиосессии и выбор STT-провайдера используют i18n-ключи
+4. `STTSettings` - готово: основные секции, язык, подключения, модели и advanced-блоки используют i18n-ключи
+5. `LLMSettings` - готово: провайдеры, API-ключи, подключение, список моделей и OpenRouter-каталог используют i18n-ключи
+6. `TranslationSettings` - готово: провайдеры, API-ключи, языки, поведение и OPUS-MT manager используют i18n-ключи
+7. `ContextStrategySettings` - готово: стратегии, пресеты, статусы индекса, поиск и кастомные параметры используют i18n-ключи
 8. `ScenarioSettings` - готово: UI-строки и встроенные prompt-тексты сценариев переведены
 9. `NoisePresetSettings` - готово: компонент уже использует i18n-ключи для названий, описаний и статистики пресетов
 10. `ConfidenceSettings` - готово: все видимые строки компонента уже используют i18n-ключи
-11. `LocalModelManager`
-12. `OpusMtModelManager`
-13. `OpenRouterModelCatalog`
+11. `LocalModelManager` - готово: кнопки Activate/Download/Delete, статусы, accuracy/speed и toast-сообщения используют i18n-ключи
+12. `OpusMtModelManager` - готово: заголовок, фильтр языков, статусы, кнопки, tooltips и toast-сообщения переведены через i18n
+13. `OpenRouterModelCatalog` - готово: поиск, сортировка, фильтры, избранное, недавно использованные, карточки и пустые состояния переведены через i18n
 
 После каждой вкладки:
 
@@ -215,16 +215,16 @@ npm run build
 - provider names обычно не переводить: `Deepgram`, `Parakeet TDT`, `Groq Whisper`.
 - технические параметры Deepgram/Groq можно оставить как code labels, но поясняющий UI перевести.
 
-## Шаг 6. Перевести onboarding wizard
+## Шаг 6. Перевести onboarding wizard - готово
 
 Файлы:
 
-- `src/components/wizard/FirstRunWizard.tsx`
-- `WelcomeStep.tsx`
-- `AudioSetupStep.tsx`
-- `STTSetupStep.tsx`
-- `LLMSetupStep.tsx`
-- `ReadyStep.tsx`
+- `src/components/wizard/FirstRunWizard.tsx` - готово: навигация, счётчик шагов, aria-label, Back/Next/Skip переведены
+- `WelcomeStep.tsx` - готово: приветствие, автообнаружение аудио/LLM и итоговые сообщения переведены
+- `AudioSetupStep.tsx` - готово: настройка источников, smart scan, результаты, тест микрофона и подписи устройств переведены
+- `STTSetupStep.tsx` - готово: описания STT-провайдеров, рекомендации и подписи сторон переведены
+- `LLMSetupStep.tsx` - готово: локальные/облачные провайдеры, API-key блок, проверки подключения, выбор модели и подсказки переведены
+- `ReadyStep.tsx` - готово: финальный экран, сводка аудио, горячие клавиши и кнопки запуска/перехода переведены
 
 Проверить:
 

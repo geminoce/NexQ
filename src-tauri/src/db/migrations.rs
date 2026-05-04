@@ -169,9 +169,7 @@ fn v2_rag_schema(conn: &Connection) -> Result<(), rusqlite::Error> {
 
 /// Schema v4: Add segment_id to meeting_bookmarks for segment-anchored bookmarks.
 fn v4_bookmark_segment_id(conn: &Connection) -> Result<(), rusqlite::Error> {
-    if let Err(e) =
-        conn.execute_batch("ALTER TABLE meeting_bookmarks ADD COLUMN segment_id TEXT")
-    {
+    if let Err(e) = conn.execute_batch("ALTER TABLE meeting_bookmarks ADD COLUMN segment_id TEXT") {
         let msg = e.to_string();
         if !msg.contains("duplicate column") {
             log::warn!("ALTER TABLE meeting_bookmarks warning: {}", msg);
@@ -245,8 +243,7 @@ fn v3_meeting_mode_schema(conn: &Connection) -> Result<(), rusqlite::Error> {
     }
 
     // Add speaker_id column to transcript_segments
-    if let Err(e) =
-        conn.execute_batch("ALTER TABLE transcript_segments ADD COLUMN speaker_id TEXT")
+    if let Err(e) = conn.execute_batch("ALTER TABLE transcript_segments ADD COLUMN speaker_id TEXT")
     {
         let msg = e.to_string();
         if !msg.contains("duplicate column") {

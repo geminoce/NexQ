@@ -91,7 +91,12 @@ mod tests {
 
     #[test]
     fn test_transcript_source_label() {
-        let chunks = vec![make_chunk("transcript", "transcript_abc", 3, "They asked about...")];
+        let chunks = vec![make_chunk(
+            "transcript",
+            "transcript_abc",
+            3,
+            "They asked about...",
+        )];
         let result = build_rag_context(&chunks, "");
         assert!(result.contains("[Source 1: Live Transcript, segment 3]"));
     }

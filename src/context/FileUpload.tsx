@@ -4,6 +4,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { useContextStore } from "../stores/contextStore";
 import { useConfigStore } from "../stores/configStore";
 import { useRagStore } from "../stores/ragStore";
+import { t } from "../i18n";
 
 export function FileUpload() {
   const loadFile = useContextStore((s) => s.loadFile);
@@ -109,7 +110,7 @@ export function FileUpload() {
         }}
         role="button"
         tabIndex={0}
-        aria-label="Drop files here or click to browse"
+        aria-label={t("context.fileUpload.aria")}
         className={`relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed transition-all duration-200 ${
           isDragOver
             ? "border-primary/60 bg-primary/5 scale-[1.01]"
@@ -120,7 +121,7 @@ export function FileUpload() {
           <>
             <Loader2 className="mb-2 h-8 w-8 animate-spin text-primary/60" />
             <p className="text-sm font-medium text-muted-foreground">
-              Processing file...
+              {t("context.fileUpload.processing")}
             </p>
           </>
         ) : (
@@ -131,16 +132,16 @@ export function FileUpload() {
               }`}
             />
             <p className="text-sm font-medium text-muted-foreground">
-              {isDragOver ? "Drop to upload" : "Drag files here"}
+              {isDragOver ? t("context.fileUpload.dropToUpload") : t("context.fileUpload.dragFilesHere")}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              PDF, TXT, Markdown, or DOCX
+              {t("context.fileUpload.formats")}
             </p>
             <button
               onClick={handleBrowse}
               className="mt-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10 hover:text-primary"
             >
-              Browse Files
+              {t("context.fileUpload.browseFiles")}
             </button>
           </>
         )}

@@ -24,7 +24,7 @@ use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
 
 use crate::audio::AudioChunk;
-use crate::stt::provider::{STTProviderType, STTProvider, TranscriptResult};
+use crate::stt::provider::{STTProvider, STTProviderType, TranscriptResult};
 
 /// All configurable Deepgram streaming parameters.
 /// Serialized to/from JSON for the IPC boundary.
@@ -267,10 +267,8 @@ impl DeepgramSTT {
     async fn connect(
         api_key: &str,
         url: &str,
-    ) -> Result<
-        WebSocketStream<MaybeTlsStream<TcpStream>>,
-        Box<dyn std::error::Error + Send + Sync>,
-    > {
+    ) -> Result<WebSocketStream<MaybeTlsStream<TcpStream>>, Box<dyn std::error::Error + Send + Sync>>
+    {
         let request = tokio_tungstenite::tungstenite::http::Request::builder()
             .uri(url)
             .header("Authorization", format!("Token {}", api_key))
@@ -369,9 +367,7 @@ impl DeepgramSTT {
     /// Spawn the combined reader + keepalive + reconnect task.
     /// Tracks seen speaker IDs and emits `speaker_detected` events for new ones.
     fn spawn_reader_task(
-        mut read_half: futures::stream::SplitStream<
-            WebSocketStream<MaybeTlsStream<TcpStream>>,
-        >,
+        mut read_half: futures::stream::SplitStream<WebSocketStream<MaybeTlsStream<TcpStream>>>,
         result_tx: mpsc::Sender<TranscriptResult>,
         speaker: String,
         stop_flag: Arc<AtomicBool>,
@@ -392,9 +388,7 @@ impl DeepgramSTT {
 
                 match msg_result {
                     Ok(Message::Text(text)) => {
-                        if let Some(result) =
-                            Self::parse_response(&text, &speaker, start_time)
-                        {
+                        if let Some(result) = Self::parse_response(&text, &speaker, start_time) {
                             // Emit speaker_detected for new diarization speaker IDs
                             if diarize_enabled {
                                 if let Some(ref spk) = result.speaker {
@@ -405,7 +399,11 @@ impl DeepgramSTT {
                                                 "speaker_id": spk,
                                                 "meeting_id": "",
                                             });
-                                            let _ = tauri::Emitter::emit(handle, "speaker_detected", &payload);
+                                            let _ = tauri::Emitter::emit(
+                                                handle,
+                                                "speaker_detected",
+                                                &payload,
+                                            );
                                             log::info!("DeepgramSTT: New speaker detected via diarization: {}", spk);
                                         }
                                     }
@@ -445,10 +443,7 @@ impl DeepgramSTT {
     /// WebSocket pings. Deepgram's idle timeout counts audio data frames, not WS pings.
     /// The KeepAlive message explicitly tells Deepgram "I'm still here" during silence.
     fn spawn_writer_task(
-        mut write_half: SplitSink<
-            WebSocketStream<MaybeTlsStream<TcpStream>>,
-            Message,
-        >,
+        mut write_half: SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>,
         mut audio_rx: mpsc::Receiver<Vec<u8>>,
         stop_flag: Arc<AtomicBool>,
         app_handle: Option<tauri::AppHandle>,
@@ -499,9 +494,7 @@ impl DeepgramSTT {
             }
 
             // Send close frame
-            let _ = write_half
-                .send(Message::Close(None))
-                .await;
+            let _ = write_half.send(Message::Close(None)).await;
 
             log::info!("DeepgramSTT: Writer task exiting");
         });
@@ -565,17 +558,24 @@ impl STTProvider for DeepgramSTT {
                         if err_str.contains("401") || err_str.contains("Unauthorized") {
                             return Err("Invalid Deepgram API key. Please check your key at https://console.deepgram.com/".into());
                         } else if err_str.contains("429") {
-                            return Err("Deepgram rate limit exceeded. Please wait a moment and try again.".into());
+                            return Err(
+                                "Deepgram rate limit exceeded. Please wait a moment and try again."
+                                    .into(),
+                            );
                         }
-                        return Err(format!("Failed to connect to Deepgram after {} retries: {}", max_retries, e).into());
+                        return Err(format!(
+                            "Failed to connect to Deepgram after {} retries: {}",
+                            max_retries, e
+                        )
+                        .into());
                     }
 
-                    let backoff = Duration::from_secs(
-                        (1u64 << (retry_count - 1)).min(30)
-                    );
+                    let backoff = Duration::from_secs((1u64 << (retry_count - 1)).min(30));
                     log::warn!(
                         "DeepgramSTT: Connection attempt {} failed: {}. Retrying in {:?}",
-                        retry_count, e, backoff
+                        retry_count,
+                        e,
+                        backoff
                     );
                     Self::emit_status(
                         &self.app_handle,
@@ -666,9 +666,12 @@ impl STTProvider for DeepgramSTT {
         // drops system audio where WASAPI loopback levels are below the local
         // VAD threshold but are perfectly valid speech for Deepgram.
         if !chunk.pcm_data.is_empty() {
-            let rms: f64 = chunk.pcm_data.iter()
+            let rms: f64 = chunk
+                .pcm_data
+                .iter()
                 .map(|&s| (s as f64) * (s as f64))
-                .sum::<f64>() / chunk.pcm_data.len() as f64;
+                .sum::<f64>()
+                / chunk.pcm_data.len() as f64;
             if rms.sqrt() < 0.5 {
                 return Ok(());
             }
@@ -718,7 +721,10 @@ impl STTProvider for DeepgramSTT {
 
     async fn test_connection(&self) -> Result<bool, Box<dyn std::error::Error + Send + Sync>> {
         if self.api_key.is_empty() {
-            return Err("No API key configured. Get a free key at https://console.deepgram.com/signup".into());
+            return Err(
+                "No API key configured. Get a free key at https://console.deepgram.com/signup"
+                    .into(),
+            );
         }
 
         log::info!("DeepgramSTT: Testing connection...");
@@ -741,10 +747,7 @@ impl STTProvider for DeepgramSTT {
         } else if status.as_u16() == 429 {
             Err("Rate limited. Please wait a moment and try again.".into())
         } else {
-            log::warn!(
-                "DeepgramSTT: Connection test failed with status {}",
-                status
-            );
+            log::warn!("DeepgramSTT: Connection test failed with status {}", status);
             Err(format!("Connection test failed with status {}", status).into())
         }
     }

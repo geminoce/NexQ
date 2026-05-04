@@ -17,6 +17,7 @@ import { useConfigStore } from "../stores/configStore";
 import { listLocalSTTEngines, deleteLocalSTTModel } from "../lib/ipc";
 import type { LocalSTTEngineInfo, LocalSTTModelInfo } from "../lib/types";
 import { showToast } from "../stores/toastStore";
+import { t } from "../i18n";
 
 interface LocalModelManagerProps {
   compact?: boolean;
@@ -70,7 +71,7 @@ export function LocalModelManager({ compact, engineFilter }: LocalModelManagerPr
               if (engine.engine === "whisper_cpp") {
                 setActiveWhisperModel(firstDownloaded.id);
               }
-              showToast(`Model "${firstDownloaded.name}" activated for ${engine.name}`, "success");
+              showToast(t("settings.stt.models.activatedToast", { model: firstDownloaded.name, engine: engine.name }), "success");
             }
           }
         }
@@ -82,7 +83,7 @@ export function LocalModelManager({ compact, engineFilter }: LocalModelManagerPr
     return (
       <div className="flex items-center gap-2 py-4 text-xs text-muted-foreground">
         <Loader2 className="h-3.5 w-3.5 animate-spin" />
-        Loading local models...
+        {t("settings.stt.models.loading")}
       </div>
     );
   }
@@ -135,17 +136,17 @@ export function LocalModelManager({ compact, engineFilter }: LocalModelManagerPr
                         setActiveModelForEngine(model.engine, null);
                         if (model.engine === "whisper_cpp") setActiveWhisperModel(null);
                       }
-                      showToast(`Deleted ${model.name}`, "success");
+                      showToast(t("settings.stt.models.deletedToast", { model: model.name }), "success");
                       loadEngines();
                     } catch (err) {
-                      showToast(`Failed to delete: ${err}`, "error");
+                      showToast(t("settings.stt.models.deleteFailedToast", { error: String(err) }), "error");
                     }
                   }}
                   onSetActive={() => {
                     setActiveModelForEngine(model.engine, model.id);
                     // Keep legacy field in sync for whisper_cpp
                     if (model.engine === "whisper_cpp") setActiveWhisperModel(model.id);
-                    showToast(`Activated "${model.name}" for ${engine.name}`, "success");
+                    showToast(t("settings.stt.models.activatedToast", { model: model.name, engine: engine.name }), "success");
                   }}
                 />
               );
@@ -264,7 +265,7 @@ function ModelRow({
             </span>
             {isActive && (
               <span className="shrink-0 rounded bg-primary/20 px-1.5 py-0.5 text-meta font-semibold text-primary">
-                Active
+                {t("settings.stt.models.active")}
               </span>
             )}
           </div>
@@ -273,8 +274,8 @@ function ModelRow({
               <span className="text-meta text-muted-foreground">
                 {sizeLabel}
               </span>
-              <RatingBadge label="Accuracy" value={model.accuracy_rating} max={5} />
-              <RatingBadge label="Speed" value={model.speed_rating} max={5} />
+              <RatingBadge label={t("settings.stt.models.accuracy")} value={model.accuracy_rating} max={5} />
+              <RatingBadge label={t("settings.stt.models.speed")} value={model.speed_rating} max={5} />
             </div>
           )}
         </div>
@@ -285,7 +286,7 @@ function ModelRow({
             <button
               onClick={onCancel}
               className="rounded-md p-1.5 text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
-              title="Cancel download"
+              title={t("settings.stt.models.cancelDownload")}
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -295,10 +296,10 @@ function ModelRow({
                 <button
                   onClick={onSetActive}
                   className="inline-flex items-center gap-1 rounded-md bg-accent px-2 py-1 text-meta font-medium text-foreground hover:bg-primary/10 hover:text-primary"
-                  title="Set as active model"
+                  title={t("settings.stt.models.setActiveModel")}
                 >
                   <CircleDot className="h-3 w-3" />
-                  {compact ? "" : "Activate"}
+                  {compact ? "" : t("settings.stt.models.activate")}
                 </button>
               )}
               {isActive && (
@@ -307,7 +308,7 @@ function ModelRow({
               <button
                 onClick={onDelete}
                 className="rounded-md p-1.5 text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
-                title="Delete model"
+                title={t("settings.stt.models.deleteModel")}
               >
                 <Trash2 className="h-3 w-3" />
               </button>
@@ -318,7 +319,7 @@ function ModelRow({
               className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-meta font-medium text-primary hover:bg-primary/20"
             >
               <Download className="h-3 w-3" />
-              {compact ? "" : "Download"}
+              {compact ? "" : t("settings.stt.models.download")}
             </button>
           )}
         </div>
@@ -336,9 +337,9 @@ function ModelRow({
           <div className="mt-0.5 flex items-center justify-between text-meta text-muted-foreground">
             <span>
               {progress.status === "extracting"
-                ? "Extracting..."
+                ? t("settings.stt.models.extracting")
                 : progress.status === "verifying"
-                  ? "Verifying..."
+                  ? t("settings.stt.models.verifying")
                   : `${formatSize(progress.downloaded_bytes)} / ${formatSize(progress.total_bytes)}`}
             </span>
             <span>{Math.round(progress.percent)}%</span>

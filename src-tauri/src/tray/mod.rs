@@ -1,11 +1,11 @@
-pub mod state;
-pub mod icons;
-pub mod tooltip;
-pub mod menu;
 pub mod click;
+pub mod icons;
+pub mod menu;
+pub mod state;
+pub mod tooltip;
 
-pub use state::TrayState;
 pub use icons::IconSet;
+pub use state::TrayState;
 
 use std::time::Instant;
 use tokio::task::JoinHandle;
@@ -41,7 +41,11 @@ impl TrayManager {
 
     /// Cancel all active timers. Called on shutdown or state transitions.
     pub fn cancel_timers(&mut self) {
-        if let Some(h) = self.pulse_timer.take() { h.abort(); }
-        if let Some(h) = self.tooltip_timer.take() { h.abort(); }
+        if let Some(h) = self.pulse_timer.take() {
+            h.abort();
+        }
+        if let Some(h) = self.tooltip_timer.take() {
+            h.abort();
+        }
     }
 }

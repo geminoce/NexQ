@@ -139,7 +139,10 @@ pub async fn download_file(
 
 /// Extract a .tar.bz2 archive into a destination directory.
 /// Returns the path to the top-level extracted directory.
-pub fn extract_tar_bz2(archive_path: &std::path::Path, dest_dir: &std::path::Path) -> Result<std::path::PathBuf, String> {
+pub fn extract_tar_bz2(
+    archive_path: &std::path::Path,
+    dest_dir: &std::path::Path,
+) -> Result<std::path::PathBuf, String> {
     use bzip2::read::BzDecoder;
     use std::fs::File;
 
@@ -149,8 +152,7 @@ pub fn extract_tar_bz2(archive_path: &std::path::Path, dest_dir: &std::path::Pat
         dest_dir.display()
     );
 
-    let file = File::open(archive_path)
-        .map_err(|e| format!("Failed to open archive: {}", e))?;
+    let file = File::open(archive_path).map_err(|e| format!("Failed to open archive: {}", e))?;
     let decoder = BzDecoder::new(file);
     let mut archive = tar::Archive::new(decoder);
 

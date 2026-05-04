@@ -17,16 +17,12 @@ pub async fn list_opus_mt_models(app: AppHandle) -> Result<String, String> {
         .map_err(|_| "OPUS-MT manager lock poisoned".to_string())?;
 
     let models = mgr.list_models();
-    serde_json::to_string(&models)
-        .map_err(|e| format!("Failed to serialize models: {}", e))
+    serde_json::to_string(&models).map_err(|e| format!("Failed to serialize models: {}", e))
 }
 
 /// Start downloading an OPUS-MT model. Progress emitted via `model_download_progress` events.
 #[command]
-pub async fn download_opus_mt_model(
-    app: AppHandle,
-    model_id: String,
-) -> Result<(), String> {
+pub async fn download_opus_mt_model(app: AppHandle, model_id: String) -> Result<(), String> {
     let state = app.state::<AppState>();
     let mgr = state
         .opus_mt_manager
@@ -42,10 +38,7 @@ pub async fn download_opus_mt_model(
 
 /// Cancel an active OPUS-MT model download.
 #[command]
-pub async fn cancel_opus_mt_download(
-    app: AppHandle,
-    model_id: String,
-) -> Result<(), String> {
+pub async fn cancel_opus_mt_download(app: AppHandle, model_id: String) -> Result<(), String> {
     let state = app.state::<AppState>();
     let mgr = state
         .opus_mt_manager
@@ -62,10 +55,7 @@ pub async fn cancel_opus_mt_download(
 
 /// Delete a downloaded OPUS-MT model.
 #[command]
-pub async fn delete_opus_mt_model(
-    app: AppHandle,
-    model_id: String,
-) -> Result<(), String> {
+pub async fn delete_opus_mt_model(app: AppHandle, model_id: String) -> Result<(), String> {
     let state = app.state::<AppState>();
     let mgr = state
         .opus_mt_manager
@@ -81,10 +71,7 @@ pub async fn delete_opus_mt_model(
 
 /// Activate a downloaded OPUS-MT model. ONNX sessions load lazily on first translate().
 #[command]
-pub async fn activate_opus_mt_model(
-    app: AppHandle,
-    model_id: String,
-) -> Result<(), String> {
+pub async fn activate_opus_mt_model(app: AppHandle, model_id: String) -> Result<(), String> {
     let state = app.state::<AppState>();
 
     // Activate in the manager (persists to active_model.txt)
@@ -114,6 +101,9 @@ pub async fn activate_opus_mt_model(
         let _ = router.set_provider(crate::translation::TranslationProviderType::OpusMt);
     }
 
-    log::info!("OPUS-MT model activated: {} (ONNX will load on first translate)", model_id);
+    log::info!(
+        "OPUS-MT model activated: {} (ONNX will load on first translate)",
+        model_id
+    );
     Ok(())
 }

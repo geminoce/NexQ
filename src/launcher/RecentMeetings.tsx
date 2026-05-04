@@ -2,6 +2,7 @@ import type { MeetingSummary } from "../lib/types";
 import { getDateGroup } from "../lib/utils";
 import { MeetingCard } from "./MeetingCard";
 import { Mic } from "lucide-react";
+import { t } from "../i18n";
 
 interface RecentMeetingsProps {
   meetings: MeetingSummary[];
@@ -43,6 +44,21 @@ function groupMeetingsByDate(
   return groups;
 }
 
+function getLocalizedDateGroup(group: string): string {
+  switch (group) {
+    case "Today":
+      return t("launcher.dateGroups.today");
+    case "Yesterday":
+      return t("launcher.dateGroups.yesterday");
+    case "This Week":
+      return t("launcher.dateGroups.thisWeek");
+    case "Earlier":
+      return t("launcher.dateGroups.earlier");
+    default:
+      return group;
+  }
+}
+
 export function RecentMeetings({
   meetings,
   onSelect,
@@ -59,10 +75,10 @@ export function RecentMeetings({
           <Mic className="h-4.5 w-4.5 text-primary/30" />
         </div>
         <p className="text-xs font-medium text-muted-foreground/50">
-          No meetings yet
+          {t("launcher.empty.title")}
         </p>
         <p className="mt-1 text-meta text-muted-foreground/60">
-          Start a meeting to see it here
+          {t("launcher.empty.description")}
         </p>
       </div>
     );
@@ -78,7 +94,7 @@ export function RecentMeetings({
       {Array.from(grouped.entries()).map(([dateGroup, groupMeetings]) => (
         <div key={dateGroup}>
           <h3 className="mb-2 text-meta font-semibold uppercase tracking-wider text-muted-foreground/60">
-            {dateGroup}
+            {getLocalizedDateGroup(dateGroup)}
           </h3>
           <div className="space-y-1.5">
             {groupMeetings.map((meeting) => {

@@ -9,8 +9,8 @@
 use std::path::PathBuf;
 use std::sync::Mutex as StdMutex;
 
-use super::*;
 use super::opus_mt_registry;
+use super::*;
 
 /// A loaded ONNX model ready for translation.
 struct LoadedModel {
@@ -62,7 +62,6 @@ impl OpusMtTranslator {
     pub fn set_active_model_id(&mut self, model_id: Option<String>) {
         self.active_model_id = model_id;
     }
-
 }
 
 // ── Model loading (runs on a blocking thread, NOT in async context) ──
@@ -86,7 +85,8 @@ fn ensure_loaded_blocking(
         }
     }
 
-    let models_dir = models_dir.as_ref()
+    let models_dir = models_dir
+        .as_ref()
         .ok_or("OPUS-MT models directory not configured")?;
 
     let model_dir = models_dir.join(model_id);
@@ -117,7 +117,11 @@ fn ensure_loaded_blocking(
             has_use_cache_branch = true;
         }
     }
-    log::info!("Decoder past_kv inputs: {} found, use_cache_branch: {}", past_kv_names.len(), has_use_cache_branch);
+    log::info!(
+        "Decoder past_kv inputs: {} found, use_cache_branch: {}",
+        past_kv_names.len(),
+        has_use_cache_branch
+    );
 
     // Read model config for attention dimensions
     let config_path = model_dir.join("config.json");
@@ -133,23 +137,47 @@ fn ensure_loaded_blocking(
         .map(|d| d.target_prefix.to_string())
         .unwrap_or_default();
 
-    log::info!("OPUS-MT model ready: {} (eos={}, dec_start={}, prefix={:?}, heads={}, head_dim={})",
-        model_id, eos_token_id, decoder_start_token_id, target_prefix, num_heads, head_dim);
+    log::info!(
+        "OPUS-MT model ready: {} (eos={}, dec_start={}, prefix={:?}, heads={}, head_dim={})",
+        model_id,
+        eos_token_id,
+        decoder_start_token_id,
+        target_prefix,
+        num_heads,
+        head_dim
+    );
 
     let mut guard = loaded.lock().map_err(|_| "Model lock error".to_string())?;
-    *guard = Some((model_id.to_string(), LoadedModel {
-        encoder, decoder, tokenizer, eos_token_id, decoder_start_token_id,
-        target_prefix, past_kv_names, num_heads, head_dim, has_use_cache_branch,
-    }));
+    *guard = Some((
+        model_id.to_string(),
+        LoadedModel {
+            encoder,
+            decoder,
+            tokenizer,
+            eos_token_id,
+            decoder_start_token_id,
+            target_prefix,
+            past_kv_names,
+            num_heads,
+            head_dim,
+            has_use_cache_branch,
+        },
+    ));
 
     Ok(())
 }
 
 #[async_trait]
 impl TranslationProvider for OpusMtTranslator {
-    fn provider_name(&self) -> &str { "OPUS-MT (Local)" }
-    fn provider_type(&self) -> TranslationProviderType { TranslationProviderType::OpusMt }
-    fn is_local(&self) -> bool { true }
+    fn provider_name(&self) -> &str {
+        "OPUS-MT (Local)"
+    }
+    fn provider_type(&self) -> TranslationProviderType {
+        TranslationProviderType::OpusMt
+    }
+    fn is_local(&self) -> bool {
+        true
+    }
 
     async fn translate(
         &self,
@@ -172,9 +200,11 @@ impl TranslationProvider for OpusMtTranslator {
             // Lazy-load model if needed (inside blocking thread, safe for ORT)
             ensure_loaded_blocking(loaded_ref, &models_dir, active_model_id.as_deref())?;
 
-            let mut guard = loaded_ref.lock()
+            let mut guard = loaded_ref
+                .lock()
                 .map_err(|_| "Model lock error during inference".to_string())?;
-            let (_, model) = guard.as_mut()
+            let (_, model) = guard
+                .as_mut()
                 .ok_or_else(|| "Model unloaded during inference".to_string())?;
             translate_blocking(&text_owned, model)
         })
@@ -254,9 +284,7 @@ impl TranslationProvider for OpusMtTranslator {
             });
         }
 
-        let has_loaded = self.loaded.lock()
-            .map(|g| g.is_some())
-            .unwrap_or(false);
+        let has_loaded = self.loaded.lock().map(|g| g.is_some()).unwrap_or(false);
 
         Ok(ConnectionStatus {
             connected: has_loaded || self.active_model_id.is_some(),
@@ -279,8 +307,16 @@ fn load_onnx_session(path: &std::path::Path) -> Result<ort::session::Session, St
 }
 
 fn log_session_io(name: &str, session: &ort::session::Session) {
-    let inputs: Vec<String> = session.inputs().iter().map(|i| i.name().to_string()).collect();
-    let outputs: Vec<String> = session.outputs().iter().map(|o| o.name().to_string()).collect();
+    let inputs: Vec<String> = session
+        .inputs()
+        .iter()
+        .map(|i| i.name().to_string())
+        .collect();
+    let outputs: Vec<String> = session
+        .outputs()
+        .iter()
+        .map(|o| o.name().to_string())
+        .collect();
     log::info!("{} inputs: {:?}", name, inputs);
     log::info!("{} outputs: {:?}", name, outputs);
 }
@@ -289,11 +325,11 @@ fn log_session_io(name: &str, session: &ort::session::Session) {
 /// Xenova MarianMT exports have `normalizer: { "type": "Precompiled", "precompiled_charsmap": null }`
 /// which the tokenizers crate rejects. We strip the null normalizer before loading.
 fn load_tokenizer(path: &std::path::Path) -> Result<tokenizers::Tokenizer, String> {
-    let raw = std::fs::read_to_string(path)
-        .map_err(|e| format!("Failed to read tokenizer: {}", e))?;
+    let raw =
+        std::fs::read_to_string(path).map_err(|e| format!("Failed to read tokenizer: {}", e))?;
 
-    let mut json: serde_json::Value = serde_json::from_str(&raw)
-        .map_err(|e| format!("Failed to parse tokenizer JSON: {}", e))?;
+    let mut json: serde_json::Value =
+        serde_json::from_str(&raw).map_err(|e| format!("Failed to parse tokenizer JSON: {}", e))?;
 
     // Patch: remove normalizer if its precompiled_charsmap is null
     if let Some(norm) = json.get("normalizer") {
@@ -315,8 +351,15 @@ fn read_model_config(config_path: &std::path::Path) -> (usize, usize) {
     if let Ok(raw) = std::fs::read_to_string(config_path) {
         if let Ok(json) = serde_json::from_str::<serde_json::Value>(&raw) {
             let d_model = json.get("d_model").and_then(|v| v.as_u64()).unwrap_or(512) as usize;
-            let num_heads = json.get("decoder_attention_heads").and_then(|v| v.as_u64()).unwrap_or(8) as usize;
-            let head_dim = if num_heads > 0 { d_model / num_heads } else { 64 };
+            let num_heads = json
+                .get("decoder_attention_heads")
+                .and_then(|v| v.as_u64())
+                .unwrap_or(8) as usize;
+            let head_dim = if num_heads > 0 {
+                d_model / num_heads
+            } else {
+                64
+            };
             return (num_heads, head_dim);
         }
     }
@@ -363,11 +406,8 @@ fn translate_blocking(text: &str, model: &mut LoadedModel) -> Result<String, Str
     let input_ids_arr = Array2::from_shape_vec((1, seq_len), input_ids.clone())
         .map_err(|e| format!("Input tensor error: {}", e))?;
 
-    let attention_mask_arr = Array2::from_shape_vec(
-        (1, seq_len),
-        vec![1i64; seq_len],
-    )
-    .map_err(|e| format!("Attention mask error: {}", e))?;
+    let attention_mask_arr = Array2::from_shape_vec((1, seq_len), vec![1i64; seq_len])
+        .map_err(|e| format!("Attention mask error: {}", e))?;
 
     // 2. Run encoder
     let enc_ids_tensor = ort::value::Tensor::from_array(input_ids_arr.clone())
@@ -402,11 +442,8 @@ fn translate_blocking(text: &str, model: &mut LoadedModel) -> Result<String, Str
 
     for _step in 0..max_new_tokens {
         let dec_len = decoder_input_ids.len();
-        let dec_ids_arr = Array2::from_shape_vec(
-            (1, dec_len),
-            decoder_input_ids.clone(),
-        )
-        .map_err(|e| format!("Decoder input error: {}", e))?;
+        let dec_ids_arr = Array2::from_shape_vec((1, dec_len), decoder_input_ids.clone())
+            .map_err(|e| format!("Decoder input error: {}", e))?;
 
         let dec_ids_tensor = ort::value::Tensor::from_array(dec_ids_arr)
             .map_err(|e| format!("Decoder input_ids tensor: {}", e))?;
@@ -433,9 +470,13 @@ fn translate_blocking(text: &str, model: &mut LoadedModel) -> Result<String, Str
         }
 
         // Provide empty past_key_values tensors (shape [1, num_heads, 0, head_dim])
-        let empty_kv_vecs: Vec<ndarray::ArrayD<f32>> = model.past_kv_names.iter().map(|_| {
-            ndarray::ArrayD::zeros(ndarray::IxDyn(&[1, model.num_heads, 0, model.head_dim]))
-        }).collect();
+        let empty_kv_vecs: Vec<ndarray::ArrayD<f32>> = model
+            .past_kv_names
+            .iter()
+            .map(|_| {
+                ndarray::ArrayD::zeros(ndarray::IxDyn(&[1, model.num_heads, 0, model.head_dim]))
+            })
+            .collect();
 
         for (name, arr) in model.past_kv_names.iter().zip(empty_kv_vecs.into_iter()) {
             let tensor = ort::value::Tensor::from_array(arr)
@@ -475,10 +516,7 @@ fn translate_blocking(text: &str, model: &mut LoadedModel) -> Result<String, Str
     }
 
     // 4. Decode output tokens (skip the start token)
-    let output_tokens: Vec<u32> = decoder_input_ids[1..]
-        .iter()
-        .map(|&id| id as u32)
-        .collect();
+    let output_tokens: Vec<u32> = decoder_input_ids[1..].iter().map(|&id| id as u32).collect();
 
     let decoded = model
         .tokenizer

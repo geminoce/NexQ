@@ -12,6 +12,7 @@ import {
   CheckCircle,
   AlertCircle,
 } from "lucide-react";
+import { t } from "../../i18n";
 
 interface ProviderChoice {
   value: STTProviderType;
@@ -27,7 +28,7 @@ const PROVIDERS: ProviderChoice[] = [
     value: "web_speech",
     label: "Web Speech API",
     icon: <Globe className="h-4 w-4" />,
-    description: "Browser-native, works with microphone input",
+    description: t("wizard.stt.providers.webSpeech"),
     requiresKey: false,
     free: true,
   },
@@ -35,7 +36,7 @@ const PROVIDERS: ProviderChoice[] = [
     value: "whisper_cpp",
     label: "Whisper.cpp (Local)",
     icon: <Server className="h-4 w-4" />,
-    description: "OpenAI Whisper running locally — offline, free",
+    description: t("wizard.stt.providers.whisperCpp"),
     requiresKey: false,
     free: true,
   },
@@ -43,7 +44,7 @@ const PROVIDERS: ProviderChoice[] = [
     value: "deepgram",
     label: "Deepgram",
     icon: <Cloud className="h-4 w-4" />,
-    description: "Real-time streaming STT, high accuracy",
+    description: t("wizard.stt.providers.deepgram"),
     requiresKey: true,
     free: false,
   },
@@ -51,7 +52,7 @@ const PROVIDERS: ProviderChoice[] = [
     value: "whisper_api",
     label: "Whisper API",
     icon: <Cloud className="h-4 w-4" />,
-    description: "OpenAI Whisper, excellent multilingual support",
+    description: t("wizard.stt.providers.whisperApi"),
     requiresKey: true,
     free: false,
   },
@@ -59,7 +60,7 @@ const PROVIDERS: ProviderChoice[] = [
     value: "groq_whisper",
     label: "Groq Whisper",
     icon: <Zap className="h-4 w-4" />,
-    description: "Ultra-fast Whisper inference",
+    description: t("wizard.stt.providers.groqWhisper"),
     requiresKey: true,
     free: false,
   },
@@ -113,10 +114,10 @@ export function STTSetupStep() {
           <Globe className="h-7 w-7 text-primary" />
         </div>
         <h2 className="text-2xl font-bold text-foreground">
-          Speech-to-Text Setup
+          {t("wizard.stt.title")}
         </h2>
         <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-          Choose how each party's audio gets transcribed.
+          {t("wizard.stt.description")}
         </p>
       </div>
 
@@ -124,8 +125,7 @@ export function STTSetupStep() {
         {/* Recommended free setup banner */}
         <div className="rounded-xl border border-success/20 bg-success/5 px-4 py-3">
           <p className="text-xs text-success leading-relaxed">
-            <strong>Recommended (Free):</strong> Web Speech for You + Windows
-            Native for Them. No API keys needed!
+            <strong>{t("wizard.stt.recommendedPrefix")}</strong> {t("wizard.stt.recommendedText")}
           </p>
         </div>
 
@@ -133,9 +133,9 @@ export function STTSetupStep() {
         <div>
           <label className="mb-3 flex items-center gap-2.5 text-sm font-medium text-foreground">
             <span className="rounded-lg bg-primary/10 px-2 py-1 text-meta font-semibold uppercase tracking-wide text-primary">
-              You
+              {t("wizard.parties.you")}
             </span>
-            STT Provider
+            {t("wizard.stt.provider")}
           </label>
           <div className="grid grid-cols-1 gap-2">
             {PROVIDERS.map((p) => (
@@ -154,9 +154,9 @@ export function STTSetupStep() {
         <div>
           <label className="mb-3 flex items-center gap-2.5 text-sm font-medium text-foreground">
             <span className="rounded-lg bg-muted px-2 py-1 text-meta font-semibold uppercase tracking-wide text-muted-foreground">
-              Them
+              {t("wizard.parties.them")}
             </span>
-            STT Provider
+            {t("wizard.stt.provider")}
           </label>
           <div className="grid grid-cols-1 gap-2">
             {PROVIDERS.filter((p) => p.value !== "web_speech").map((p) => (
@@ -170,7 +170,7 @@ export function STTSetupStep() {
             ))}
           </div>
           <p className="mt-1 text-meta text-muted-foreground">
-            Web Speech API is not available for "Them" — it only works with the browser's microphone.
+            {t("wizard.stt.webSpeechThemUnavailable")}
           </p>
         </div>
       </div>
@@ -208,7 +208,7 @@ function ProviderButton({
           </span>
           {provider.free && (
             <span className="rounded-md bg-success/10 px-1.5 py-0.5 text-meta font-semibold text-success">
-              FREE
+              {t("wizard.free")}
             </span>
           )}
           {provider.requiresKey && hasKey && (

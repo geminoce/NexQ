@@ -164,12 +164,17 @@ export function useSpeechRecognition() {
         const confidence = result[0].confidence || 0.9;
         if (!transcript) continue;
 
+        const speakerId = speakerLabel === "User" ? "you" : "them";
+        const { mutedYou, mutedThem } = useConfigStore.getState();
+        if ((speakerId === "you" && mutedYou) || (speakerId === "them" && mutedThem)) {
+          continue;
+        }
+
         const segId = `web_${sessionPrefixRef.current}_${segmentCounterRef.current + 1}`;
 
         if (result.isFinal) {
           segmentCounterRef.current += 1;
           const now = Date.now();
-          const speakerId = speakerLabel === "User" ? "you" : "them";
           const wordCount = transcript.split(/\s+/).filter(Boolean).length;
           useSpeakerStore.getState().updateStats(speakerId, wordCount, 0);
           updateInterimRef.current({
@@ -183,7 +188,6 @@ export function useSpeechRecognition() {
           });
           pushTranscript(transcript, speakerLabel, now, true).catch(() => {});
         } else {
-          const speakerId = speakerLabel === "User" ? "you" : "them";
           updateInterimRef.current({
             id: segId,
             text: transcript,
@@ -263,7 +267,7 @@ export function useSpeechRecognition() {
               fresh.continuous = true;
               fresh.interimResults = true;
               fresh.maxAlternatives = 1;
-              fresh.lang = "en-US";
+              fresh.lang = sttLanguage;
               // Copy handlers from old instance
               fresh.onresult = recognitionRef.current!.onresult;
               fresh.onerror = recognitionRef.current!.onerror;

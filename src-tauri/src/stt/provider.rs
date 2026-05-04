@@ -341,20 +341,14 @@ pub fn list_available_providers() -> Vec<STTProviderInfo> {
             name: "Parakeet TDT (Best Local)".to_string(),
             requires_api_key: false,
             is_local: true,
-            supported_languages: vec![
-                "en".to_string(),
-                "ru".to_string(),
-            ],
+            supported_languages: vec!["en".to_string(), "ru".to_string()],
         },
         STTProviderInfo {
             provider_type: "gigaam_russian".to_string(),
             name: "GigaAM v2 Russian (Local)".to_string(),
             requires_api_key: false,
             is_local: true,
-            supported_languages: vec![
-                "ru".to_string(),
-                "ru-RU".to_string(),
-            ],
+            supported_languages: vec!["ru".to_string(), "ru-RU".to_string()],
         },
     ]
 }

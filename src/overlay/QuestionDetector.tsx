@@ -4,6 +4,7 @@ import { onQuestionDetected } from "../lib/events";
 import { generateAssist } from "../lib/ipc";
 import { useTranscriptStore } from "../stores/transcriptStore";
 import type { DetectedQuestion } from "../lib/types";
+import { t } from "../i18n";
 
 function looksLikeQuestion(text: string): boolean {
   const trimmed = text.trim();
@@ -66,7 +67,7 @@ export function QuestionDetector() {
   const previousQuestions = questions.slice(1, 4);
 
   return (
-    <div className="flex flex-col gap-2.5" role="region" aria-label="Detected questions">
+    <div className="flex flex-col gap-2.5" role="region" aria-label={t("overlay.questionDetector.region")}>
       {/* Latest question — prominent card */}
       <div
         className={`group flex items-start gap-3 rounded-lg transition-all duration-200 ${
@@ -78,7 +79,10 @@ export function QuestionDetector() {
         onKeyDown={(e) => { if (latest && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); handleAssist(0); } }}
         role={latest ? "button" : undefined}
         tabIndex={latest ? 0 : undefined}
-        aria-label={latest ? `Question: ${latest.text}. ${latest.assisted ? "Answered" : "Click to assist"}` : undefined}
+        aria-label={latest ? t("overlay.questionDetector.questionAria", {
+          question: latest.text,
+          status: latest.assisted ? t("overlay.questionDetector.answeredStatus") : t("overlay.questionDetector.clickToAssist"),
+        }) : undefined}
       >
         <div className="relative mt-0.5 shrink-0" aria-hidden="true">
           <HelpCircle className={`h-5 w-5 transition-colors ${latest ? "text-info" : "text-muted-foreground/50"}`} />
@@ -99,7 +103,7 @@ export function QuestionDetector() {
             </p>
           ) : (
             <p className="text-xs text-muted-foreground/50">
-              Listening for questions from the other party
+              {t("overlay.questionDetector.listening")}
             </p>
           )}
         </div>
@@ -107,7 +111,7 @@ export function QuestionDetector() {
         {latest && (
           <button
             onClick={(e) => { e.stopPropagation(); handleAssist(0); }}
-            aria-label={latest.assisted ? "Already answered" : "Get AI assistance for this question"}
+            aria-label={latest.assisted ? t("overlay.questionDetector.alreadyAnswered") : t("overlay.questionDetector.getAssistance")}
             className={`shrink-0 flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all duration-150 cursor-pointer ${
               latest.assisted
                 ? "bg-success/10 border border-success/20 text-success"
@@ -117,12 +121,12 @@ export function QuestionDetector() {
             {latest.assisted ? (
               <>
                 <Check className="h-3.5 w-3.5" aria-hidden="true" />
-                Answered
+                {t("overlay.questionDetector.answered")}
               </>
             ) : (
               <>
                 <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-                Assist
+                {t("overlay.questionDetector.assist")}
               </>
             )}
           </button>

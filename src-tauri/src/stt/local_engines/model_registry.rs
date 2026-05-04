@@ -93,7 +93,8 @@ static WHISPER_CPP_MODELS: &[ModelDefinition] = &[
         model_id: "distil-large-v3",
         display_name: "Distil Whisper Large v3 (809 MB, fast+accurate)",
         size_bytes: 809_000_000,
-        download_url: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-distil-large-v3.bin",
+        download_url:
+            "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-distil-large-v3.bin",
         sha256: "",
         accuracy_rating: 5,
         speed_rating: 3,
@@ -107,7 +108,8 @@ static WHISPER_CPP_MODELS: &[ModelDefinition] = &[
         model_id: "large-v3-turbo",
         display_name: "Whisper Large v3 Turbo (1.6 GB, best accuracy)",
         size_bytes: 1_600_000_000,
-        download_url: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin",
+        download_url:
+            "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin",
         sha256: "",
         accuracy_rating: 5,
         speed_rating: 2,

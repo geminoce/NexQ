@@ -112,9 +112,7 @@ impl NDJSONParser {
     /// Check if an Ollama NDJSON object indicates the stream is done.
     /// Field: done == true
     pub fn is_ollama_done(data: &Value) -> bool {
-        data.get("done")
-            .and_then(|d| d.as_bool())
-            .unwrap_or(false)
+        data.get("done").and_then(|d| d.as_bool()).unwrap_or(false)
     }
 }
 

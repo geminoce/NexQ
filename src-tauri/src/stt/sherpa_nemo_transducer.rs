@@ -184,18 +184,41 @@ impl STTProvider for SherpaNemoTransducerSTT {
             return Err("Stream already active".into());
         }
 
-        let files = crate::stt::local_engines::model_discovery::discover_model_files(&self.model_dir)
-            .map_err(|e| format!("Model discovery failed in {}: {}", self.model_dir.display(), e))?;
+        let files =
+            crate::stt::local_engines::model_discovery::discover_model_files(&self.model_dir)
+                .map_err(|e| {
+                    format!(
+                        "Model discovery failed in {}: {}",
+                        self.model_dir.display(),
+                        e
+                    )
+                })?;
 
         self.debug(
             "info",
             &format!(
                 "Starting with model_dir={}, encoder={}, decoder={}, joiner={}, tokens={}, lang={}",
                 self.model_dir.display(),
-                files.encoder.file_name().unwrap_or_default().to_string_lossy(),
-                files.decoder.file_name().unwrap_or_default().to_string_lossy(),
-                files.joiner.file_name().unwrap_or_default().to_string_lossy(),
-                files.tokens.file_name().unwrap_or_default().to_string_lossy(),
+                files
+                    .encoder
+                    .file_name()
+                    .unwrap_or_default()
+                    .to_string_lossy(),
+                files
+                    .decoder
+                    .file_name()
+                    .unwrap_or_default()
+                    .to_string_lossy(),
+                files
+                    .joiner
+                    .file_name()
+                    .unwrap_or_default()
+                    .to_string_lossy(),
+                files
+                    .tokens
+                    .file_name()
+                    .unwrap_or_default()
+                    .to_string_lossy(),
                 self.language
             ),
         );

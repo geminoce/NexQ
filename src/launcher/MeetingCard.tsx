@@ -1,6 +1,8 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import type { MeetingSummary } from "../lib/types";
-import { formatRelativeTime, formatDurationLong } from "../lib/utils";
+import { formatDurationLong } from "../lib/utils";
+import { t } from "../i18n";
+import { getScenarioById } from "../lib/scenarios";
 import {
   Trash2,
   Pencil,
@@ -25,6 +27,25 @@ interface MeetingCardProps {
   isLive?: boolean;
   /** Index for staggered entrance animation (0-based) */
   staggerIndex?: number;
+}
+
+function formatLocalizedRelativeTime(isoDate: string): string {
+  const date = new Date(isoDate);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return t("launcher.relativeTime.justNow");
+  if (diffMins < 60) return t("launcher.relativeTime.minutesAgo", { count: diffMins });
+  if (diffHours < 24) return t("launcher.relativeTime.hoursAgo", { count: diffHours });
+  if (diffDays < 7) return t("launcher.relativeTime.daysAgo", { count: diffDays });
+  return date.toLocaleDateString("ru-RU");
+}
+
+function formatScenarioName(id: string): string {
+  return getScenarioById(id)?.name ?? id.replace("_", " ");
 }
 
 export function MeetingCard({
@@ -116,8 +137,9 @@ export function MeetingCard({
   const durationDisplay = meeting.duration_seconds
     ? formatDurationLong(meeting.duration_seconds * 1000)
     : isLive
-      ? "In progress"
+      ? t("launcher.meetingCard.inProgress")
       : "—";
+  const relativeTime = formatLocalizedRelativeTime(meeting.start_time);
 
   const handleCardKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -135,7 +157,7 @@ export function MeetingCard({
       onKeyDown={handleCardKeyDown}
       role="button"
       tabIndex={0}
-      aria-label={`Meeting: ${meeting.title}, ${formatRelativeTime(meeting.start_time)}`}
+      aria-label={t("launcher.meetingCard.aria", { title: meeting.title, time: relativeTime })}
       className={`group meeting-card-enter meeting-card-interactive relative cursor-pointer rounded-xl bg-card/40 px-4 py-3 border-l-[3px] ${
         isLive
           ? "border-l-success/50"
@@ -154,7 +176,7 @@ export function MeetingCard({
               ? "text-warning"
               : "text-muted-foreground/40 opacity-0 group-hover:opacity-100 hover:text-warning/70"
           }`}
-          aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+          aria-label={isFavorite ? t("launcher.meetingCard.removeFavorite") : t("launcher.meetingCard.addFavorite")}
           aria-pressed={isFavorite}
         >
           <Star
@@ -189,7 +211,7 @@ export function MeetingCard({
                 }}
                 disabled={isSaving}
                 className="rounded-md p-1 text-success hover:bg-success/10 disabled:opacity-50"
-                aria-label="Save title"
+                aria-label={t("launcher.meetingCard.saveTitle")}
               >
                 <Check className="h-3 w-3" aria-hidden="true" />
               </button>
@@ -199,7 +221,7 @@ export function MeetingCard({
                   handleCancelEdit();
                 }}
                 className="rounded-md p-1 text-muted-foreground hover:bg-secondary"
-                aria-label="Cancel editing"
+                aria-label={t("launcher.meetingCard.cancelEditing")}
               >
                 <X className="h-3 w-3" aria-hidden="true" />
               </button>
@@ -213,12 +235,12 @@ export function MeetingCard({
           {/* Badges row */}
           <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
             <span className="text-meta tabular-nums text-muted-foreground/70">
-              {formatRelativeTime(meeting.start_time)}
+              {relativeTime}
             </span>
 
             {isLive ? (
               <span className="live-ring-pulse rounded-full bg-success/10 px-2 py-0.5 text-meta font-semibold text-success">
-                LIVE
+                {t("launcher.meetingCard.live")}
               </span>
             ) : (
               <span className="flex items-center gap-0.5 text-meta tabular-nums text-muted-foreground/60">
@@ -248,13 +270,13 @@ export function MeetingCard({
                   backgroundColor: meeting.audio_mode === "online" ? "rgba(74,108,247,0.12)" : "rgba(168,85,247,0.12)",
                 }}
               >
-                {meeting.audio_mode === "online" ? "ONLINE" : "IN-PERSON"}
+                {meeting.audio_mode === "online" ? t("launcher.meetingCard.online") : t("launcher.meetingCard.inPerson")}
               </span>
             )}
 
             {meeting.ai_scenario && (
               <span className="text-[9px] font-medium text-muted-foreground/50 truncate max-w-[80px]">
-                {meeting.ai_scenario.replace("_", " ")}
+                {formatScenarioName(meeting.ai_scenario)}
               </span>
             )}
 
@@ -271,18 +293,18 @@ export function MeetingCard({
         <div className="flex items-center gap-0.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
           {showDeleteConfirm ? (
             <div className="flex items-center gap-1 rounded-lg bg-destructive/10 px-2 py-1">
-              <span className="text-meta text-destructive">Delete?</span>
+              <span className="text-meta text-destructive">{t("launcher.meetingCard.deleteConfirm")}</span>
               <button
                 onClick={handleConfirmDelete}
                 className="rounded p-0.5 text-destructive hover:bg-destructive/20"
-                aria-label="Confirm delete"
+                aria-label={t("launcher.meetingCard.delete")}
               >
                 <Check className="h-3 w-3" aria-hidden="true" />
               </button>
               <button
                 onClick={handleCancelDelete}
                 className="rounded p-0.5 text-muted-foreground hover:bg-secondary"
-                aria-label="Cancel delete"
+                aria-label={t("common.cancel")}
               >
                 <X className="h-3 w-3" aria-hidden="true" />
               </button>
@@ -292,14 +314,14 @@ export function MeetingCard({
               <button
                 onClick={handleStartEdit}
                 className="rounded-md p-1 text-muted-foreground/60 hover:bg-secondary hover:text-foreground"
-                aria-label="Rename meeting"
+                aria-label={t("launcher.meetingCard.rename")}
               >
                 <Pencil className="h-3 w-3" aria-hidden="true" />
               </button>
               <button
                 onClick={handleDeleteClick}
                 className="rounded-md p-1 text-muted-foreground/60 hover:bg-destructive/10 hover:text-destructive"
-                aria-label="Delete meeting"
+                aria-label={t("launcher.meetingCard.delete")}
               >
                 <Trash2 className="h-3 w-3" aria-hidden="true" />
               </button>

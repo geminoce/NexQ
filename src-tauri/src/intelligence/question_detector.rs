@@ -20,10 +20,8 @@ pub struct QuestionDetector;
 
 /// Interrogative words that commonly start questions.
 const INTERROGATIVE_STARTERS: &[&str] = &[
-    "what", "why", "how", "when", "where", "who", "which",
-    "can", "could", "would", "should",
-    "do", "does", "is", "are", "will", "have", "has",
-    "tell",
+    "what", "why", "how", "when", "where", "who", "which", "can", "could", "would", "should", "do",
+    "does", "is", "are", "will", "have", "has", "tell",
 ];
 
 /// Interview-specific patterns that indicate a question or prompt.
@@ -57,7 +55,12 @@ impl QuestionDetector {
 
     /// Detect questions in the given text.
     /// Returns a list of detected questions with confidence scores.
-    pub fn detect_questions(&self, text: &str, timestamp_ms: u64, source: &str) -> Vec<DetectedQuestion> {
+    pub fn detect_questions(
+        &self,
+        text: &str,
+        timestamp_ms: u64,
+        source: &str,
+    ) -> Vec<DetectedQuestion> {
         let mut questions: Vec<DetectedQuestion> = Vec::new();
 
         // Split text into sentences

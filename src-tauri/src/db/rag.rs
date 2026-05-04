@@ -138,14 +138,14 @@ pub fn get_all_embeddings(conn: &Connection) -> Result<Vec<(String, Vec<u8>)>, S
 /// context_resources.index_status column (which depends on ALTER TABLE
 /// migration success).
 pub fn get_index_status(conn: &Connection) -> Result<RagIndexStatus, String> {
-    let total_chunks: usize = conn
-        .query_row("SELECT COUNT(*) FROM rag_chunks", [], |row| {
+    let total_chunks: usize =
+        conn.query_row("SELECT COUNT(*) FROM rag_chunks", [], |row| {
             row.get::<_, i64>(0)
         })
         .map_err(|e| format!("Failed to count chunks: {}", e))? as usize;
 
-    let total_tokens: usize = conn
-        .query_row(
+    let total_tokens: usize =
+        conn.query_row(
             "SELECT COALESCE(SUM(token_count), 0) FROM rag_chunks",
             [],
             |row| row.get::<_, i64>(0),
@@ -154,11 +154,9 @@ pub fn get_index_status(conn: &Connection) -> Result<RagIndexStatus, String> {
 
     // total_files = all context resources loaded by the user
     let total_files: usize = conn
-        .query_row(
-            "SELECT COUNT(*) FROM context_resources",
-            [],
-            |row| row.get::<_, i64>(0),
-        )
+        .query_row("SELECT COUNT(*) FROM context_resources", [], |row| {
+            row.get::<_, i64>(0)
+        })
         .unwrap_or(0) as usize;
 
     // indexed_files = files that actually have chunks in rag_chunks
@@ -172,11 +170,9 @@ pub fn get_index_status(conn: &Connection) -> Result<RagIndexStatus, String> {
 
     // last_indexed_at from rag_chunks.created_at (reliable, no ALTER TABLE dependency)
     let last_indexed_at: Option<String> = conn
-        .query_row(
-            "SELECT MAX(created_at) FROM rag_chunks",
-            [],
-            |row| row.get::<_, Option<String>>(0),
-        )
+        .query_row("SELECT MAX(created_at) FROM rag_chunks", [], |row| {
+            row.get::<_, Option<String>>(0)
+        })
         .unwrap_or(None);
 
     Ok(RagIndexStatus {
@@ -189,11 +185,7 @@ pub fn get_index_status(conn: &Connection) -> Result<RagIndexStatus, String> {
 }
 
 /// Update the index_status and last_indexed_at for a context resource.
-pub fn update_index_status(
-    conn: &Connection,
-    file_id: &str,
-    status: &str,
-) -> Result<(), String> {
+pub fn update_index_status(conn: &Connection, file_id: &str, status: &str) -> Result<(), String> {
     conn.execute(
         "UPDATE context_resources SET index_status = ?1, last_indexed_at = datetime('now') WHERE id = ?2",
         params![status, file_id],

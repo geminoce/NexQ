@@ -144,9 +144,7 @@ pub fn start_recording(meeting_id: &str) -> Result<RecorderHandle, String> {
 
     let writer_thread = std::thread::Builder::new()
         .name("audio-recorder".into())
-        .spawn(move || {
-            recorder_thread_fn(path_for_thread, spec, rx)
-        })
+        .spawn(move || recorder_thread_fn(path_for_thread, spec, rx))
         .map_err(|e| format!("Failed to spawn recorder thread: {}", e))?;
 
     let start_time_ms = std::time::SystemTime::now()
@@ -256,7 +254,10 @@ impl SharedRecorder {
 
     /// Stop the recording and return the file path.
     pub fn stop(&self) -> Result<PathBuf, String> {
-        let mut guard = self.inner.lock().map_err(|_| "Recorder lock poisoned".to_string())?;
+        let mut guard = self
+            .inner
+            .lock()
+            .map_err(|_| "Recorder lock poisoned".to_string())?;
         match guard.take() {
             Some(handle) => handle.stop(),
             None => Err("Recording already stopped".to_string()),

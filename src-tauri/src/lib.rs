@@ -4,8 +4,8 @@ pub mod context;
 pub mod credentials;
 pub mod db;
 pub mod intelligence;
-pub mod rag;
 pub mod llm;
+pub mod rag;
 pub mod state;
 pub mod stt;
 pub mod translation;
@@ -14,7 +14,7 @@ pub mod tray;
 use state::AppState;
 use std::sync::{Arc, Mutex};
 use tauri::{
-    tray::{TrayIconEvent, MouseButton},
+    tray::{MouseButton, TrayIconEvent},
     Emitter, Manager,
 };
 
@@ -87,9 +87,7 @@ fn hide_all(app: &tauri::AppHandle) {
 pub fn run() {
     // Initialize env_logger so all log::info/warn/error macros produce output.
     // Without this, every log statement in the backend is a no-op.
-    env_logger::Builder::from_env(
-        env_logger::Env::default().default_filter_or("info")
-    ).init();
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
@@ -147,10 +145,8 @@ pub fn run() {
             if let (Some(db_arc), Some(ctx_arc)) = (&app_state.database, &app_state.context) {
                 let stored = {
                     match db_arc.lock() {
-                        Ok(db_guard) => {
-                            db::context::list_context_resources(db_guard.connection())
-                                .unwrap_or_default()
-                        }
+                        Ok(db_guard) => db::context::list_context_resources(db_guard.connection())
+                            .unwrap_or_default(),
                         Err(_) => Vec::new(),
                     }
                 };
@@ -173,7 +169,11 @@ pub fn run() {
                         match ctx.restore_resource(res) {
                             Ok(()) => {}
                             Err(e) => {
-                                log::warn!("Context resource {} no longer on disk, removing: {}", id, e);
+                                log::warn!(
+                                    "Context resource {} no longer on disk, removing: {}",
+                                    id,
+                                    e
+                                );
                                 missing_ids.push(id);
                             }
                         }
@@ -319,7 +319,10 @@ pub fn run() {
                     log::info!("TrayManager initialized successfully");
                 }
                 Err(e) => {
-                    log::error!("Failed to initialize TrayManager: {}. Tray will use defaults.", e);
+                    log::error!(
+                        "Failed to initialize TrayManager: {}. Tray will use defaults.",
+                        e
+                    );
                 }
             }
 

@@ -46,7 +46,11 @@ fn compose_instructions(presets: &InstructionPresets, custom: &str) -> String {
 /// Build transcript text from frontend-provided segments, applying the per-action window.
 /// The frontend transcript store is the single source of truth for ALL STT engines.
 /// When `include_segment_ids` is true, each line includes the segment ID for LLM reference.
-fn build_transcript_from_segments(segments_json: &str, window_seconds: u64, include_segment_ids: bool) -> String {
+fn build_transcript_from_segments(
+    segments_json: &str,
+    window_seconds: u64,
+    include_segment_ids: bool,
+) -> String {
     #[derive(serde::Deserialize)]
     struct Seg {
         #[serde(default)]
@@ -77,7 +81,8 @@ fn build_transcript_from_segments(segments_json: &str, window_seconds: u64, incl
         latest_ts.saturating_sub(window_seconds * 1000)
     };
 
-    segments.iter()
+    segments
+        .iter()
         .filter(|s| s.timestamp_ms >= cutoff_ms)
         .map(|s| {
             let label = match s.speaker.as_str() {
@@ -99,7 +104,9 @@ fn build_transcript_from_segments(segments_json: &str, window_seconds: u64, incl
 fn count_total_segments(segments_json: &str) -> usize {
     #[derive(serde::Deserialize)]
     #[allow(dead_code)]
-    struct Seg { text: String }
+    struct Seg {
+        text: String,
+    }
     serde_json::from_str::<Vec<Seg>>(segments_json)
         .map(|s| s.len())
         .unwrap_or(0)
@@ -149,7 +156,10 @@ pub async fn generate_assist(
     let (action_cfg, global_defaults) = action_config_snapshot;
 
     // Compute include_question early for effective_question logic
-    let include_question = action_cfg.as_ref().map(|c| c.include_detected_question).unwrap_or(true);
+    let include_question = action_cfg
+        .as_ref()
+        .map(|c| c.include_detected_question)
+        .unwrap_or(true);
 
     // Construct effective question for the Detected Question prompt section.
     // custom_question (user-typed or user-clicked) is ALWAYS used if provided — it's explicit input.
@@ -187,7 +197,9 @@ pub async fn generate_assist(
         build_transcript_from_segments(segs, window_seconds, include_segment_ids)
     } else {
         // Legacy fallback: read from backend buffer
-        let intel = state.intelligence.as_ref()
+        let intel = state
+            .intelligence
+            .as_ref()
             .ok_or_else(|| "Intelligence engine not initialized".to_string())?;
         let engine = intel.lock().map_err(|e| e.to_string())?;
         if window_seconds == 0 {
@@ -204,25 +216,41 @@ pub async fn generate_assist(
         }
     }
 
-    let total_segments = transcript_segments.as_ref()
+    let total_segments = transcript_segments
+        .as_ref()
         .map(|s| count_total_segments(s))
         .unwrap_or(0);
-    let included_segments = transcript_text.lines()
+    let included_segments = transcript_text
+        .lines()
         .filter(|l| l.starts_with("["))
         .count();
 
     // Resolve per-action settings
     // Read default top-K from RagConfig (Context Strategy) — single source of truth
-    let rag_default_top_k = state.rag.as_ref()
+    let rag_default_top_k = state
+        .rag
+        .as_ref()
         .and_then(|r| r.lock().ok())
         .map(|r| r.config().top_k)
         .unwrap_or(5);
-    let rag_top_k = action_cfg.as_ref().and_then(|c| c.rag_top_k).unwrap_or(rag_default_top_k);
+    let rag_top_k = action_cfg
+        .as_ref()
+        .and_then(|c| c.rag_top_k)
+        .unwrap_or(rag_default_top_k);
 
-    let include_rag = action_cfg.as_ref().map(|c| c.include_rag_chunks).unwrap_or(true);
-    let include_transcript = action_cfg.as_ref().map(|c| c.include_transcript).unwrap_or(true);
+    let include_rag = action_cfg
+        .as_ref()
+        .map(|c| c.include_rag_chunks)
+        .unwrap_or(true);
+    let include_transcript = action_cfg
+        .as_ref()
+        .map(|c| c.include_transcript)
+        .unwrap_or(true);
     // include_question already computed above
-    let include_instructions = action_cfg.as_ref().map(|c| c.include_custom_instructions).unwrap_or(true);
+    let include_instructions = action_cfg
+        .as_ref()
+        .map(|c| c.include_custom_instructions)
+        .unwrap_or(true);
 
     // Resolve base system prompt: per-action config > active scenario > hardcoded template.
     // Active scenario is set by the frontend at meeting start based on the selected AI scenario.
@@ -232,7 +260,11 @@ pub async fn generate_assist(
         .unwrap_or_else(|| {
             // Check if the active scenario has a system prompt set
             let scenario_prompt = state.active_scenario.read().ok().and_then(|s| {
-                if s.system_prompt.is_empty() { None } else { Some(s.system_prompt.clone()) }
+                if s.system_prompt.is_empty() {
+                    None
+                } else {
+                    Some(s.system_prompt.clone())
+                }
             });
             scenario_prompt.unwrap_or_else(|| {
                 crate::intelligence::prompt_templates::get_system_prompt(&mode).to_string()
@@ -242,7 +274,10 @@ pub async fn generate_assist(
     // Append composed instructions (tone + format + length + custom text) to system prompt.
     // These are behavioral directives that belong in the system context, not as reference materials.
     let system_prompt = if include_instructions && !composed_instructions.is_empty() {
-        format!("{}\n\nAdditional Instructions: {}", base_system_prompt, composed_instructions)
+        format!(
+            "{}\n\nAdditional Instructions: {}",
+            base_system_prompt, composed_instructions
+        )
     } else {
         base_system_prompt
     };
@@ -275,14 +310,20 @@ pub async fn generate_assist(
                 // RAG query sources (priority: custom_question > effective_question > transcript)
                 // custom_question is what the user typed (Ask mode) or the clicked question (Assist mode)
                 // effective_question is the auto-detected question from the meeting
-                let question_text = custom_question.as_deref()
+                let question_text = custom_question
+                    .as_deref()
                     .filter(|q| !q.is_empty())
                     .map(|q| q.to_string())
                     .or_else(|| effective_question.as_ref().map(|q| q.text.clone()));
 
                 let transcript_excerpt: String = transcript_text
-                    .chars().rev().take(500).collect::<String>()
-                    .chars().rev().collect();
+                    .chars()
+                    .rev()
+                    .take(500)
+                    .collect::<String>()
+                    .chars()
+                    .rev()
+                    .collect();
 
                 // Dual search: search with question alone, then with question+transcript, merge results.
                 // This prevents transcript noise from drowning out a clear question match,
@@ -292,11 +333,15 @@ pub async fn generate_assist(
 
                 if has_question || has_transcript {
                     if let (Some(rag_arc), Some(db_arc)) =
-                        (state.rag.as_ref(), state.database.as_ref()) {
-
+                        (state.rag.as_ref(), state.database.as_ref())
+                    {
                         let (mut config, embedder_url, embedding_model) = {
                             let rag_guard = rag_arc.lock().map_err(|e| e.to_string())?;
-                            (rag_guard.config().clone(), rag_guard.embedder_url(), rag_guard.embedding_model())
+                            (
+                                rag_guard.config().clone(),
+                                rag_guard.embedder_url(),
+                                rag_guard.embedding_model(),
+                            )
                         };
                         config.top_k = rag_top_k;
 
@@ -305,7 +350,15 @@ pub async fn generate_assist(
                         // Search 1: question only (clean semantic match)
                         if let Some(ref q) = question_text {
                             rag_query_text = Some(q.clone());
-                            match rag::RagManager::search_async(db_arc, q, &config, &embedder_url, &embedding_model).await {
+                            match rag::RagManager::search_async(
+                                db_arc,
+                                q,
+                                &config,
+                                &embedder_url,
+                                &embedding_model,
+                            )
+                            .await
+                            {
                                 Ok(chunks) => all_chunks.extend(chunks),
                                 Err(e) => log::warn!("RAG search (question-only) failed: {}", e),
                             }
@@ -313,33 +366,59 @@ pub async fn generate_assist(
 
                         // Search 2: question + transcript (contextual match)
                         if has_question && has_transcript {
-                            let combined = format!("{}\n\n{}", question_text.as_ref().unwrap(), transcript_excerpt);
+                            let combined = format!(
+                                "{}\n\n{}",
+                                question_text.as_ref().unwrap(),
+                                transcript_excerpt
+                            );
                             if rag_query_text.is_none() {
                                 rag_query_text = Some(combined.clone());
                             }
-                            match rag::RagManager::search_async(db_arc, &combined, &config, &embedder_url, &embedding_model).await {
+                            match rag::RagManager::search_async(
+                                db_arc,
+                                &combined,
+                                &config,
+                                &embedder_url,
+                                &embedding_model,
+                            )
+                            .await
+                            {
                                 Ok(chunks) => all_chunks.extend(chunks),
                                 Err(e) => log::warn!("RAG search (combined) failed: {}", e),
                             }
                         } else if !has_question && has_transcript {
                             // No question at all — search with transcript only as last resort
                             rag_query_text = Some(transcript_excerpt.clone());
-                            match rag::RagManager::search_async(db_arc, &transcript_excerpt, &config, &embedder_url, &embedding_model).await {
+                            match rag::RagManager::search_async(
+                                db_arc,
+                                &transcript_excerpt,
+                                &config,
+                                &embedder_url,
+                                &embedding_model,
+                            )
+                            .await
+                            {
                                 Ok(chunks) => all_chunks.extend(chunks),
                                 Err(e) => log::warn!("RAG search (transcript-only) failed: {}", e),
                             }
                         }
 
                         // Deduplicate: keep highest normalized_score per chunk_id
-                        let mut best: std::collections::HashMap<String, rag::search::ScoredChunk> = std::collections::HashMap::new();
+                        let mut best: std::collections::HashMap<String, rag::search::ScoredChunk> =
+                            std::collections::HashMap::new();
                         for chunk in all_chunks {
                             let entry = best.entry(chunk.chunk_id.clone()).or_insert(chunk.clone());
                             if chunk.normalized_score > entry.normalized_score {
                                 *entry = chunk;
                             }
                         }
-                        let mut merged: Vec<rag::search::ScoredChunk> = best.into_values().collect();
-                        merged.sort_by(|a, b| b.normalized_score.partial_cmp(&a.normalized_score).unwrap_or(std::cmp::Ordering::Equal));
+                        let mut merged: Vec<rag::search::ScoredChunk> =
+                            best.into_values().collect();
+                        merged.sort_by(|a, b| {
+                            b.normalized_score
+                                .partial_cmp(&a.normalized_score)
+                                .unwrap_or(std::cmp::Ordering::Equal)
+                        });
                         merged.truncate(rag_top_k);
 
                         // Build metadata for AI log
@@ -461,10 +540,7 @@ pub async fn cancel_generation(state: State<'_, AppState>) -> Result<(), String>
 }
 
 #[command]
-pub async fn set_auto_trigger(
-    enabled: bool,
-    state: State<'_, AppState>,
-) -> Result<(), String> {
+pub async fn set_auto_trigger(enabled: bool, state: State<'_, AppState>) -> Result<(), String> {
     let intel = state
         .intelligence
         .as_ref()
@@ -589,13 +665,18 @@ pub async fn set_active_scenario(
     question_detection_prompt: String,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
-    let mut scenario = state.active_scenario.write()
+    let mut scenario = state
+        .active_scenario
+        .write()
         .map_err(|e| format!("Failed to lock active scenario: {}", e))?;
     scenario.system_prompt = system_prompt;
     scenario.summary_prompt = summary_prompt;
     scenario.question_detection_prompt = question_detection_prompt;
-    log::info!("Active scenario updated (system_prompt len={}, summary_prompt len={})",
-        scenario.system_prompt.len(), scenario.summary_prompt.len());
+    log::info!(
+        "Active scenario updated (system_prompt len={}, summary_prompt len={})",
+        scenario.system_prompt.len(),
+        scenario.summary_prompt.len()
+    );
     Ok(())
 }
 
@@ -606,18 +687,21 @@ pub async fn update_speaker_context(
     speaker_context: String,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
-    let mut scenario = state.active_scenario.write()
+    let mut scenario = state
+        .active_scenario
+        .write()
         .map_err(|e| format!("Failed to lock active scenario: {}", e))?;
     scenario.speaker_context = speaker_context;
-    log::info!("Speaker context updated (len={})", scenario.speaker_context.len());
+    log::info!(
+        "Speaker context updated (len={})",
+        scenario.speaker_context.len()
+    );
     Ok(())
 }
 
 /// Get current action configs from the backend.
 #[command]
-pub async fn get_action_configs(
-    state: State<'_, AppState>,
-) -> Result<String, String> {
+pub async fn get_action_configs(state: State<'_, AppState>) -> Result<String, String> {
     let intel = state
         .intelligence
         .as_ref()
@@ -628,6 +712,5 @@ pub async fn get_action_configs(
         .map_err(|e| format!("Failed to lock intelligence engine: {}", e))?;
 
     let configs = engine.get_action_configs();
-    serde_json::to_string(configs)
-        .map_err(|e| format!("Failed to serialize action configs: {}", e))
+    serde_json::to_string(configs).map_err(|e| format!("Failed to serialize action configs: {}", e))
 }

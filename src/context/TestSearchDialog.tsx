@@ -4,6 +4,7 @@ import { useConfigStore } from "../stores/configStore";
 import { testRagAnswer } from "../lib/ipc";
 import { onStreamStart, onStreamToken, onStreamEnd, onStreamError } from "../lib/events";
 import type { UnlistenFn } from "@tauri-apps/api/event";
+import { t } from "../i18n";
 import {
   X,
   Search,
@@ -227,9 +228,9 @@ export function TestSearchDialog({ isOpen, onClose }: TestSearchDialogProps) {
               <FlaskConical className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-foreground">Test Knowledge Base</h2>
+              <h2 className="text-sm font-semibold text-foreground">{t("context.testSearch.title")}</h2>
               <p className="text-meta text-muted-foreground">
-                Search documents + get AI answer using your knowledge base
+                {t("context.testSearch.description")}
               </p>
             </div>
           </div>

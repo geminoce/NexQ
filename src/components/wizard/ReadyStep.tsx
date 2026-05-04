@@ -9,6 +9,7 @@ import {
   Globe,
 } from "lucide-react";
 import { useConfigStore } from "../../stores/configStore";
+import { t } from "../../i18n";
 
 interface ReadyStepProps {
   onStartMeeting: () => void;
@@ -19,16 +20,16 @@ interface ReadyStepProps {
 function useShortcuts() {
   const hotkeys = useConfigStore((s) => s.hotkeys);
   return [
-    { keys: hotkeys.toggle_assist, action: "Trigger AI Assist", context: "During meeting" },
-    { keys: hotkeys.start_end_meeting, action: "Start / End meeting", context: "Global" },
-    { keys: hotkeys.show_hide, action: "Show / Hide overlay", context: "Global" },
-    { keys: hotkeys.mode_say, action: "What to Say mode", context: "During meeting" },
-    { keys: hotkeys.mode_shorten, action: "Shorten mode", context: "During meeting" },
-    { keys: hotkeys.mode_followup, action: "Follow-up mode", context: "During meeting" },
-    { keys: hotkeys.mode_recap, action: "Recap mode", context: "During meeting" },
-    { keys: hotkeys.mode_ask, action: "Ask Question mode", context: "During meeting" },
-    { keys: hotkeys.open_settings, action: "Open Settings", context: "Global" },
-    { keys: hotkeys.escape, action: "Close overlay / settings", context: "Global" },
+    { keys: hotkeys.toggle_assist, action: t("wizard.ready.shortcuts.triggerAssist"), context: t("wizard.ready.contexts.duringMeeting") },
+    { keys: hotkeys.start_end_meeting, action: t("wizard.ready.shortcuts.startEndMeeting"), context: t("wizard.ready.contexts.global") },
+    { keys: hotkeys.show_hide, action: t("wizard.ready.shortcuts.showHideOverlay"), context: t("wizard.ready.contexts.global") },
+    { keys: hotkeys.mode_say, action: t("wizard.ready.shortcuts.whatToSay"), context: t("wizard.ready.contexts.duringMeeting") },
+    { keys: hotkeys.mode_shorten, action: t("wizard.ready.shortcuts.shorten"), context: t("wizard.ready.contexts.duringMeeting") },
+    { keys: hotkeys.mode_followup, action: t("wizard.ready.shortcuts.followUp"), context: t("wizard.ready.contexts.duringMeeting") },
+    { keys: hotkeys.mode_recap, action: t("wizard.ready.shortcuts.recap"), context: t("wizard.ready.contexts.duringMeeting") },
+    { keys: hotkeys.mode_ask, action: t("wizard.ready.shortcuts.askQuestion"), context: t("wizard.ready.contexts.duringMeeting") },
+    { keys: hotkeys.open_settings, action: t("wizard.ready.shortcuts.openSettings"), context: t("wizard.ready.contexts.global") },
+    { keys: hotkeys.escape, action: t("wizard.ready.shortcuts.closeOverlaySettings"), context: t("wizard.ready.contexts.global") },
   ];
 }
 
@@ -48,10 +49,10 @@ export function ReadyStep({
           <CheckCircle className="h-8 w-8 text-success" />
         </div>
         <h2 className="text-2xl font-semibold text-foreground">
-          You're All Set!
+          {t("wizard.ready.title")}
         </h2>
         <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
-          NexQ is ready to be your AI meeting assistant.
+          {t("wizard.ready.description")}
         </p>
       </div>
 
@@ -60,11 +61,11 @@ export function ReadyStep({
         {meetingAudioConfig && (
           <div className="rounded-xl border border-border/40 bg-secondary/20 p-4 space-y-2.5">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Audio Configuration
+              {t("wizard.ready.audioConfiguration")}
             </p>
             <div className="flex items-center gap-2 text-xs">
               <Mic className="h-3.5 w-3.5 text-primary" />
-              <span className="font-medium text-foreground">You:</span>
+              <span className="font-medium text-foreground">{t("wizard.parties.you")}:</span>
               <span className="text-muted-foreground">
                 {meetingAudioConfig.you.stt_provider === "web_speech"
                   ? "Web Speech API"
@@ -73,7 +74,7 @@ export function ReadyStep({
             </div>
             <div className="flex items-center gap-2 text-xs">
               <Volume2 className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="font-medium text-foreground">Them:</span>
+              <span className="font-medium text-foreground">{t("wizard.parties.them")}:</span>
               <span className="text-muted-foreground">
                 {meetingAudioConfig.them.stt_provider === "web_speech"
                   ? "Web Speech API"
@@ -88,7 +89,7 @@ export function ReadyStep({
           <div className="flex items-center gap-2.5 border-b border-border/20 px-5 py-3">
             <Keyboard className="h-4 w-4 text-muted-foreground" />
             <p className="text-sm font-semibold text-foreground">
-              Keyboard Shortcuts
+              {t("wizard.ready.keyboardShortcuts")}
             </p>
           </div>
           <div className="max-h-52 overflow-y-auto p-1.5">
@@ -125,7 +126,7 @@ export function ReadyStep({
             className="group flex w-full items-center justify-center gap-3 rounded-2xl bg-primary px-6 py-4 text-base font-semibold text-primary-foreground shadow-md shadow-primary/10 transition-all duration-200 hover:shadow-lg hover:shadow-primary/20"
           >
             <Mic className="h-5 w-5" />
-            Start Meeting
+            {t("launcher.start.button")}
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </button>
 
@@ -135,7 +136,7 @@ export function ReadyStep({
             className="flex w-full items-center justify-center gap-2.5 rounded-2xl border border-border/40 bg-secondary/20 px-6 py-3.5 text-sm font-semibold text-foreground transition-all duration-200 hover:bg-secondary/40"
           >
             <Rocket className="h-4 w-4 text-muted-foreground" />
-            Go to Launcher
+            {t("wizard.ready.goToLauncher")}
           </button>
         </div>
 
@@ -146,7 +147,7 @@ export function ReadyStep({
             className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-primary"
           >
             <FileText className="h-3.5 w-3.5" />
-            Upload your resume for personalized responses
+            {t("wizard.ready.uploadResume")}
           </button>
         </div>
       </div>

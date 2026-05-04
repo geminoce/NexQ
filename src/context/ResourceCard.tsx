@@ -5,6 +5,7 @@ import { useConfigStore } from "../stores/configStore";
 import { useRagStore } from "../stores/ragStore";
 import { rebuildFileIndex } from "../lib/ipc";
 import { showToast } from "../stores/toastStore";
+import { t } from "../i18n";
 
 interface ResourceCardProps {
   resource: ContextResource;
@@ -21,11 +22,11 @@ export function ResourceCard({ resource, onRemove }: ResourceCardProps) {
     setIsReindexing(true);
     try {
       await rebuildFileIndex(resource.id);
-      showToast(`Re-indexed "${resource.name}"`, "success");
+      showToast(t("context.resourceCard.reindexedToast", { name: resource.name }), "success");
       useRagStore.getState().refreshIndexStatus();
     } catch (e) {
       console.error("Failed to re-index:", e);
-      showToast("Couldn't re-index file — try removing and re-adding it", "error");
+      showToast(t("context.resourceCard.reindexFailedToast"), "error");
     } finally {
       setIsReindexing(false);
     }
@@ -87,11 +88,11 @@ export function ResourceCard({ resource, onRemove }: ResourceCardProps) {
         <div className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground">
           <span>{formatFileSize(resource.size_bytes)}</span>
           <span className="rounded-full bg-muted/40 px-2 py-0.5">
-            ~{formatTokenCount(resource.token_count)} tokens
+            ~{formatTokenCount(resource.token_count)} {t("context.resourceCard.tokens")}
           </span>
           {isRagActive && resource.chunk_count != null && resource.chunk_count > 0 && (
             <span className="rounded-full bg-primary/10 px-2 py-0.5 text-primary">
-              {resource.chunk_count} chunks
+              {resource.chunk_count} {t("context.resourceCard.chunks")}
             </span>
           )}
         </div>
@@ -110,7 +111,7 @@ export function ResourceCard({ resource, onRemove }: ResourceCardProps) {
           onClick={handleReindex}
           disabled={isReindexing}
           className="flex-shrink-0 rounded-lg p-1.5 text-muted-foreground/60 transition-colors hover:bg-primary/10 hover:text-primary opacity-0 group-hover:opacity-100"
-          title="Re-index file"
+          title={t("context.resourceCard.reindexFile")}
         >
           <RefreshCw className={`h-3.5 w-3.5 ${isReindexing ? "animate-spin" : ""}`} />
         </button>
@@ -124,7 +125,7 @@ export function ResourceCard({ resource, onRemove }: ResourceCardProps) {
             ? "bg-destructive/10 text-destructive hover:bg-destructive/20"
             : "text-muted-foreground/60 hover:bg-destructive/10 hover:text-destructive opacity-0 group-hover:opacity-100"
         }`}
-        title={confirmRemove ? "Click again to confirm removal" : "Remove file"}
+        title={confirmRemove ? t("context.resourceCard.confirmRemoval") : t("context.resourceCard.removeFile")}
       >
         <X className="h-4 w-4" />
       </button>
@@ -146,7 +147,7 @@ function getFileIndexBadge(
   if (!hasChunks) {
     // No index built yet
     return {
-      label: "New",
+      label: t("context.resourceCard.new"),
       className: "bg-info/10 text-info",
     };
   }
@@ -154,14 +155,14 @@ function getFileIndexBadge(
   if (indexedFiles >= totalFiles && totalFiles > 0) {
     // All files indexed — every resource is covered
     return {
-      label: "Indexed",
+      label: t("context.resourceCard.indexed"),
       className: "bg-success/10 text-success",
     };
   }
 
   // Index exists but not all files covered
   return {
-    label: "Not Indexed",
+    label: t("context.resourceCard.notIndexed"),
     className: "bg-warning/10 text-warning",
   };
 }

@@ -7,6 +7,7 @@ import { ResourceCard } from "./ResourceCard";
 import { TokenBudget } from "./TokenBudget";
 import { RagIndexBar } from "./RagIndexBar";
 import { FileText } from "lucide-react";
+import { t } from "../i18n";
 
 export function ContextPanel() {
   const resources = useContextStore((s) => s.resources);
@@ -34,10 +35,10 @@ export function ContextPanel() {
       {/* Panel header */}
       <div className="flex items-center gap-2">
         <FileText className="h-4 w-4 text-primary" />
-        <h2 className="text-sm font-semibold text-foreground">Meeting Context</h2>
+        <h2 className="text-sm font-semibold text-foreground">{t("context.panel.title")}</h2>
         {contextStrategy === "local_rag" && (
           <div className="flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-meta font-medium text-primary">
-            <span>Smart Search Active</span>
+            <span>{t("context.panel.smartSearchActive")}</span>
           </div>
         )}
       </div>
@@ -57,8 +58,10 @@ export function ContextPanel() {
           <div className="flex items-center gap-2">
             <FileText className="h-3.5 w-3.5 text-muted-foreground" />
             <span className="text-xs font-medium text-muted-foreground">
-              Loaded Context ({resources.length} file
-              {resources.length !== 1 ? "s" : ""})
+              {t("context.panel.loadedContext", {
+                count: resources.length,
+                plural: resources.length === 1 ? "" : "s",
+              })}
             </span>
           </div>
           <div className="flex flex-col gap-2.5">

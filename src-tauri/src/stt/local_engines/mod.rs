@@ -311,12 +311,7 @@ impl ModelManager {
                         );
                     }
                     Ok(Err(e)) => {
-                        log::error!(
-                            "Extraction failed ({}:{}): {}",
-                            engine_str,
-                            model_id_str,
-                            e
-                        );
+                        log::error!("Extraction failed ({}:{}): {}", engine_str, model_id_str, e);
                         let _ = app_handle.emit(
                             "model_download_progress",
                             &downloader::DownloadProgress {

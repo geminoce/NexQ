@@ -116,11 +116,7 @@ impl OpusMtManager {
     }
 
     /// Start downloading a model. Downloads 3 files sequentially with combined progress.
-    pub fn download_model(
-        &mut self,
-        model_id: &str,
-        app_handle: AppHandle,
-    ) -> Result<(), String> {
+    pub fn download_model(&mut self, model_id: &str, app_handle: AppHandle) -> Result<(), String> {
         let def = opus_mt_registry::get_model(model_id)
             .ok_or_else(|| format!("Unknown model: {}", model_id))?;
 
@@ -156,7 +152,11 @@ impl OpusMtManager {
 
             // Create staging directory
             if let Err(e) = tokio::fs::create_dir_all(&staging_dir).await {
-                emit_error(&app_handle, &model_id_str, &format!("Failed to create staging dir: {}", e));
+                emit_error(
+                    &app_handle,
+                    &model_id_str,
+                    &format!("Failed to create staging dir: {}", e),
+                );
                 return;
             }
 
@@ -187,10 +187,26 @@ impl OpusMtManager {
             }
 
             let files = [
-                FileDownload { url: encoder_url, filename: "encoder_model.onnx", weight: 0.45 },
-                FileDownload { url: decoder_url, filename: "decoder_model_merged.onnx", weight: 0.45 },
-                FileDownload { url: tokenizer_url, filename: "tokenizer.json", weight: 0.05 },
-                FileDownload { url: config_url, filename: "config.json", weight: 0.05 },
+                FileDownload {
+                    url: encoder_url,
+                    filename: "encoder_model.onnx",
+                    weight: 0.45,
+                },
+                FileDownload {
+                    url: decoder_url,
+                    filename: "decoder_model_merged.onnx",
+                    weight: 0.45,
+                },
+                FileDownload {
+                    url: tokenizer_url,
+                    filename: "tokenizer.json",
+                    weight: 0.05,
+                },
+                FileDownload {
+                    url: config_url,
+                    filename: "config.json",
+                    weight: 0.05,
+                },
             ];
 
             let mut cumulative_weight: f32 = 0.0;
@@ -208,13 +224,7 @@ impl OpusMtManager {
                     "downloading",
                 );
 
-                match download_single_file(
-                    &file_dl.url,
-                    &dest,
-                    &cancel_flag,
-                )
-                .await
-                {
+                match download_single_file(&file_dl.url, &dest, &cancel_flag).await {
                     Ok(_) => {
                         cumulative_weight += file_dl.weight;
                         emit_progress(
@@ -289,8 +299,7 @@ impl OpusMtManager {
     pub fn delete_model(&mut self, model_id: &str) -> Result<(), String> {
         let dir = self.model_dir(model_id);
         if dir.is_dir() {
-            std::fs::remove_dir_all(&dir)
-                .map_err(|e| format!("Failed to delete model: {}", e))?;
+            std::fs::remove_dir_all(&dir).map_err(|e| format!("Failed to delete model: {}", e))?;
         }
 
         // If this was the active model, deactivate
@@ -371,10 +380,7 @@ fn emit_error(app_handle: &AppHandle, model_id: &str, msg: &str) {
 }
 
 /// Recursively copy a directory (fallback for cross-device rename).
-async fn copy_dir_recursive(
-    src: &std::path::Path,
-    dst: &std::path::Path,
-) -> Result<(), String> {
+async fn copy_dir_recursive(src: &std::path::Path, dst: &std::path::Path) -> Result<(), String> {
     tokio::fs::create_dir_all(dst)
         .await
         .map_err(|e| format!("mkdir: {}", e))?;

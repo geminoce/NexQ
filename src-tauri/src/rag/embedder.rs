@@ -1,8 +1,8 @@
 use futures::StreamExt;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Emitter};
 use std::time::Duration;
+use tauri::{AppHandle, Emitter};
 
 /// Ollama embedding HTTP client.
 pub struct OllamaEmbedder {
@@ -145,10 +145,7 @@ impl OllamaEmbedder {
                 .text()
                 .await
                 .unwrap_or_else(|_| "no body".to_string());
-            return Err(format!(
-                "Ollama embed returned status {}: {}",
-                status, body
-            ));
+            return Err(format!("Ollama embed returned status {}: {}", status, body));
         }
 
         let embed_response: EmbedResponse = response
@@ -160,11 +157,7 @@ impl OllamaEmbedder {
     }
 
     /// Embed a single query text with the "search_query: " prefix.
-    pub async fn embed_query(
-        &self,
-        text: &str,
-        model: &str,
-    ) -> Result<Vec<f32>, String> {
+    pub async fn embed_query(&self, text: &str, model: &str) -> Result<Vec<f32>, String> {
         let prefixed = format!("search_query: {}", text);
         let results = self.embed_texts(vec![prefixed], model).await?;
         results
@@ -199,10 +192,7 @@ impl OllamaEmbedder {
             .map_err(|e| format!("Cannot connect to Ollama at {}: {}", base_url, e))?;
 
         if !response.status().is_success() {
-            return Err(format!(
-                "Ollama returned status {}",
-                response.status()
-            ));
+            return Err(format!("Ollama returned status {}", response.status()));
         }
 
         let tags: TagsResponse = response
@@ -249,10 +239,7 @@ impl OllamaEmbedder {
                 .text()
                 .await
                 .unwrap_or_else(|_| "no body".to_string());
-            return Err(format!(
-                "Ollama pull returned status {}: {}",
-                status, body
-            ));
+            return Err(format!("Ollama pull returned status {}: {}", status, body));
         }
 
         let mut stream = response.bytes_stream();
@@ -261,8 +248,8 @@ impl OllamaEmbedder {
         let mut line_buffer = String::new();
 
         while let Some(chunk_result) = stream.next().await {
-            let chunk = chunk_result
-                .map_err(|e| format!("Stream read error during pull: {}", e))?;
+            let chunk =
+                chunk_result.map_err(|e| format!("Stream read error during pull: {}", e))?;
 
             let text = String::from_utf8_lossy(&chunk);
             line_buffer.push_str(&text);

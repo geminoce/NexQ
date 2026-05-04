@@ -115,9 +115,7 @@ impl WhisperApiSTT {
         let file_part = reqwest::multipart::Part::bytes(wav_data)
             .file_name("audio.wav")
             .mime_str("audio/wav")
-            .unwrap_or_else(|_| {
-                reqwest::multipart::Part::bytes(Vec::new())
-            });
+            .unwrap_or_else(|_| reqwest::multipart::Part::bytes(Vec::new()));
 
         let mut form = reqwest::multipart::Form::new()
             .text("model", "whisper-1")
@@ -166,11 +164,7 @@ impl WhisperApiSTT {
                 } else {
                     let status = resp.status();
                     let body = resp.text().await.unwrap_or_default();
-                    log::error!(
-                        "WhisperApiSTT: API returned status {}: {}",
-                        status,
-                        body
-                    );
+                    log::error!("WhisperApiSTT: API returned status {}: {}", status, body);
                 }
             }
             Err(e) => {
@@ -268,8 +262,7 @@ impl STTProvider for WhisperApiSTT {
                 let language = self.language.clone();
                 let result_tx = tx.clone();
                 tokio::spawn(async move {
-                    Self::send_segment(&api_key, &language, segment, timestamp_ms, result_tx)
-                        .await;
+                    Self::send_segment(&api_key, &language, segment, timestamp_ms, result_tx).await;
                 });
             }
         }
@@ -299,8 +292,7 @@ impl STTProvider for WhisperApiSTT {
                 let language = self.language.clone();
                 let result_tx = tx.clone();
                 tokio::spawn(async move {
-                    Self::send_segment(&api_key, &language, segment, timestamp_ms, result_tx)
-                        .await;
+                    Self::send_segment(&api_key, &language, segment, timestamp_ms, result_tx).await;
                 });
             }
         }

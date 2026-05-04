@@ -956,12 +956,10 @@ function PauseThresholdSetting() {
   return (
     <div className="rounded-xl border border-border/30 bg-card/50 p-5">
       <h3 className="mb-1 text-sm font-semibold text-primary/80">
-        New Line Pause Duration
+        {t("settings.stt.pauseThreshold.title")}
       </h3>
       <p className="mb-3 text-xs text-muted-foreground">
-        Start a new transcript line after no words detected for this duration.
-        Lower values create more lines; higher values create longer paragraphs.
-        Applies to all STT providers.
+        {t("settings.stt.pauseThreshold.description")}
       </p>
       <div className="flex items-center gap-3">
         <input
@@ -978,8 +976,8 @@ function PauseThresholdSetting() {
         </span>
       </div>
       <div className="mt-1.5 flex justify-between text-meta text-muted-foreground/70">
-        <span>0.5s (more lines)</span>
-        <span>5.0s (longer paragraphs)</span>
+        <span>{t("settings.stt.pauseThreshold.moreLines")}</span>
+        <span>{t("settings.stt.pauseThreshold.longerParagraphs")}</span>
       </div>
     </div>
   );

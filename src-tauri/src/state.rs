@@ -4,19 +4,19 @@ use std::sync::{Arc, Mutex};
 
 use crate::audio::AudioCaptureManager;
 use crate::context::ContextManager;
-use crate::tray::TrayManager;
 use crate::credentials::CredentialManager;
 use crate::db::DatabaseManager;
 use crate::intelligence::IntelligenceEngine;
 use crate::llm::openrouter_models::OpenRouterModelCache;
 use crate::llm::LLMRouter;
 use crate::rag::RagManager;
-use crate::translation::TranslationRouter;
-use crate::translation::opus_mt_manager::OpusMtManager;
 use crate::stt::groq_whisper::GroqConfig;
 use crate::stt::local_engines::ModelManager;
 use crate::stt::provider::DualPassConfig;
 use crate::stt::STTRouter;
+use crate::translation::opus_mt_manager::OpusMtManager;
+use crate::translation::TranslationRouter;
+use crate::tray::TrayManager;
 use std::sync::RwLock;
 
 /// Recording info captured when stop_capture runs, consumed by end_meeting

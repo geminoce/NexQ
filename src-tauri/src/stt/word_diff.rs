@@ -37,9 +37,9 @@ pub fn merge_correction(old_words: &[&str], new_words: &[&str]) -> String {
 
 #[derive(Debug, Clone, PartialEq)]
 enum DiffOp {
-    Keep(usize, usize),   // index in old, index in new
-    Insert(usize),         // index in new
-    Delete(usize),         // index in old
+    Keep(usize, usize), // index in old, index in new
+    Insert(usize),      // index in new
+    Delete(usize),      // index in old
 }
 
 /// Simple LCS-based diff. O(NM) but inputs are bounded by MAX_WORDS.
@@ -147,9 +147,6 @@ mod tests {
     fn punctuation_correction() {
         let old = vec!["hello", "world", "how", "are", "you"];
         let new = vec!["Hello,", "world.", "How", "are", "you?"];
-        assert_eq!(
-            merge_correction(&old, &new),
-            "Hello, world. How are you?"
-        );
+        assert_eq!(merge_correction(&old, &new), "Hello, world. How are you?");
     }
 }

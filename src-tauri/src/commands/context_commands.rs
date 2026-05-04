@@ -32,14 +32,14 @@ pub async fn load_context_file(
                 preview: resource.preview.clone(),
                 loaded_at: resource.loaded_at.clone(),
             };
-            if let Err(e) = crate::db::context::add_context_resource(db_guard.connection(), &db_res) {
+            if let Err(e) = crate::db::context::add_context_resource(db_guard.connection(), &db_res)
+            {
                 log::warn!("Failed to persist context resource to DB: {}", e);
             }
         }
     }
 
-    serde_json::to_string(&resource)
-        .map_err(|e| format!("Failed to serialize resource: {}", e))
+    serde_json::to_string(&resource).map_err(|e| format!("Failed to serialize resource: {}", e))
 }
 
 #[command]
@@ -62,7 +62,8 @@ pub async fn remove_context_file(
     // Remove from DB (context record + RAG chunks)
     if let Some(db_arc) = state.database.as_ref() {
         if let Ok(db_guard) = db_arc.lock() {
-            let _ = crate::db::context::delete_context_resource(db_guard.connection(), &resource_id);
+            let _ =
+                crate::db::context::delete_context_resource(db_guard.connection(), &resource_id);
             let _ = crate::db::rag::delete_chunks_by_file(db_guard.connection(), &resource_id);
         }
     }
@@ -71,9 +72,7 @@ pub async fn remove_context_file(
 }
 
 #[command]
-pub async fn list_context_resources(
-    state: State<'_, AppState>,
-) -> Result<String, String> {
+pub async fn list_context_resources(state: State<'_, AppState>) -> Result<String, String> {
     let ctx_mgr = state
         .context
         .as_ref()
@@ -85,8 +84,7 @@ pub async fn list_context_resources(
 
     let resources = ctx.list_resources();
 
-    serde_json::to_string(&resources)
-        .map_err(|e| format!("Failed to serialize resources: {}", e))
+    serde_json::to_string(&resources).map_err(|e| format!("Failed to serialize resources: {}", e))
 }
 
 #[command]
@@ -109,9 +107,7 @@ pub async fn set_custom_instructions(
 }
 
 #[command]
-pub async fn get_assembled_context(
-    state: State<'_, AppState>,
-) -> Result<String, String> {
+pub async fn get_assembled_context(state: State<'_, AppState>) -> Result<String, String> {
     let ctx_mgr = state
         .context
         .as_ref()
@@ -125,9 +121,7 @@ pub async fn get_assembled_context(
 }
 
 #[command]
-pub async fn get_token_budget(
-    state: State<'_, AppState>,
-) -> Result<String, String> {
+pub async fn get_token_budget(state: State<'_, AppState>) -> Result<String, String> {
     let ctx_mgr = state
         .context
         .as_ref()
@@ -144,6 +138,5 @@ pub async fn get_token_budget(
 
     let budget = ctx.get_token_budget(model_context_window, transcript_tokens);
 
-    serde_json::to_string(&budget)
-        .map_err(|e| format!("Failed to serialize token budget: {}", e))
+    serde_json::to_string(&budget).map_err(|e| format!("Failed to serialize token budget: {}", e))
 }

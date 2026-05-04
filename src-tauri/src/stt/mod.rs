@@ -10,10 +10,10 @@ pub mod azure_speech;
 pub mod groq_whisper;
 pub mod whisper_api;
 // STT Engine Overhaul: New streaming providers
-pub mod sherpa_sidecar;
-pub mod sherpa_offline;
-pub mod sherpa_nemo_transducer;
 pub mod ort_streaming;
+pub mod sherpa_nemo_transducer;
+pub mod sherpa_offline;
+pub mod sherpa_sidecar;
 // Pause-based segment merging for all STT providers
 pub mod segment_accumulator;
 
@@ -144,10 +144,7 @@ impl STTRouter {
 
     /// Set the active STT provider type.
     /// If currently processing, stops the current provider before switching.
-    pub async fn set_provider(
-        &mut self,
-        provider_type: STTProviderType,
-    ) -> Result<(), String> {
+    pub async fn set_provider(&mut self, provider_type: STTProviderType) -> Result<(), String> {
         // If same provider is already active, no-op
         if self.active_type.as_ref() == Some(&provider_type) {
             return Ok(());
@@ -229,7 +226,10 @@ impl STTRouter {
             | STTProviderType::GigaAmRussian => {
                 // These are created per-party in start_capture_per_party, not via STTRouter.
                 self.active_provider = None;
-                log::info!("STTRouter: {:?} selected (provider created per-party)", provider_type);
+                log::info!(
+                    "STTRouter: {:?} selected (provider created per-party)",
+                    provider_type
+                );
                 self.active_type = Some(provider_type);
                 return Ok(());
             }

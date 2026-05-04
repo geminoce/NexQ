@@ -152,9 +152,9 @@ impl STTProvider for SherpaSidecarSTT {
             .into());
         }
 
-        let args = self.build_args().map_err(|e| {
-            format!("Failed to discover model files: {}", e)
-        })?;
+        let args = self
+            .build_args()
+            .map_err(|e| format!("Failed to discover model files: {}", e))?;
 
         self.debug(
             "info",
@@ -329,12 +329,7 @@ impl STTProvider for SherpaSidecarSTT {
                 // Surface to dev log
                 log::info!("[sherpa-onnx stderr] {}", trimmed);
                 if let Some(ref handle) = stderr_app_handle {
-                    crate::stt::emit_stt_debug(
-                        handle,
-                        "info",
-                        "sherpa_binary",
-                        trimmed,
-                    );
+                    crate::stt::emit_stt_debug(handle, "info", "sherpa_binary", trimmed);
                 }
             }
             log::info!("SherpaSidecarSTT: stderr reader task exiting");
@@ -405,23 +400,14 @@ impl STTProvider for SherpaSidecarSTT {
             loop {
                 match child.try_wait() {
                     Ok(Some(status)) => {
-                        self.debug(
-                            "info",
-                            &format!("Child process exited: {}", status),
-                        );
+                        self.debug("info", &format!("Child process exited: {}", status));
                         break;
                     }
                     Ok(None) => {
                         if Instant::now() >= deadline {
-                            self.debug(
-                                "warn",
-                                "Child process didn't exit in 2s, killing",
-                            );
+                            self.debug("warn", "Child process didn't exit in 2s, killing");
                             if let Err(e) = child.kill() {
-                                log::error!(
-                                    "SherpaSidecarSTT: kill failed: {}",
-                                    e
-                                );
+                                log::error!("SherpaSidecarSTT: kill failed: {}", e);
                             }
                             let _ = child.wait();
                             break;
@@ -429,10 +415,7 @@ impl STTProvider for SherpaSidecarSTT {
                         std::thread::sleep(Duration::from_millis(50));
                     }
                     Err(e) => {
-                        log::error!(
-                            "SherpaSidecarSTT: wait error: {}",
-                            e
-                        );
+                        log::error!("SherpaSidecarSTT: wait error: {}", e);
                         break;
                     }
                 }
@@ -456,11 +439,7 @@ impl STTProvider for SherpaSidecarSTT {
 
     async fn test_connection(&self) -> Result<bool, Box<dyn std::error::Error + Send + Sync>> {
         if !self.binary_path.exists() {
-            return Err(format!(
-                "Binary not found: {}",
-                self.binary_path.display()
-            )
-            .into());
+            return Err(format!("Binary not found: {}", self.binary_path.display()).into());
         }
         // Also verify model files exist
         match crate::stt::local_engines::model_discovery::discover_model_files(&self.model_dir) {
@@ -470,11 +449,7 @@ impl STTProvider for SherpaSidecarSTT {
     }
 
     fn set_language(&mut self, language: &str) {
-        self.language = language
-            .split('-')
-            .next()
-            .unwrap_or(language)
-            .to_string();
+        self.language = language.split('-').next().unwrap_or(language).to_string();
         log::info!("SherpaSidecarSTT: Language set to {}", self.language);
     }
 }

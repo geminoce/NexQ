@@ -1,4 +1,5 @@
 import { Search } from "lucide-react";
+import { t } from "../../i18n";
 
 export type SortOption = "newest" | "price_asc" | "price_desc" | "context_desc";
 
@@ -39,7 +40,7 @@ export function FilterBar({
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/40" />
           <input
             type="text"
-            placeholder="Search models..."
+            placeholder={t("settings.llm.openrouter.searchPlaceholder")}
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             className="w-full rounded-lg border border-border/30 bg-background/50 pl-8 pr-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/30 focus:border-primary/40 focus:outline-none focus:ring-1 focus:ring-primary/20"
@@ -50,34 +51,34 @@ export function FilterBar({
           onChange={(e) => onSortChange(e.target.value as SortOption)}
           className="rounded-lg border border-border/30 bg-background/50 px-3 py-2 text-xs text-foreground focus:border-primary/40 focus:outline-none cursor-pointer min-w-[150px]"
         >
-          <option value="newest">Newest first</option>
-          <option value="price_asc">Price: low → high</option>
-          <option value="price_desc">Price: high → low</option>
-          <option value="context_desc">Context: high → low</option>
+          <option value="newest">{t("settings.llm.openrouter.sort.newest")}</option>
+          <option value="price_asc">{t("settings.llm.openrouter.sort.priceAsc")}</option>
+          <option value="price_desc">{t("settings.llm.openrouter.sort.priceDesc")}</option>
+          <option value="context_desc">{t("settings.llm.openrouter.sort.contextDesc")}</option>
         </select>
       </div>
 
       {/* Filter chips */}
       <div className="flex items-center gap-1.5">
         <Chip
-          label="Free only"
+          label={t("settings.llm.openrouter.filters.freeOnly")}
           active={freeOnly}
           onClick={() => onFreeOnlyChange(!freeOnly)}
           variant="free"
         />
         <div className="w-px h-4 bg-border/20 mx-1" />
         <Chip
-          label="Tools"
+          label={t("settings.llm.openrouter.filters.tools")}
           active={filterTools}
           onClick={() => onFilterToolsChange(!filterTools)}
         />
         <Chip
-          label="Reasoning"
+          label={t("settings.llm.openrouter.filters.reasoning")}
           active={filterReasoning}
           onClick={() => onFilterReasoningChange(!filterReasoning)}
         />
         <Chip
-          label="Web search"
+          label={t("settings.llm.openrouter.filters.webSearch")}
           active={filterWebSearch}
           onClick={() => onFilterWebSearchChange(!filterWebSearch)}
         />

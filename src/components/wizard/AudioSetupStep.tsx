@@ -18,6 +18,7 @@ import {
   Loader2,
   Wand2,
 } from "lucide-react";
+import { t } from "../../i18n";
 
 export function AudioSetupStep() {
   const {
@@ -197,9 +198,9 @@ export function AudioSetupStep() {
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 shadow-md shadow-primary/10">
           <Mic className="h-7 w-7 text-primary" />
         </div>
-        <h2 className="text-2xl font-bold text-foreground">Audio Setup</h2>
+        <h2 className="text-2xl font-bold text-foreground">{t("wizard.audio.title")}</h2>
         <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-          Choose audio sources for you and the other party.
+          {t("wizard.audio.description")}
         </p>
       </div>
 
@@ -213,12 +214,12 @@ export function AudioSetupStep() {
           {isScanning ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              Scanning devices...
+              {t("wizard.audio.scanningDevices")}
             </>
           ) : (
             <>
               <Wand2 className="h-4 w-4" />
-              Smart Detect Sources
+              {t("wizard.audio.smartDetectSources")}
             </>
           )}
         </button>
@@ -227,7 +228,7 @@ export function AudioSetupStep() {
         {scanResults.length > 0 && (
           <div className="rounded-xl border border-border/40 bg-secondary/20 p-3.5 space-y-1.5">
             <p className="text-meta font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
-              Scan Results
+              {t("wizard.audio.scanResults")}
             </p>
             {scanResults.map((r) => (
               <div
@@ -244,10 +245,10 @@ export function AudioSetupStep() {
                 </span>
                 {r.hasAudio ? (
                   <span className="flex items-center gap-1 text-success">
-                    <CheckCircle className="h-3 w-3" /> Active
+                    <CheckCircle className="h-3 w-3" /> {t("wizard.audio.active")}
                   </span>
                 ) : (
-                  <span className="text-muted-foreground/50">Silent</span>
+                  <span className="text-muted-foreground/50">{t("wizard.audio.silent")}</span>
                 )}
               </div>
             ))}
@@ -258,9 +259,9 @@ export function AudioSetupStep() {
         <div className="space-y-2.5">
           <label className="flex items-center gap-2.5 text-sm font-medium text-foreground">
             <span className="rounded-lg bg-primary/10 px-2 py-1 text-meta font-semibold uppercase tracking-wide text-primary">
-              You
+              {t("wizard.parties.you")}
             </span>
-            Audio Source
+            {t("wizard.audio.audioSource")}
           </label>
           <select
             value={config.you.device_id}
@@ -272,22 +273,22 @@ export function AudioSetupStep() {
             className="w-full rounded-xl border border-border/40 bg-background px-4 py-3 text-sm transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20"
           >
             <option value="default">
-              {loadingDevices ? "Detecting devices..." : "Default microphone"}
+              {loadingDevices ? t("wizard.audio.detectingDevices") : t("wizard.audio.defaultMicrophone")}
             </option>
             {devices.inputs.length > 0 && (
-              <optgroup label="Microphones">
+              <optgroup label={t("wizard.audio.microphones")}>
                 {devices.inputs.map((d) => (
                   <option key={d.id} value={d.id}>
-                    {d.name}{d.is_default ? " (Default)" : ""}
+                    {d.name}{d.is_default ? t("settings.audio.defaultDeviceSuffix") : ""}
                   </option>
                 ))}
               </optgroup>
             )}
             {devices.outputs.length > 0 && (
-              <optgroup label="Speakers / Output">
+              <optgroup label={t("wizard.audio.speakersOutput")}>
                 {devices.outputs.map((d) => (
                   <option key={d.id} value={d.id}>
-                    {d.name}{d.is_default ? " (Default)" : ""}
+                    {d.name}{d.is_default ? t("settings.audio.defaultDeviceSuffix") : ""}
                   </option>
                 ))}
               </optgroup>
@@ -299,9 +300,9 @@ export function AudioSetupStep() {
         <div className="space-y-2.5">
           <label className="flex items-center gap-2.5 text-sm font-medium text-foreground">
             <span className="rounded-lg bg-muted px-2 py-1 text-meta font-semibold uppercase tracking-wide text-muted-foreground">
-              Them
+              {t("wizard.parties.them")}
             </span>
-            Audio Source
+            {t("wizard.audio.audioSource")}
           </label>
           <select
             value={config.them.device_id}
@@ -313,22 +314,22 @@ export function AudioSetupStep() {
             className="w-full rounded-xl border border-border/40 bg-background px-4 py-3 text-sm transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20"
           >
             <option value="default">
-              {loadingDevices ? "Detecting devices..." : "Default output (loopback)"}
+              {loadingDevices ? t("wizard.audio.detectingDevices") : t("wizard.audio.defaultOutput")}
             </option>
             {devices.outputs.length > 0 && (
-              <optgroup label="Speakers / Output">
+              <optgroup label={t("wizard.audio.speakersOutput")}>
                 {devices.outputs.map((d) => (
                   <option key={d.id} value={d.id}>
-                    {d.name}{d.is_default ? " (Default)" : ""}
+                    {d.name}{d.is_default ? t("settings.audio.defaultDeviceSuffix") : ""}
                   </option>
                 ))}
               </optgroup>
             )}
             {devices.inputs.length > 0 && (
-              <optgroup label="Microphones">
+              <optgroup label={t("wizard.audio.microphones")}>
                 {devices.inputs.map((d) => (
                   <option key={d.id} value={d.id}>
-                    {d.name}{d.is_default ? " (Default)" : ""}
+                    {d.name}{d.is_default ? t("settings.audio.defaultDeviceSuffix") : ""}
                   </option>
                 ))}
               </optgroup>
@@ -343,14 +344,14 @@ export function AudioSetupStep() {
           className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
         >
           <RefreshCw className={`h-3 w-3 ${loadingDevices ? "animate-spin" : ""}`} />
-          Refresh devices
+          {t("wizard.audio.refreshDevices")}
         </button>
 
         {/* Live Audio Test */}
         <div className="rounded-xl border border-border/40 bg-secondary/20 p-5">
           <div className="mb-4 flex items-center justify-between">
             <p className="text-sm font-semibold text-foreground">
-              Microphone Test
+              {t("wizard.audio.microphoneTest")}
             </p>
             <button
               onClick={handleLiveTest}
@@ -364,10 +365,10 @@ export function AudioSetupStep() {
               {isTestingAudio ? (
                 <>
                   <div className="h-2 w-2 animate-pulse rounded-full bg-destructive" />
-                  Stop ({testCountdown}s)
+                  {t("wizard.audio.stopTest", { seconds: testCountdown })}
                 </>
               ) : (
-                "Test Audio"
+                t("wizard.audio.testAudio")
               )}
             </button>
           </div>
@@ -375,11 +376,11 @@ export function AudioSetupStep() {
           {/* Level Meter */}
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <span className="w-8 text-xs text-muted-foreground">Mic</span>
+              <span className="w-8 text-xs text-muted-foreground">{t("wizard.audio.micShort")}</span>
               <div
                 className="relative h-4 flex-1 overflow-hidden rounded-full bg-muted"
                 role="meter"
-                aria-label="Microphone audio level"
+                aria-label={t("wizard.audio.microphoneLevel")}
                 aria-valuenow={Math.round(micLevel * 100)}
                 aria-valuemin={0}
                 aria-valuemax={100}
@@ -408,8 +409,8 @@ export function AudioSetupStep() {
 
             <p className="text-center text-xs text-muted-foreground">
               {isTestingAudio
-                ? "Speak now to verify your microphone..."
-                : 'Click "Test Audio" and speak to check'}
+                ? t("wizard.audio.speakNow")
+                : t("wizard.audio.clickTest")}
             </p>
           </div>
         </div>

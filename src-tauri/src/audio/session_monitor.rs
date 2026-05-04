@@ -34,7 +34,10 @@ fn enumerate_sessions_windows() -> Result<Vec<AudioSessionInfo>, String> {
             sessions.extend(wasapi_sessions);
         }
         Err(e) => {
-            log::warn!("WASAPI session enumeration failed: {}. Returning empty list.", e);
+            log::warn!(
+                "WASAPI session enumeration failed: {}. Returning empty list.",
+                e
+            );
         }
     }
 
@@ -74,15 +77,13 @@ fn enumerate_wasapi_sessions(
                 }
                 let _guard = ComGuard;
 
+                use windows::core::Interface;
                 use windows::Win32::Media::Audio::{
-                    IMMDeviceEnumerator, MMDeviceEnumerator, eRender,
-                    IAudioSessionManager2, IAudioSessionEnumerator,
-                    IAudioSessionControl, IAudioSessionControl2,
-                    AudioSessionStateActive,
-                    AudioSessionStateExpired,
+                    eRender, AudioSessionStateActive, AudioSessionStateExpired,
+                    IAudioSessionControl, IAudioSessionControl2, IAudioSessionEnumerator,
+                    IAudioSessionManager2, IMMDeviceEnumerator, MMDeviceEnumerator,
                 };
                 use windows::Win32::System::Com::{CoCreateInstance, CLSCTX_ALL};
-                use windows::core::Interface;
 
                 // Create device enumerator
                 let enumerator: IMMDeviceEnumerator =
@@ -91,10 +92,14 @@ fn enumerate_wasapi_sessions(
 
                 // Enumerate output (render) devices
                 let devices = enumerator
-                    .EnumAudioEndpoints(eRender, windows::Win32::Media::Audio::DEVICE_STATE(0x00000001)) // DEVICE_STATE_ACTIVE
+                    .EnumAudioEndpoints(
+                        eRender,
+                        windows::Win32::Media::Audio::DEVICE_STATE(0x00000001),
+                    ) // DEVICE_STATE_ACTIVE
                     .map_err(|e| format!("EnumAudioEndpoints failed: {}", e))?;
 
-                let device_count = devices.GetCount()
+                let device_count = devices
+                    .GetCount()
                     .map_err(|e| format!("GetCount failed: {}", e))?;
 
                 let mut all_sessions = Vec::new();
@@ -106,7 +111,8 @@ fn enumerate_wasapi_sessions(
                     };
 
                     // Get device friendly name
-                    let device_name = get_device_name(&device).unwrap_or_else(|| format!("Device {}", i));
+                    let device_name =
+                        get_device_name(&device).unwrap_or_else(|| format!("Device {}", i));
 
                     // Activate IAudioSessionManager2
                     let mgr: IAudioSessionManager2 = match device.Activate(CLSCTX_ALL, None) {
@@ -146,12 +152,14 @@ fn enumerate_wasapi_sessions(
                         let is_active = state == AudioSessionStateActive;
 
                         // Get display name (may be empty)
-                        let display_name = control.GetDisplayName()
+                        let display_name = control
+                            .GetDisplayName()
                             .map(|s| s.to_string().unwrap_or_default())
                             .unwrap_or_default();
 
                         // Resolve process name from PID
-                        let process_name = get_process_name(pid).unwrap_or_else(|| format!("PID {}", pid));
+                        let process_name =
+                            get_process_name(pid).unwrap_or_else(|| format!("PID {}", pid));
 
                         let final_display = if display_name.is_empty() {
                             process_name.clone()
@@ -183,8 +191,8 @@ fn enumerate_wasapi_sessions(
 #[cfg(target_os = "windows")]
 fn get_device_name(device: &windows::Win32::Media::Audio::IMMDevice) -> Option<String> {
     unsafe {
-        use windows::Win32::UI::Shell::PropertiesSystem::PROPERTYKEY;
         use windows::core::GUID;
+        use windows::Win32::UI::Shell::PropertiesSystem::PROPERTYKEY;
 
         // PKEY_Device_FriendlyName = {a45c254e-df1c-4efd-8020-67d146a850e0}, 14
         let pkey = PROPERTYKEY {
@@ -198,7 +206,9 @@ fn get_device_name(device: &windows::Win32::Media::Audio::IMMDevice) -> Option<S
         };
 
         // STGM_READ = 0x00000000
-        let store = device.OpenPropertyStore(windows::Win32::System::Com::STGM(0)).ok()?;
+        let store = device
+            .OpenPropertyStore(windows::Win32::System::Com::STGM(0))
+            .ok()?;
         let prop = store.GetValue(&pkey).ok()?;
 
         // Use Display trait on PROPVARIANT to extract string value
@@ -214,11 +224,11 @@ fn get_device_name(device: &windows::Win32::Media::Audio::IMMDevice) -> Option<S
 #[cfg(target_os = "windows")]
 fn get_process_name(pid: u32) -> Option<String> {
     unsafe {
-        use windows::Win32::System::Threading::{
-            OpenProcess, QueryFullProcessImageNameW,
-            PROCESS_NAME_FORMAT, PROCESS_QUERY_LIMITED_INFORMATION,
-        };
         use windows::Win32::Foundation::CloseHandle;
+        use windows::Win32::System::Threading::{
+            OpenProcess, QueryFullProcessImageNameW, PROCESS_NAME_FORMAT,
+            PROCESS_QUERY_LIMITED_INFORMATION,
+        };
 
         let handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid).ok()?;
 

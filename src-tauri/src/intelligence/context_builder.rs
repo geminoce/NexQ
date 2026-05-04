@@ -63,10 +63,7 @@ impl ContextBuilder {
         // RAG chunks (controlled by `includeRagChunks` per-action toggle)
         // top_k filtering already applied by caller before reaching here
         if include_context && !context_text.is_empty() {
-            user_parts.push(format!(
-                "## Reference Materials\n{}\n",
-                context_text
-            ));
+            user_parts.push(format!("## Reference Materials\n{}\n", context_text));
         }
 
         // Transcript (controlled by `includeTranscript` per-action toggle)

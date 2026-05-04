@@ -23,6 +23,7 @@ import { useSpeakerDetection } from "../hooks/useSpeakerDetection";
 import { useTopicDetection } from "../hooks/useTopicDetection";
 import { useTranslation } from "../hooks/useTranslation";
 import { MODE_COLORS } from "../lib/speakerColors";
+import { t } from "../i18n";
 import {
   GripHorizontal,
   Minus,
@@ -93,8 +94,8 @@ export function OverlayView() {
   useTranslation();
 
   const handleEndMeeting = useCallback(async () => {
-    try { await endMeetingFlow(); showToast("Meeting ended", "info"); }
-    catch (err) { showToast(err instanceof Error ? err.message : "Couldn't end meeting", "error"); }
+    try { await endMeetingFlow(); showToast(t("overlay.toasts.ended"), "info"); }
+    catch (err) { showToast(err instanceof Error ? err.message : t("overlay.toasts.endFailed"), "error"); }
   }, [endMeetingFlow]);
 
   const handleTranslateAll = useCallback(async () => {
@@ -103,14 +104,14 @@ export function OverlayView() {
     try {
       const { total, alreadyDone, newlyTranslated } = await translateBatch(meetingId, targetLang);
       if (newlyTranslated === 0) {
-        showToast(`All ${total} segments already translated`, "info");
+        showToast(t("overlay.toasts.allTranslated", { total }), "info");
       } else if (alreadyDone > 0) {
-        showToast(`Translated ${newlyTranslated} new segments (${alreadyDone} already cached, ${total} total)`, "success");
+        showToast(t("overlay.toasts.translatedNew", { newlyTranslated, alreadyDone, total }), "success");
       } else {
-        showToast(`Translated all ${total} segments`, "success");
+        showToast(t("overlay.toasts.translatedAll", { total }), "success");
       }
     } catch (err) {
-      showToast(`Batch translation failed: ${err}`, "error");
+      showToast(t("overlay.toasts.batchFailed", { error: String(err) }), "error");
     }
   }, [activeMeeting?.id, targetLang]);
 
@@ -131,7 +132,7 @@ export function OverlayView() {
             {meetingTitle}
           </span>
           {recordingEnabled && (
-            <div className="flex items-center gap-1.5 rounded-full bg-destructive/20 px-2.5 py-0.5 ring-1 ring-destructive/10" role="status" aria-label="Recording in progress">
+            <div className="flex items-center gap-1.5 rounded-full bg-destructive/20 px-2.5 py-0.5 ring-1 ring-destructive/10" role="status" aria-label={t("overlay.header.recording")}>
               <span className="relative flex h-2.5 w-2.5" aria-hidden="true">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-destructive opacity-75" />
                 <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-destructive" />
@@ -144,7 +145,7 @@ export function OverlayView() {
             className="text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded"
             style={{ color: MODE_COLORS[audioMode].text, backgroundColor: MODE_COLORS[audioMode].bg }}
           >
-            {audioMode === "online" ? "ONLINE" : "IN-PERSON"}
+            {audioMode === "online" ? t("overlay.header.online") : t("overlay.header.inPerson")}
           </span>
           {/* Scenario chip */}
           <span className="text-[10px] text-muted-foreground px-1.5 py-0.5 rounded bg-white/5">
@@ -156,12 +157,12 @@ export function OverlayView() {
         </div>
 
         <div className="flex items-center gap-1">
-          <HeaderBtn icon={<BarChart3 className="h-3.5 w-3.5" />} active={statsOpen} onClick={() => setStatsOpen(p => !p)} tooltip="Speaker Stats (S)" />
-          <HeaderBtn icon={<Bookmark className="h-3.5 w-3.5" />} active={bookmarksOpen} onClick={() => setBookmarksOpen(p => !p)} tooltip="Bookmarks (K)" />
-          <HeaderBtn icon={<Activity className="h-3.5 w-3.5" />} active={logOpen} onClick={toggleLog} tooltip="AI Call Log" />
-          <HeaderBtn icon={<Terminal className="h-3.5 w-3.5" />} active={devLogOpen} onClick={() => setDevLogOpen(p => !p)} tooltip="Dev Log (Ctrl+Shift+L)" />
-          <HeaderBtn icon={<Settings className="h-3.5 w-3.5" />} onClick={() => setCurrentView("settings")} tooltip="Settings" />
-          <HeaderBtn icon={<Minus className="h-3.5 w-3.5" />} onClick={() => setCurrentView("launcher")} tooltip="Minimize to Dashboard" />
+          <HeaderBtn icon={<BarChart3 className="h-3.5 w-3.5" />} active={statsOpen} onClick={() => setStatsOpen(p => !p)} tooltip={t("overlay.header.speakerStats")} />
+          <HeaderBtn icon={<Bookmark className="h-3.5 w-3.5" />} active={bookmarksOpen} onClick={() => setBookmarksOpen(p => !p)} tooltip={t("overlay.header.bookmarks")} />
+          <HeaderBtn icon={<Activity className="h-3.5 w-3.5" />} active={logOpen} onClick={toggleLog} tooltip={t("overlay.header.aiCallLog")} />
+          <HeaderBtn icon={<Terminal className="h-3.5 w-3.5" />} active={devLogOpen} onClick={() => setDevLogOpen(p => !p)} tooltip={t("overlay.header.devLog")} />
+          <HeaderBtn icon={<Settings className="h-3.5 w-3.5" />} onClick={() => setCurrentView("settings")} tooltip={t("overlay.header.settings")} />
+          <HeaderBtn icon={<Minus className="h-3.5 w-3.5" />} onClick={() => setCurrentView("launcher")} tooltip={t("overlay.header.minimize")} />
 
           {/* Translation controls */}
           <button
@@ -171,10 +172,10 @@ export function OverlayView() {
                 ? "bg-primary/10 text-primary ring-1 ring-primary/20"
                 : "text-muted-foreground hover:bg-accent"
             }`}
-            title="Toggle auto-translate"
+            title={t("overlay.header.toggleAutoTranslate")}
           >
             <Globe className="h-3 w-3" />
-            Translate
+            {t("overlay.header.translate")}
           </button>
 
           {autoTranslateActive && (
@@ -186,7 +187,7 @@ export function OverlayView() {
                     displayMode === "inline" ? "bg-primary/15 text-primary" : "text-muted-foreground/50"
                   }`}
                 >
-                  Inline
+                  {t("overlay.header.inline")}
                 </button>
                 <button
                   onClick={() => setDisplayMode("hover")}
@@ -194,16 +195,16 @@ export function OverlayView() {
                     displayMode === "hover" ? "bg-primary/15 text-primary" : "text-muted-foreground/50"
                   }`}
                 >
-                  Hover
+                  {t("overlay.header.hover")}
                 </button>
               </div>
               <button
                 onClick={handleTranslateAll}
                 disabled={isBatchTranslating}
                 className="flex items-center gap-1 rounded-md border border-primary/20 bg-primary/5 px-1.5 py-0.5 text-[10px] font-medium text-primary hover:bg-primary/10 transition-colors disabled:opacity-50 cursor-pointer"
-                title="Translate all past transcript segments"
+                title={t("overlay.header.translateAllPast")}
               >
-                {isBatchTranslating ? "Translating..." : "Translate All"}
+                {isBatchTranslating ? t("overlay.header.translating") : t("overlay.header.translateAll")}
               </button>
               <span className="text-[10px] text-muted-foreground/40 flex items-center gap-1">
                 <span className="h-1.5 w-1.5 rounded-full bg-success inline-block" />
@@ -215,10 +216,10 @@ export function OverlayView() {
           <button
             onClick={handleEndMeeting}
             className="ml-1.5 flex items-center gap-1.5 rounded-lg bg-destructive/10 border border-destructive/20 px-3 py-1.5 text-xs font-semibold text-destructive transition-all duration-150 hover:bg-destructive/20 hover:border-destructive/30 hover:shadow-sm hover:shadow-destructive/10 cursor-pointer"
-            aria-label="End meeting"
+            aria-label={t("overlay.header.endMeeting")}
           >
             <Square className="h-3 w-3 fill-current" aria-hidden="true" />
-            End
+            {t("overlay.header.end")}
           </button>
         </div>
       </div>
@@ -230,7 +231,7 @@ export function OverlayView() {
         {/* ── LEFT: TRANSCRIPT ── */}
         <div className="flex min-w-[180px] min-h-0 flex-1 basis-[220px] flex-col overflow-hidden rounded-xl bg-card/20">
           <div className="flex shrink-0 items-center border-b border-border/20 px-3 py-1.5">
-            <span className="text-meta font-semibold uppercase tracking-wider text-muted-foreground/60">Transcript</span>
+            <span className="text-meta font-semibold uppercase tracking-wider text-muted-foreground/60">{t("overlay.transcript.title")}</span>
           </div>
           <div className="flex flex-1 flex-col min-h-0 overflow-hidden p-2.5">
             <TranscriptPanel />

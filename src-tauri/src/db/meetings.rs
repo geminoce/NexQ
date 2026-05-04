@@ -46,7 +46,7 @@ pub struct Meeting {
 /// Response struct that maps MeetingSpeaker back to frontend SpeakerIdentity format.
 #[derive(Debug, Clone, Serialize)]
 pub struct MeetingSpeakerResponse {
-    pub id: String,           // This is speaker_id (e.g. "speaker_0"), NOT the record UUID
+    pub id: String, // This is speaker_id (e.g. "speaker_0"), NOT the record UUID
     pub display_name: String,
     pub source: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -180,8 +180,7 @@ pub fn get_meeting(conn: &Connection, id: &str) -> Result<Meeting, DatabaseError
                 transcript: serde_json::from_str(&transcript_str).unwrap_or(serde_json::json!([])),
                 ai_interactions: serde_json::from_str(&ai_str).unwrap_or(serde_json::json!([])),
                 summary,
-                config_snapshot: config_str
-                    .and_then(|s| serde_json::from_str(&s).ok()),
+                config_snapshot: config_str.and_then(|s| serde_json::from_str(&s).ok()),
                 speakers: None,
                 bookmarks: None,
                 action_items: None,
@@ -211,7 +210,8 @@ pub fn get_meeting(conn: &Connection, id: &str) -> Result<Meeting, DatabaseError
     if !speakers.is_empty() {
         let speaker_responses: Vec<MeetingSpeakerResponse> =
             speakers.into_iter().map(|s| s.into()).collect();
-        meeting.speakers = Some(serde_json::to_value(&speaker_responses).unwrap_or(serde_json::json!([])));
+        meeting.speakers =
+            Some(serde_json::to_value(&speaker_responses).unwrap_or(serde_json::json!([])));
     }
 
     let bookmarks = list_meeting_bookmarks(conn, id)?;
@@ -221,12 +221,14 @@ pub fn get_meeting(conn: &Connection, id: &str) -> Result<Meeting, DatabaseError
 
     let action_items = list_meeting_action_items(conn, id)?;
     if !action_items.is_empty() {
-        meeting.action_items = Some(serde_json::to_value(&action_items).unwrap_or(serde_json::json!([])));
+        meeting.action_items =
+            Some(serde_json::to_value(&action_items).unwrap_or(serde_json::json!([])));
     }
 
     let topic_sections = list_meeting_topic_sections(conn, id)?;
     if !topic_sections.is_empty() {
-        meeting.topic_sections = Some(serde_json::to_value(&topic_sections).unwrap_or(serde_json::json!([])));
+        meeting.topic_sections =
+            Some(serde_json::to_value(&topic_sections).unwrap_or(serde_json::json!([])));
     }
 
     Ok(meeting)
@@ -257,8 +259,12 @@ pub fn list_meetings(
             duration_seconds: row.get(4)?,
             segment_count: row.get(5)?,
             has_summary: row.get::<_, i32>(6)? != 0,
-            audio_mode: row.get::<_, String>(7).unwrap_or_else(|_| "online".to_string()),
-            ai_scenario: row.get::<_, String>(8).unwrap_or_else(|_| "team_meeting".to_string()),
+            audio_mode: row
+                .get::<_, String>(7)
+                .unwrap_or_else(|_| "online".to_string()),
+            ai_scenario: row
+                .get::<_, String>(8)
+                .unwrap_or_else(|_| "team_meeting".to_string()),
         })
     })?;
 
@@ -342,10 +348,7 @@ pub fn update_meeting(
 
     let rows_affected = conn.execute(&sql, param_refs.as_slice())?;
     if rows_affected == 0 {
-        return Err(DatabaseError::NotFound(format!(
-            "Meeting {} not found",
-            id
-        )));
+        return Err(DatabaseError::NotFound(format!("Meeting {} not found", id)));
     }
 
     Ok(())
@@ -366,10 +369,7 @@ pub fn update_meeting_recording(
     )?;
 
     if rows == 0 {
-        return Err(DatabaseError::NotFound(format!(
-            "Meeting {} not found",
-            id
-        )));
+        return Err(DatabaseError::NotFound(format!("Meeting {} not found", id)));
     }
 
     Ok(())
@@ -378,10 +378,22 @@ pub fn update_meeting_recording(
 /// Delete a meeting and all its related data (feature tables + segments).
 pub fn delete_meeting(conn: &Connection, id: &str) -> Result<(), DatabaseError> {
     // Delete from feature tables first
-    conn.execute("DELETE FROM meeting_speakers WHERE meeting_id = ?1", params![id])?;
-    conn.execute("DELETE FROM meeting_bookmarks WHERE meeting_id = ?1", params![id])?;
-    conn.execute("DELETE FROM meeting_action_items WHERE meeting_id = ?1", params![id])?;
-    conn.execute("DELETE FROM meeting_topic_sections WHERE meeting_id = ?1", params![id])?;
+    conn.execute(
+        "DELETE FROM meeting_speakers WHERE meeting_id = ?1",
+        params![id],
+    )?;
+    conn.execute(
+        "DELETE FROM meeting_bookmarks WHERE meeting_id = ?1",
+        params![id],
+    )?;
+    conn.execute(
+        "DELETE FROM meeting_action_items WHERE meeting_id = ?1",
+        params![id],
+    )?;
+    conn.execute(
+        "DELETE FROM meeting_topic_sections WHERE meeting_id = ?1",
+        params![id],
+    )?;
 
     // Then existing deletes (segments + meeting)
     conn.execute(
@@ -391,10 +403,7 @@ pub fn delete_meeting(conn: &Connection, id: &str) -> Result<(), DatabaseError> 
 
     let rows = conn.execute("DELETE FROM meetings WHERE id = ?1", params![id])?;
     if rows == 0 {
-        return Err(DatabaseError::NotFound(format!(
-            "Meeting {} not found",
-            id
-        )));
+        return Err(DatabaseError::NotFound(format!("Meeting {} not found", id)));
     }
 
     Ok(())
@@ -430,8 +439,12 @@ pub fn search_meetings(
             duration_seconds: row.get(4)?,
             segment_count: row.get(5)?,
             has_summary: row.get::<_, i32>(6)? != 0,
-            audio_mode: row.get::<_, String>(7).unwrap_or_else(|_| "online".to_string()),
-            ai_scenario: row.get::<_, String>(8).unwrap_or_else(|_| "team_meeting".to_string()),
+            audio_mode: row
+                .get::<_, String>(7)
+                .unwrap_or_else(|_| "online".to_string()),
+            ai_scenario: row
+                .get::<_, String>(8)
+                .unwrap_or_else(|_| "team_meeting".to_string()),
         })
     })?;
 
@@ -700,10 +713,7 @@ pub fn update_meeting_bookmark_note(
 }
 
 /// Delete a single bookmark.
-pub fn delete_meeting_bookmark(
-    conn: &Connection,
-    bookmark_id: &str,
-) -> Result<(), DatabaseError> {
+pub fn delete_meeting_bookmark(conn: &Connection, bookmark_id: &str) -> Result<(), DatabaseError> {
     conn.execute(
         "DELETE FROM meeting_bookmarks WHERE id = ?1",
         params![bookmark_id],
@@ -795,10 +805,7 @@ pub fn update_action_item_completed(
 }
 
 /// Delete a single action item.
-pub fn delete_action_item(
-    conn: &Connection,
-    item_id: &str,
-) -> Result<(), DatabaseError> {
+pub fn delete_action_item(conn: &Connection, item_id: &str) -> Result<(), DatabaseError> {
     conn.execute(
         "DELETE FROM meeting_action_items WHERE id = ?1",
         params![item_id],

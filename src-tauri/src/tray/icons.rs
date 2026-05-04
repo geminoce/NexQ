@@ -1,5 +1,5 @@
+use image::{Rgba, RgbaImage};
 use std::collections::HashMap;
-use image::{RgbaImage, Rgba};
 use tauri::image::Image as TauriImage;
 
 use super::TrayState;
@@ -60,7 +60,10 @@ impl IconSet {
 
     /// Get the icon bytes for a given state.
     pub fn get(&self, state: TrayState) -> TauriImage<'_> {
-        let bytes = self.variants.get(&state).expect("All states pre-composited");
+        let bytes = self
+            .variants
+            .get(&state)
+            .expect("All states pre-composited");
         TauriImage::new_owned(bytes.clone(), self.width, self.height)
     }
 

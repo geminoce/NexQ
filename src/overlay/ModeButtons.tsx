@@ -4,6 +4,7 @@ import { useAIActionsStore } from "../stores/aiActionsStore";
 import { generateAssist, cancelGeneration } from "../lib/ipc";
 import { showToast } from "../stores/toastStore";
 import type { IntelligenceMode } from "../lib/types";
+import { t } from "../i18n";
 import {
   Loader2,
   Sparkles,
@@ -40,6 +41,25 @@ const MODE_SHORTCUTS: Record<string, string> = {
 // Ordered built-in modes — AskQuestion now included
 const BUILT_IN_ORDER = ["Assist", "WhatToSay", "Shorten", "FollowUp", "Recap", "AskQuestion"];
 
+function getModeDisplayLabel(mode: string, fallback: string): string {
+  switch (mode) {
+    case "Assist":
+      return t("overlay.ai.modes.Assist");
+    case "WhatToSay":
+      return t("overlay.ai.modes.WhatToSay");
+    case "Shorten":
+      return t("overlay.ai.modes.Shorten");
+    case "FollowUp":
+      return t("overlay.ai.modes.FollowUp");
+    case "Recap":
+      return t("overlay.ai.modes.Recap");
+    case "AskQuestion":
+      return t("overlay.ai.modes.AskQuestion");
+    default:
+      return fallback;
+  }
+}
+
 export function ModeButtons() {
   const currentMode = useStreamStore((s) => s.currentMode);
   const isStreaming = useStreamStore((s) => s.isStreaming);
@@ -64,7 +84,7 @@ export function ModeButtons() {
       if (cfg && cfg.visible) {
         result.push({
           mode: cfg.mode,
-          label: cfg.name,
+          label: getModeDisplayLabel(modeKey, cfg.name),
           shortcut: MODE_SHORTCUTS[modeKey] || "",
           icon: MODE_ICONS[modeKey] || Wand2,
           isCustom: false,
@@ -91,7 +111,7 @@ export function ModeButtons() {
   const handleClick = useCallback(
     (mode: string) => {
       if (isStreaming) {
-        if (currentMode === mode) cancelGeneration().catch(() => showToast("Couldn't cancel generation", "error"));
+        if (currentMode === mode) cancelGeneration().catch(() => showToast(t("overlay.toasts.cancelFailed"), "error"));
         return;
       }
       // AskQuestion mode: toggle ask input instead of direct generation
@@ -99,7 +119,7 @@ export function ModeButtons() {
         setAskInputVisible((v) => !v);
         return;
       }
-      generateAssist(mode).catch((err) => showToast(err instanceof Error ? err.message : "Couldn't generate AI response", "error"));
+      generateAssist(mode).catch((err) => showToast(err instanceof Error ? err.message : t("overlay.toasts.generateFailed"), "error"));
     },
     [isStreaming, currentMode]
   );
@@ -108,7 +128,7 @@ export function ModeButtons() {
     const text = askInputText.trim();
     if (!text || isStreaming) return;
     generateAssist("AskQuestion", text).catch((err) =>
-      showToast(err instanceof Error ? err.message : "Couldn't send question", "error")
+      showToast(err instanceof Error ? err.message : t("overlay.toasts.sendQuestionFailed"), "error")
     );
     setAskInputText("");
     setAskInputVisible(false);
@@ -156,8 +176,8 @@ export function ModeButtons() {
               if (e.key === "Enter") { e.preventDefault(); handleAskSubmit(); }
               if (e.key === "Escape") { e.preventDefault(); setAskInputVisible(false); }
             }}
-            placeholder="Ask about the meeting..."
-            aria-label="Ask a question"
+            placeholder={t("overlay.ai.askPlaceholder")}
+            aria-label={t("overlay.ai.askAria")}
             autoFocus
             maxLength={2000}
             className="flex-1 min-w-0 bg-transparent text-xs text-foreground/90 placeholder:text-muted-foreground/50 outline-none"
@@ -166,14 +186,14 @@ export function ModeButtons() {
             onClick={handleAskSubmit}
             disabled={!askInputText.trim()}
             className="rounded-md p-1 text-info/60 hover:bg-info/10 hover:text-info disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            aria-label="Send question"
+            aria-label={t("overlay.ai.sendQuestion")}
           >
             <Send className="h-3 w-3" aria-hidden="true" />
           </button>
           <button
             onClick={() => setAskInputVisible(false)}
             className="rounded-md p-1 text-muted-foreground/60 hover:bg-accent hover:text-muted-foreground transition-colors"
-            aria-label="Close question input"
+            aria-label={t("overlay.ai.closeQuestion")}
           >
             <X className="h-3 w-3" aria-hidden="true" />
           </button>

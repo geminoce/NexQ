@@ -57,9 +57,15 @@ struct DeepLLanguage {
 
 #[async_trait]
 impl TranslationProvider for DeepLTranslator {
-    fn provider_name(&self) -> &str { "DeepL" }
-    fn provider_type(&self) -> TranslationProviderType { TranslationProviderType::Deepl }
-    fn is_local(&self) -> bool { false }
+    fn provider_name(&self) -> &str {
+        "DeepL"
+    }
+    fn provider_type(&self) -> TranslationProviderType {
+        TranslationProviderType::Deepl
+    }
+    fn is_local(&self) -> bool {
+        false
+    }
 
     async fn translate(
         &self,
@@ -120,10 +126,7 @@ impl TranslationProvider for DeepLTranslator {
         let url = format!("{}/translate", self.base_url);
 
         // DeepL accepts multiple `text` params in a single form-encoded body.
-        let mut params: Vec<(&str, String)> = texts
-            .iter()
-            .map(|t| ("text", t.clone()))
-            .collect();
+        let mut params: Vec<(&str, String)> = texts.iter().map(|t| ("text", t.clone())).collect();
         params.push(("target_lang", Self::to_deepl_lang(target)));
         if let Some(src) = source {
             params.push(("source_lang", Self::to_deepl_lang(src)));
@@ -241,7 +244,9 @@ impl TranslationProvider for DeepLTranslator {
         // Translate a short test string to validate the API key
         match self.translate("hello", None, "es").await {
             Ok(_) => {
-                let lang_count = self.supported_languages().await
+                let lang_count = self
+                    .supported_languages()
+                    .await
                     .map(|l| l.len())
                     .unwrap_or(0);
                 Ok(ConnectionStatus {
