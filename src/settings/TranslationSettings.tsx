@@ -957,7 +957,7 @@ function ProviderCard({
     <button
       onClick={onClick}
       aria-pressed={isSelected}
-      className={`relative flex flex-col items-start rounded-xl border p-3 text-left transition-all duration-150 cursor-pointer ${
+      className={`relative flex min-h-[90px] flex-col items-start rounded-xl border p-2.5 text-left transition-all duration-150 cursor-pointer ${
         isSelected
           ? "border-primary bg-primary/10 ring-1 ring-primary/20 shadow-sm"
           : "border-border/40 bg-card/30 hover:border-border/70 hover:bg-accent/60"
@@ -973,19 +973,19 @@ function ProviderCard({
           />
         </div>
       )}
-      <div className="flex w-full items-center gap-1.5 mb-1">
-        <ProviderIcon value={provider.value} isSelected={isSelected} />
-        <span className={`text-xs font-medium ${isSelected ? "text-primary" : "text-foreground"}`}>
-          {provider.label}
-        </span>
-        <span
-          className={`ml-auto inline-flex shrink-0 items-center rounded-full border px-1.5 py-0.5 text-[8px] font-semibold tracking-wide ${BADGE_STYLES[badge.variant]}`}
-        >
-          {badge.text}
-        </span>
+      <div className="mb-1 flex w-full items-start gap-1.5">
+          <ProviderIcon value={provider.value} isSelected={isSelected} />
+          <span className={`min-w-0 text-xs font-medium leading-tight ${isSelected ? "text-primary" : "text-foreground"}`}>
+            {provider.label}
+          </span>
       </div>
-      <span className="text-meta text-muted-foreground/70 leading-tight">
+      <span className="text-meta text-muted-foreground/70 line-clamp-1 leading-tight">
         {provider.description}
+      </span>
+      <span
+        className={`mt-auto inline-flex shrink-0 items-center rounded-full border px-1.5 py-0.5 text-[8px] font-semibold leading-none tracking-wide ${BADGE_STYLES[badge.variant]}`}
+      >
+        {badge.text}
       </span>
     </button>
   );

@@ -9,19 +9,31 @@ import {
   Activity,
   FileSearch,
 } from "lucide-react";
+import { t } from "../i18n";
 
 // -- Filter options ----------------------------------------------------------
 
-const FILTER_OPTIONS: Array<{ label: string; value: LogFilterKind }> = [
-  { label: "All", value: "all" },
-  { label: "Assist", value: "Assist" },
-  { label: "Say", value: "WhatToSay" },
-  { label: "Short", value: "Shorten" },
-  { label: "F/U", value: "FollowUp" },
-  { label: "Recap", value: "Recap" },
-  { label: "Ask", value: "AskQuestion" },
-  { label: "Errors", value: "errors" },
+const FILTER_OPTIONS: Array<{ labelKey: keyof typeof FILTER_LABEL_KEYS; value: LogFilterKind }> = [
+  { labelKey: "all", value: "all" },
+  { labelKey: "assist", value: "Assist" },
+  { labelKey: "say", value: "WhatToSay" },
+  { labelKey: "short", value: "Shorten" },
+  { labelKey: "followUp", value: "FollowUp" },
+  { labelKey: "recap", value: "Recap" },
+  { labelKey: "ask", value: "AskQuestion" },
+  { labelKey: "errors", value: "errors" },
 ];
+
+const FILTER_LABEL_KEYS = {
+  all: "calllog.filters.all",
+  assist: "calllog.filters.assist",
+  say: "calllog.filters.say",
+  short: "calllog.filters.short",
+  followUp: "calllog.filters.followUp",
+  recap: "calllog.filters.recap",
+  ask: "calllog.filters.ask",
+  errors: "calllog.filters.errors",
+} as const;
 
 // -- Main sidebar component --------------------------------------------------
 
@@ -129,7 +141,7 @@ export function CallLogSidebar() {
             <div className="flex items-center gap-2">
               <Activity className="h-3.5 w-3.5 text-primary" />
               <span className="text-xs font-semibold text-foreground">
-                AI Call Log
+                {t("calllog.title")}
               </span>
               {entries.length > 0 && (
                 <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-meta font-medium text-primary">
@@ -142,7 +154,7 @@ export function CallLogSidebar() {
                 <button
                   onClick={clearAll}
                   className="rounded p-1 text-muted-foreground/70 transition-colors hover:bg-accent hover:text-destructive"
-                  title="Clear all"
+                  title={t("calllog.clearAll")}
                 >
                   <Trash2 className="h-3 w-3" />
                 </button>
@@ -151,7 +163,7 @@ export function CallLogSidebar() {
                 ref={closeButtonRef}
                 onClick={handleClose}
                 className="rounded p-1 text-muted-foreground/70 transition-colors hover:bg-accent hover:text-foreground"
-                title="Close (Esc)"
+                title={t("calllog.closeEsc")}
               >
                 <X className="h-3.5 w-3.5" />
               </button>
@@ -160,7 +172,7 @@ export function CallLogSidebar() {
 
           {/* Filter chips */}
           <div className="mt-2 flex flex-wrap gap-1">
-            {FILTER_OPTIONS.map(({ label, value }) => {
+            {FILTER_OPTIONS.map(({ labelKey, value }) => {
               const count = filterCounts[value] ?? 0;
               const isActive = activeFilter === value;
               return (
@@ -173,7 +185,7 @@ export function CallLogSidebar() {
                       : "bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground"
                   }`}
                 >
-                  {label}
+                  {t(FILTER_LABEL_KEYS[labelKey])}
                   {count > 0 && (
                     <span
                       className={
@@ -194,10 +206,10 @@ export function CallLogSidebar() {
         {/* Performance mini-dashboard */}
         {stats.total > 0 && (
           <div className="flex items-center justify-between border-b border-border/20 bg-secondary/20 px-3 py-1.5">
-            <StatTile label="Calls" value={`${stats.total}`} />
-            <StatTile label="Avg" value={`${stats.avgLatency}ms`} />
+            <StatTile label={t("calllog.stats.calls")} value={`${stats.total}`} />
+            <StatTile label={t("calllog.stats.avg")} value={`${stats.avgLatency}ms`} />
             <StatTile
-              label="Tokens"
+              label={t("calllog.stats.tokens")}
               value={
                 stats.totalTokens > 999
                   ? `${(stats.totalTokens / 1000).toFixed(1)}k`
@@ -206,7 +218,7 @@ export function CallLogSidebar() {
             />
             {stats.errorCount > 0 && (
               <StatTile
-                label="Errors"
+                label={t("calllog.stats.errors")}
                 value={`${stats.errorCount}`}
                 valueClass="text-destructive"
               />
@@ -221,8 +233,8 @@ export function CallLogSidebar() {
               <FileSearch className="h-6 w-6" />
               <span className="text-xs">
                 {entries.length === 0
-                  ? "No AI calls yet"
-                  : "No calls match filter"}
+                  ? t("calllog.empty.noCalls")
+                  : t("calllog.empty.noMatches")}
               </span>
             </div>
           ) : (

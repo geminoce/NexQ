@@ -25,6 +25,7 @@ import type { AppView } from "./lib/types";
 import { useDemoShortcut } from "./demo/useDemoShortcut";
 import { DemoPicker } from "./demo/DemoPicker";
 import { DemoBadge } from "./demo/DemoBadge";
+import { t } from "./i18n";
 
 function App() {
   const currentView = useMeetingStore((s) => s.currentView);
@@ -216,7 +217,7 @@ function App() {
           <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
             <div className="h-3 w-3 rounded-full bg-primary/40 animate-pulse" />
           </div>
-          <div className="text-sm text-muted-foreground">Starting NexQ...</div>
+          <div className="text-sm text-muted-foreground">{t("errors.startingApp")}</div>
         </div>
       </div>
     );
@@ -227,14 +228,14 @@ function App() {
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-background text-foreground">
-      <ErrorBoundary fallbackMessage="NexQ encountered an error">
+      <ErrorBoundary fallbackMessage={t("errors.appCrashed")}>
         {resolvedView === "launcher" && (
-          <ErrorBoundary fallbackMessage="Failed to load launcher">
+          <ErrorBoundary fallbackMessage={t("errors.launcherLoadFailed")}>
             <LauncherView />
           </ErrorBoundary>
         )}
         {resolvedView === "overlay" && (
-          <ErrorBoundary fallbackMessage="Failed to load overlay">
+          <ErrorBoundary fallbackMessage={t("errors.overlayLoadFailed")}>
             <div className="flex h-full">
               <div className="flex-1 min-w-0 overflow-hidden">
                 <OverlayView />
@@ -244,12 +245,12 @@ function App() {
           </ErrorBoundary>
         )}
         {resolvedView === "wizard" && (
-          <ErrorBoundary fallbackMessage="Failed to load setup wizard">
+          <ErrorBoundary fallbackMessage={t("errors.wizardLoadFailed")}>
             <FirstRunWizard />
           </ErrorBoundary>
         )}
         {resolvedView === "settings" && (
-          <ErrorBoundary fallbackMessage="Failed to load settings">
+          <ErrorBoundary fallbackMessage={t("errors.settingsLoadFailed")}>
             <SettingsOverlay />
           </ErrorBoundary>
         )}

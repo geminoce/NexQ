@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useContextStore } from "../stores/contextStore";
+import { t } from "../i18n";
 
 export function CustomInstructions() {
   const customInstructions = useContextStore((s) => s.customInstructions);
@@ -48,17 +49,17 @@ export function CustomInstructions() {
     <div className="w-full">
       <div className="mb-2 flex items-center justify-between">
         <label className="text-xs font-semibold text-muted-foreground">
-          Custom Instructions
+          {t("context.customInstructions.title")}
         </label>
         <div className="flex items-center gap-3 text-meta text-muted-foreground/70">
-          <span>{charCount} chars</span>
-          <span>~{tokenCount} tokens</span>
+          <span>{t("context.customInstructions.chars", { count: charCount })}</span>
+          <span>{t("context.customInstructions.tokens", { count: tokenCount })}</span>
         </div>
       </div>
       <textarea
         value={localText}
         onChange={(e) => handleChange(e.target.value)}
-        placeholder="Add custom instructions for AI responses..."
+        placeholder={t("context.customInstructions.placeholder")}
         rows={3}
         maxLength={5000}
         className="w-full resize-none rounded-xl border border-border/40 bg-secondary/20 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 transition-colors focus:border-primary/40 focus:bg-secondary/40 focus:outline-none focus:ring-1 focus:ring-primary/20"

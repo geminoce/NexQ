@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Bookmark, BookmarkX, MessageSquarePlus, Copy } from "lucide-react";
+import { t } from "../i18n";
 
 interface TranscriptContextMenuProps {
   x: number;
@@ -49,17 +50,17 @@ export function TranscriptContextMenu({
   const items = [
     {
       icon: isBookmarked ? <BookmarkX className="h-3.5 w-3.5" /> : <Bookmark className="h-3.5 w-3.5" />,
-      label: isBookmarked ? "Remove Bookmark" : "Bookmark",
+      label: isBookmarked ? t("overlay.contextMenu.removeBookmark") : t("overlay.contextMenu.bookmark"),
       onClick: () => { onBookmark(); onClose(); },
     },
     {
       icon: <MessageSquarePlus className="h-3.5 w-3.5" />,
-      label: "Add Note",
+      label: t("overlay.contextMenu.addNote"),
       onClick: () => { onAddNote(); onClose(); },
     },
     {
       icon: <Copy className="h-3.5 w-3.5" />,
-      label: "Copy Text",
+      label: t("overlay.contextMenu.copyText"),
       onClick: () => { onCopy(); onClose(); },
     },
   ];

@@ -13,6 +13,7 @@ import {
   Volume2,
 } from "lucide-react";
 import { useCallback } from "react";
+import { t } from "../i18n";
 
 // STT provider short labels for compact display
 const STT_SHORT_LABELS: Record<string, string> = {
@@ -67,9 +68,9 @@ export function StatusBar() {
   const handleEndMeeting = useCallback(async () => {
     try {
       await endMeetingFlow();
-      showToast("Meeting ended", "info");
+      showToast(t("overlay.toasts.ended"), "info");
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Failed to end meeting";
+      const msg = err instanceof Error ? err.message : t("overlay.toasts.endFailed");
       showToast(msg, "error");
     }
   }, [endMeetingFlow]);
@@ -85,7 +86,7 @@ export function StatusBar() {
             label={`${displayProvider}/${displayModel.split("/").pop()?.split(":")[0] || displayModel}`}
             active={isStreaming}
             activeColor="text-info"
-            title={`LLM: ${displayProvider} / ${displayModel}`}
+            title={t("overlay.status.llmTitle", { provider: displayProvider, model: displayModel })}
           />
 
           <span className="text-border/30">|</span>
@@ -93,10 +94,13 @@ export function StatusBar() {
           {/* You STT indicator */}
           <ServiceIndicator
             icon={<Mic className="h-2.5 w-2.5" />}
-            label={`You: ${youSTT}`}
+            label={t("overlay.status.youLabel", { provider: youSTT })}
             active={micActive}
             activeColor="text-speaker-user"
-            title={`Your STT: ${youSTT} ${micActive ? "(receiving audio)" : "(silent)"}`}
+            title={t("overlay.status.yourSttTitle", {
+              provider: youSTT,
+              state: micActive ? t("overlay.status.receivingAudio") : t("overlay.status.silent"),
+            })}
           />
 
           <span className="text-border/30">|</span>
@@ -104,10 +108,13 @@ export function StatusBar() {
           {/* Them STT indicator */}
           <ServiceIndicator
             icon={<Volume2 className="h-2.5 w-2.5" />}
-            label={`Them: ${themSTT}`}
+            label={t("overlay.status.themLabel", { provider: themSTT })}
             active={systemActive}
             activeColor="text-speaker-interviewer"
-            title={`Their STT: ${themSTT} ${systemActive ? "(receiving audio)" : "(silent)"}`}
+            title={t("overlay.status.theirSttTitle", {
+              provider: themSTT,
+              state: systemActive ? t("overlay.status.receivingAudio") : t("overlay.status.silent"),
+            })}
           />
 
           {/* Latency */}
@@ -116,7 +123,7 @@ export function StatusBar() {
               <span className="text-border/30">|</span>
               <span className="tabular-nums">
                 {isStreaming ? (
-                  <span className="animate-pulse text-primary/80">streaming</span>
+                  <span className="animate-pulse text-primary/80">{t("overlay.status.streaming")}</span>
                 ) : (
                   `${latencyMs}ms`
                 )}
@@ -129,26 +136,26 @@ export function StatusBar() {
           <button
             onClick={() => useCallLogStore.getState().toggleOpen()}
             className="rounded-lg p-1.5 transition-colors duration-150 hover:bg-accent hover:text-foreground"
-            title="AI Call Log"
-            aria-label="Toggle AI call log"
+            title={t("overlay.header.aiCallLog")}
+            aria-label={t("overlay.status.toggleAiCallLog")}
           >
             <Activity className="h-3 w-3" />
           </button>
           <button
             onClick={() => setCurrentView("settings")}
             className="rounded-lg p-1.5 transition-colors duration-150 hover:bg-accent hover:text-foreground"
-            title="Settings"
-            aria-label="Open settings"
+            title={t("overlay.header.settings")}
+            aria-label={t("overlay.status.openSettings")}
           >
             <Settings className="h-3 w-3" />
           </button>
           <button
             onClick={handleEndMeeting}
             className="flex items-center gap-1 rounded-lg bg-destructive/10 px-2.5 py-1 font-medium text-destructive/70 transition-all duration-150 hover:bg-destructive/20 hover:text-destructive active:scale-95"
-            aria-label="End meeting"
+            aria-label={t("overlay.header.endMeeting")}
           >
             <Square className="h-2.5 w-2.5 fill-current" aria-hidden="true" />
-            End
+            {t("overlay.header.end")}
           </button>
         </div>
       </div>
@@ -178,7 +185,7 @@ function ServiceIndicator({
       }`}
       title={title}
       role="status"
-      aria-label={`${label}: ${active ? "active" : "inactive"}`}
+      aria-label={`${label}: ${active ? t("overlay.status.active") : t("overlay.status.inactive")}`}
     >
       {/* Activity dot */}
       <span className="relative flex h-1.5 w-1.5 shrink-0" aria-hidden="true">

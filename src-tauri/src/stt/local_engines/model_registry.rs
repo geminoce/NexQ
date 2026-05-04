@@ -285,8 +285,8 @@ static GIGAAM_RUSSIAN_MODELS: &[ModelDefinition] = &[
         size_bytes: 254_000_000, // extracted model files are ~242 MB
         download_url: "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19.tar.bz2",
         sha256: "",
-        accuracy_rating: 5,
-        speed_rating: 4,
+        accuracy_rating: 3,
+        speed_rating: 5,
         is_streaming: false,
         filename: "sherpa-onnx-nemo-transducer-giga-am-v2-russian-2025-04-19",
         is_archive: true,
@@ -295,7 +295,7 @@ static GIGAAM_RUSSIAN_MODELS: &[ModelDefinition] = &[
     ModelDefinition {
         engine: "gigaam_russian",
         model_id: "gigaam-v3-e2e-rnnt-punct",
-        display_name: "GigaAM v3 e2e RNNT (punctuation)",
+        display_name: "GigaAM v3 e2e RNNT (int8, Russian, punctuation)",
         size_bytes: 326_400_000,
         download_url: "",
         sha256: "",

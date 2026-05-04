@@ -470,7 +470,7 @@ export function ContextStrategySettings() {
                         : "border-border/30 bg-background hover:border-border/60 hover:bg-accent/40"
                     }`}
                   >
-                    <span className={`text-xs font-semibold ${isActive ? "text-primary" : "text-foreground"}`}>
+                    <span className={`flex min-h-[32px] items-center justify-center whitespace-nowrap text-xs font-semibold leading-tight ${isActive ? "text-primary" : "text-foreground"}`}>
                       {preset.label}
                     </span>
                     <span className={`rounded-full px-1.5 py-0.5 text-meta font-medium font-mono ${

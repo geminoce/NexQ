@@ -16,6 +16,7 @@ import { addMeetingBookmark, deleteMeetingBookmark, updateMeetingBookmark } from
 import { showToast } from "../../stores/toastStore";
 import { useConfigStore } from "../../stores/configStore";
 import { ColorPickerButton } from "../../components/ColorPickerButton";
+import { t } from "../../i18n";
 
 interface TranscriptViewProps {
   segments: TranscriptSegment[];
@@ -228,7 +229,7 @@ export function TranscriptView({ segments, search, meetingStartTime, recordingOf
         onBookmarksChanged((bookmarks ?? []).filter(b => b.id !== existing.id));
       } catch (err) {
         console.error("[TranscriptView] Delete bookmark failed:", err);
-        showToast("Failed to remove bookmark", "error");
+        showToast(t("launcher.details.transcript.failedRemoveBookmark"), "error");
       }
     } else {
       const newBookmark: MeetingBookmark = {
@@ -242,7 +243,7 @@ export function TranscriptView({ segments, search, meetingStartTime, recordingOf
         onBookmarksChanged([...(bookmarks ?? []), newBookmark]);
       } catch (err) {
         console.error("[TranscriptView] Add bookmark failed:", err);
-        showToast("Failed to add bookmark", "error");
+        showToast(t("launcher.details.transcript.failedAddBookmark"), "error");
       }
     }
   }, [meetingId, bookmarks, bookmarkBySegment, onBookmarksChanged]);
@@ -262,7 +263,7 @@ export function TranscriptView({ segments, search, meetingStartTime, recordingOf
         onBookmarksChanged([...(bookmarks ?? []), bm]);
       } catch (err) {
         console.error("[TranscriptView] Add bookmark for note failed:", err);
-        showToast("Failed to create bookmark", "error");
+        showToast(t("launcher.details.transcript.failedCreateBookmark"), "error");
         return;
       }
     }
@@ -279,14 +280,14 @@ export function TranscriptView({ segments, search, meetingStartTime, recordingOf
       );
     } catch (err) {
       console.error("[TranscriptView] Update bookmark note failed:", err);
-      showToast("Failed to save note", "error");
+      showToast(t("launcher.details.transcript.failedSaveNote"), "error");
     }
     setNoteEdit(null);
   }, [noteEdit, bookmarks, onBookmarksChanged]);
 
   const handleCopyText = useCallback((text: string) => {
     navigator.clipboard.writeText(text);
-    showToast("Copied to clipboard", "success");
+    showToast(t("launcher.details.transcript.copied"), "success");
   }, []);
 
   const handleContextMenu = useCallback((e: React.MouseEvent, segmentIndex: number) => {
@@ -311,7 +312,7 @@ export function TranscriptView({ segments, search, meetingStartTime, recordingOf
     return (
       <div className="flex flex-col items-center justify-center py-20 text-muted-foreground/50">
         <FileText className="mb-3 h-8 w-8" />
-        <p className="text-sm font-medium">No transcript segments</p>
+        <p className="text-sm font-medium">{t("launcher.details.transcript.empty")}</p>
       </div>
     );
   }
@@ -332,18 +333,18 @@ export function TranscriptView({ segments, search, meetingStartTime, recordingOf
               else search.nextMatch();
             }
           }}
-          placeholder="Search transcript..."
+          placeholder={t("launcher.details.transcript.searchPlaceholder")}
           maxLength={200}
-          aria-label="Search transcript"
+          aria-label={t("launcher.details.transcript.searchAria")}
           className="flex-1 bg-transparent text-xs text-foreground/90 placeholder:text-muted-foreground/50 outline-none"
         />
         {search.query && search.totalMatches > 0 && (
           <span className="shrink-0 text-xs tabular-nums font-medium text-muted-foreground/60">
-            {search.currentMatchIndex + 1} of {search.totalMatches}
+            {t("launcher.details.transcript.matchCounter", { current: search.currentMatchIndex + 1, total: search.totalMatches })}
           </span>
         )}
         {search.query && search.totalMatches === 0 && (
-          <span className="shrink-0 text-xs text-red-400/60">No matches</span>
+          <span className="shrink-0 text-xs text-red-400/60">{t("launcher.details.transcript.noMatches")}</span>
         )}
         {search.query && (
           <div className="flex items-center gap-0.5 border-l border-border/20 pl-2">
@@ -473,7 +474,7 @@ export function TranscriptView({ segments, search, meetingStartTime, recordingOf
                     if (isSegTranslating) {
                       return (
                         <div className="mt-1 leading-[1.5]" style={{ fontSize: `${translationFontSize}px` }}>
-                          <span className="text-muted-foreground/40 animate-pulse">Translating...</span>
+                          <span className="text-muted-foreground/40 animate-pulse">{t("launcher.details.transcript.translating")}</span>
                         </div>
                       );
                     }
@@ -495,7 +496,7 @@ export function TranscriptView({ segments, search, meetingStartTime, recordingOf
                             <button
                               onClick={(e) => { e.stopPropagation(); onRetranslateSegment(segment.id!, segment.text); }}
                               className="shrink-0 flex items-center gap-0.5 rounded px-1 py-px text-[9px] font-semibold text-orange-400 hover:bg-orange-500/[0.08] transition-colors cursor-pointer"
-                              title={`Retranslate to ${currentTargetLang?.toUpperCase()}`}
+                              title={t("launcher.details.transcript.retranslateTo", { language: currentTargetLang?.toUpperCase() ?? "" })}
                             >
                               <RefreshCw className="h-2.5 w-2.5" />
                               {currentTargetLang?.toUpperCase()}
@@ -512,7 +513,7 @@ export function TranscriptView({ segments, search, meetingStartTime, recordingOf
                           className="mt-1 flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-semibold text-muted-foreground/50 border border-dashed border-border/20 hover:text-primary/70 hover:border-primary/20 hover:bg-primary/[0.03] opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
                         >
                           <Globe className="h-2.5 w-2.5" />
-                          Translate to {currentTargetLang.toUpperCase()}
+                          {t("launcher.details.transcript.translateTo", { language: currentTargetLang.toUpperCase() })}
                         </button>
                       );
                     }
@@ -539,7 +540,7 @@ export function TranscriptView({ segments, search, meetingStartTime, recordingOf
                     <button
                       onClick={(e) => { e.stopPropagation(); handleToggleBookmark(segment); }}
                       className="rounded p-0.5 hover:bg-accent/50 transition-colors cursor-pointer"
-                      title={isBookmarked ? "Remove bookmark" : "Bookmark this line"}
+                      title={isBookmarked ? t("launcher.details.transcript.removeBookmark") : t("launcher.details.transcript.bookmarkLine")}
                     >
                       <BookmarkIcon className={`h-3 w-3 ${isBookmarked ? "fill-primary text-primary" : "text-muted-foreground/40"}`} />
                     </button>
@@ -568,7 +569,7 @@ export function TranscriptView({ segments, search, meetingStartTime, recordingOf
       <div className="flex items-center gap-3 mx-2 px-3 py-1.5 border-t border-border/10 text-[10px]">
         {/* Left: Typeset controls */}
         <div className="flex items-center gap-1">
-          <span className="font-semibold text-muted-foreground/60">Text</span>
+          <span className="font-semibold text-muted-foreground/60">{t("launcher.details.transcript.text")}</span>
           <button
             onClick={() => setTranscriptFontSize(Math.max(10, transcriptFontSize - 1))}
             className="flex h-5 w-5 items-center justify-center rounded text-[9px] font-bold text-muted-foreground/60 hover:bg-secondary/30 cursor-pointer"
@@ -578,11 +579,11 @@ export function TranscriptView({ segments, search, meetingStartTime, recordingOf
             onClick={() => setTranscriptFontSize(Math.min(20, transcriptFontSize + 1))}
             className="flex h-5 w-5 items-center justify-center rounded text-[13px] font-bold text-muted-foreground/60 hover:bg-secondary/30 cursor-pointer"
           >A</button>
-          <ColorPickerButton value={transcriptTextColor} onChange={setTranscriptTextColor} label="Text color" />
+          <ColorPickerButton value={transcriptTextColor} onChange={setTranscriptTextColor} label={t("launcher.details.transcript.textColor")} />
         </div>
         <div className="h-4 w-px bg-border/10" />
         <div className="flex items-center gap-1">
-          <span className="font-semibold text-muted-foreground/60">Translation</span>
+          <span className="font-semibold text-muted-foreground/60">{t("launcher.details.transcript.translation")}</span>
           <button
             onClick={() => setTranslationFontSize(Math.max(9, translationFontSize - 1))}
             className="flex h-5 w-5 items-center justify-center rounded text-[9px] font-bold text-muted-foreground/60 hover:bg-secondary/30 cursor-pointer"
@@ -592,7 +593,7 @@ export function TranscriptView({ segments, search, meetingStartTime, recordingOf
             onClick={() => setTranslationFontSize(Math.min(18, translationFontSize + 1))}
             className="flex h-5 w-5 items-center justify-center rounded text-[13px] font-bold text-muted-foreground/60 hover:bg-secondary/30 cursor-pointer"
           >A</button>
-          <ColorPickerButton value={translationTextColor} onChange={setTranslationTextColor} label="Translation color" />
+          <ColorPickerButton value={translationTextColor} onChange={setTranslationTextColor} label={t("launcher.details.transcript.translationColor")} />
         </div>
 
         {/* Right: Translation toolbar (coverage, display mode, retranslate, visibility) */}
@@ -622,7 +623,7 @@ export function TranscriptView({ segments, search, meetingStartTime, recordingOf
                       ? "bg-primary/15 text-primary"
                       : "text-muted-foreground hover:bg-secondary/30"
                   }`}
-                >Inline</button>
+                >{t("launcher.details.transcript.inline")}</button>
                 <button
                   onClick={() => onDisplayModeChange("hover")}
                   className={`px-2 py-0.5 font-semibold transition-colors cursor-pointer ${
@@ -630,7 +631,7 @@ export function TranscriptView({ segments, search, meetingStartTime, recordingOf
                       ? "bg-primary/15 text-primary"
                       : "text-muted-foreground hover:bg-secondary/30"
                   }`}
-                >Hover</button>
+                >{t("launcher.details.transcript.hover")}</button>
               </div>
             )}
 
@@ -651,7 +652,7 @@ export function TranscriptView({ segments, search, meetingStartTime, recordingOf
               <button
                 onClick={onToggleTranslationVisibility}
                 className="rounded-md p-1 text-primary/50 hover:bg-primary/10 transition-colors cursor-pointer"
-                title={showTranslations ? "Hide translations" : "Show translations"}
+                title={showTranslations ? t("launcher.details.transcript.hideTranslations") : t("launcher.details.transcript.showTranslations")}
               >
                 {showTranslations ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
               </button>
@@ -670,7 +671,7 @@ export function TranscriptView({ segments, search, meetingStartTime, recordingOf
             className="w-full max-w-sm rounded-xl border border-border/30 bg-card p-4 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-sm font-semibold text-foreground mb-3">Bookmark Note</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-3">{t("launcher.details.transcript.bookmarkNote")}</h3>
             <textarea
               ref={noteInputRef}
               value={noteEdit.note}
@@ -679,25 +680,25 @@ export function TranscriptView({ segments, search, meetingStartTime, recordingOf
                 if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) handleSaveNote();
                 if (e.key === "Escape") setNoteEdit(null);
               }}
-              placeholder="Add a note..."
+              placeholder={t("launcher.details.transcript.addNotePlaceholder")}
               rows={3}
               autoFocus
               className="w-full resize-none rounded-lg border border-border/30 bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20"
             />
             <div className="mt-3 flex items-center justify-between">
-              <span className="text-[10px] text-muted-foreground/40">Ctrl+Enter to save</span>
+              <span className="text-[10px] text-muted-foreground/40">{t("launcher.details.transcript.saveShortcut")}</span>
               <div className="flex gap-2">
                 <button
                   onClick={() => setNoteEdit(null)}
                   className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-secondary transition-colors cursor-pointer"
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button
                   onClick={handleSaveNote}
                   className="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors cursor-pointer"
                 >
-                  Save
+                  {t("launcher.details.transcript.save")}
                 </button>
               </div>
             </div>

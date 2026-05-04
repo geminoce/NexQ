@@ -17,6 +17,7 @@ import {
   Brain,
   Timer,
 } from "lucide-react";
+import { t } from "../../i18n";
 
 interface MeetingHeaderProps {
   meeting: Meeting;
@@ -87,7 +88,7 @@ export function MeetingHeader({
 
   const durationDisplay = meeting.duration_seconds
     ? formatDurationLong(meeting.duration_seconds * 1000)
-    : "In progress";
+    : t("launcher.details.inProgress");
 
   return (
     <div className="border-b border-border/20">
@@ -96,7 +97,7 @@ export function MeetingHeader({
         <button
           onClick={onBack}
           className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground cursor-pointer"
-          aria-label="Go back"
+          aria-label={t("launcher.details.goBackAria")}
         >
           <ArrowLeft className="h-4.5 w-4.5" aria-hidden="true" />
         </button>
@@ -115,10 +116,10 @@ export function MeetingHeader({
                 maxLength={200}
                 className="flex-1 rounded-lg border border-primary/30 bg-background px-3 py-1 text-sm font-semibold text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
               />
-              <button onClick={handleSaveEdit} disabled={isSaving} className="rounded-md p-1.5 text-success hover:bg-success/10 disabled:opacity-50 cursor-pointer" aria-label="Save title">
+              <button onClick={handleSaveEdit} disabled={isSaving} className="rounded-md p-1.5 text-success hover:bg-success/10 disabled:opacity-50 cursor-pointer" aria-label={t("launcher.meetingCard.saveTitle")}>
                 <Check className="h-4 w-4" aria-hidden="true" />
               </button>
-              <button onClick={handleCancelEdit} className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary cursor-pointer" aria-label="Cancel editing">
+              <button onClick={handleCancelEdit} className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary cursor-pointer" aria-label={t("launcher.meetingCard.cancelEditing")}>
                 <X className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
@@ -133,7 +134,7 @@ export function MeetingHeader({
             <span>&middot;</span>
             <span>{durationDisplay}</span>
             <span>&middot;</span>
-            <span>{meeting.transcript.length} segments</span>
+            <span>{t("launcher.details.segments", { count: meeting.transcript.length })}</span>
           </div>
         </div>
 
@@ -141,21 +142,21 @@ export function MeetingHeader({
 
       {/* Row 2: Stats bar */}
       <div className="flex items-center gap-3 px-5 pb-2.5 overflow-x-auto">
-        <Stat icon={<Clock className="h-3.5 w-3.5" />} label="Duration" value={stats.durationDisplay} />
-        <Stat icon={<AlignLeft className="h-3.5 w-3.5" />} label="Words" value={stats.wordCount.toLocaleString()} />
+        <Stat icon={<Clock className="h-3.5 w-3.5" />} label={t("launcher.details.stats.duration")} value={stats.durationDisplay} />
+        <Stat icon={<AlignLeft className="h-3.5 w-3.5" />} label={t("launcher.details.stats.words")} value={stats.wordCount.toLocaleString()} />
         {stats.wordsPerMinute > 0 && (
-          <Stat icon={<Zap className="h-3.5 w-3.5" />} label="Pace" value={`${stats.wordsPerMinute}/min`} />
+          <Stat icon={<Zap className="h-3.5 w-3.5" />} label={t("launcher.details.stats.pace")} value={t("launcher.details.stats.perMinute", { count: stats.wordsPerMinute })} />
         )}
         {stats.speakerBreakdown.map((s) => {
           const Icon = s.speaker === "User" || s.speaker === "Interviewer" ? Mic : Volume2;
-          const label = s.speaker === "User" ? "You" : s.speaker;
+          const label = s.speaker === "User" ? t("launcher.details.stats.you") : s.speaker;
           return <Stat key={s.speaker} icon={<Icon className={`h-3.5 w-3.5 ${s.color}`} />} label={label} value={`${s.percentage}%`} />;
         })}
         {stats.aiCount > 0 && (
           <Stat icon={<Brain className="h-3.5 w-3.5" />} label="AI" value={String(stats.aiCount)} />
         )}
         {stats.avgLatencyMs !== null && (
-          <Stat icon={<Timer className="h-3.5 w-3.5" />} label="Latency" value={`${stats.avgLatencyMs}ms`} />
+          <Stat icon={<Timer className="h-3.5 w-3.5" />} label={t("launcher.details.stats.latency")} value={t("launcher.details.stats.milliseconds", { count: stats.avgLatencyMs })} />
         )}
       </div>
     </div>

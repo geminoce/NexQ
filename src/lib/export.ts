@@ -5,6 +5,7 @@
 import type { Meeting, TranscriptSegment, AIScenario, SpeakerIdentity } from "./types";
 import { formatTimestamp, formatDurationLong, getSpeakerLabel, getModeLabel } from "./utils";
 import { showToast } from "../stores/toastStore";
+import { t } from "../i18n";
 
 /** Strip LLM thinking tags from text (Qwen3, DeepSeek, etc.) */
 function stripThinkTags(text: string): string {
@@ -302,11 +303,11 @@ export async function saveExportFile({ defaultName, extension, filterLabel, cont
     if (!filePath) return false;
     const { writeTextFile } = await import("@tauri-apps/plugin-fs");
     await writeTextFile(filePath, content);
-    showToast("Exported successfully", "success");
+    showToast(t("errors.exportSuccess"), "success");
     return true;
   } catch (err) {
     console.error("[Export] Failed:", err);
-    showToast("Export failed — check disk space", "error");
+    showToast(t("errors.exportFailedDisk"), "error");
     return false;
   }
 }

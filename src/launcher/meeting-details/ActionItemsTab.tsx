@@ -21,6 +21,7 @@ import {
   Download,
   Copy,
 } from "lucide-react";
+import { t } from "../../i18n";
 
 interface ActionItemsTabProps {
   meeting: Meeting;
@@ -99,7 +100,7 @@ function ActionItemRow({
       <button
         onClick={() => onToggle(item.id, !item.completed)}
         className="mt-0.5 shrink-0 text-muted-foreground/50 hover:text-primary transition-colors cursor-pointer"
-        aria-label={item.completed ? "Mark incomplete" : "Mark complete"}
+        aria-label={item.completed ? t("launcher.details.actions.markIncomplete") : t("launcher.details.actions.markComplete")}
       >
         {item.completed ? (
           <CheckSquare className="h-4 w-4 text-success" />
@@ -137,7 +138,7 @@ function ActionItemRow({
             className={`text-sm leading-relaxed text-foreground/80 cursor-default ${
               item.completed ? "line-through text-muted-foreground/50" : ""
             }`}
-            title="Double-click to edit"
+            title={t("launcher.details.actions.doubleClickEdit")}
           >
             {item.text}
           </p>
@@ -149,7 +150,7 @@ function ActionItemRow({
                 type="button"
                 onClick={() => { if (isPlaying) seekToTimestamp(item.timestamp_ms); }}
                 className={`tabular-nums transition-colors ${isPlaying ? "cursor-pointer hover:text-primary" : "cursor-default"}`}
-                title={isPlaying ? "Seek to this moment" : undefined}
+                title={isPlaying ? t("launcher.details.actions.seekToMoment") : undefined}
               >
                 {formatTimestamp(relativeMs)}
               </button>
@@ -174,14 +175,14 @@ function ActionItemRow({
           <button
             onClick={() => { setEditText(item.text); setEditing(true); }}
             className="rounded-md p-1 text-muted-foreground/30 hover:text-foreground/60 hover:bg-secondary/30 transition-colors cursor-pointer"
-            title="Edit"
+            title={t("launcher.details.actions.edit")}
           >
             <Pencil className="h-3 w-3" />
           </button>
           <button
             onClick={() => onDelete(item.id)}
             className="rounded-md p-1 text-muted-foreground/30 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
-            title="Delete"
+            title={t("launcher.details.actions.delete")}
           >
             <Trash2 className="h-3 w-3" />
           </button>
@@ -234,7 +235,7 @@ export function ActionItemsTab({
         const itemsWithMeetingId = updated.map((a) => ({ ...a, meeting_id: meeting.id }));
         await saveMeetingActionItems(meeting.id, JSON.stringify(itemsWithMeetingId));
       } catch {
-        showToast("Failed to save edit", "error");
+        showToast(t("launcher.details.actions.saveFailed"), "error");
       }
     },
     [items, meeting.id, onItemsUpdated]
@@ -249,7 +250,7 @@ export function ActionItemsTab({
         await deleteActionItem(itemId);
       } catch {
         onItemsUpdated(prev);
-        showToast("Failed to delete", "error");
+        showToast(t("launcher.details.actions.deleteFailed"), "error");
       }
     },
     [items, onItemsUpdated]
@@ -303,7 +304,7 @@ export function ActionItemsTab({
         const itemsWithMeetingId = reordered.map((a) => ({ ...a, meeting_id: meeting.id }));
         await saveMeetingActionItems(meeting.id, JSON.stringify(itemsWithMeetingId));
       } catch {
-        showToast("Failed to reorder", "error");
+        showToast(t("launcher.details.actions.reorderFailed"), "error");
       }
     },
     [items, meeting.id, onItemsUpdated]
@@ -322,14 +323,14 @@ export function ActionItemsTab({
     );
     const text = `# Action Items — ${meeting.title}\n\n${lines.join("\n")}`;
     navigator.clipboard.writeText(text);
-    showToast("Action items copied to clipboard", "success");
+    showToast(t("launcher.details.actions.copied"), "success");
   }, [items, meeting.title]);
 
   // Re-extract
   const handleReextract = useCallback(() => {
     if (items.length > 0) {
       const confirmed = window.confirm(
-        `This will replace ${items.length} existing action items. Continue?`
+        t("launcher.details.actions.replaceConfirm", { count: items.length })
       );
       if (!confirmed) return;
     }
@@ -342,11 +343,11 @@ export function ActionItemsTab({
       <div className="flex flex-col items-center justify-center py-16">
         <div className="rounded-xl border border-primary/20 bg-card/30 px-8 py-6 text-center">
           <Loader2 className="mx-auto mb-3 h-6 w-6 animate-spin text-primary" />
-          <p className="mb-1 text-sm font-medium text-foreground/70">Analyzing transcript...</p>
-          <p className="mb-4 text-[11px] text-muted-foreground/40">Extracting action items, assignments, and follow-ups</p>
+          <p className="mb-1 text-sm font-medium text-foreground/70">{t("launcher.details.actions.analyzing")}</p>
+          <p className="mb-4 text-[11px] text-muted-foreground/40">{t("launcher.details.actions.extractingDescription")}</p>
           <button onClick={extraction.cancel} className="flex items-center gap-1.5 mx-auto rounded-lg px-3 py-1.5 text-xs text-muted-foreground/50 hover:bg-secondary hover:text-foreground transition-colors cursor-pointer">
             <X className="h-3.5 w-3.5" />
-            Cancel
+            {t("common.cancel")}
           </button>
         </div>
       </div>
@@ -361,7 +362,7 @@ export function ActionItemsTab({
           {extraction.error}
         </div>
         <button onClick={() => extraction.extract()} className="rounded-xl bg-primary/10 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/20 cursor-pointer">
-          Try Again
+          {t("launcher.details.actions.tryAgain")}
         </button>
       </div>
     );
@@ -374,25 +375,25 @@ export function ActionItemsTab({
         {/* Header bar */}
         <div className="mb-2 flex items-center justify-between px-1">
           <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/40">
-            {completedCount} of {items.length} completed
+            {t("launcher.details.actions.completed", { completed: completedCount, total: items.length })}
           </span>
           <div className="flex items-center gap-1">
             <button
               onClick={handleExport}
               className="flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] text-muted-foreground/40 hover:bg-secondary hover:text-foreground transition-colors cursor-pointer"
-              title="Copy action items to clipboard"
+              title={t("launcher.details.actions.copyTitle")}
             >
               <Copy className="h-3 w-3" />
-              Copy
+              {t("launcher.details.actions.copy")}
             </button>
             <button
               onClick={handleReextract}
               disabled={isOtherStreaming || extraction.isExtracting}
               className="flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] text-muted-foreground/40 hover:bg-secondary hover:text-foreground transition-colors disabled:opacity-30 cursor-pointer"
-              title="Re-extract action items"
+              title={t("launcher.details.actions.reextractTitle")}
             >
               <RefreshCw className="h-3 w-3" />
-              Re-extract
+              {t("launcher.details.actions.reextract")}
             </button>
           </div>
         </div>
@@ -439,18 +440,18 @@ export function ActionItemsTab({
   return (
     <div className="flex flex-col items-center justify-center py-16">
       <Sparkles className="mb-4 h-8 w-8 text-primary/20" />
-      <p className="mb-1 text-sm font-semibold text-muted-foreground/50">Extract Action Items</p>
+      <p className="mb-1 text-sm font-semibold text-muted-foreground/50">{t("launcher.details.actions.emptyTitle")}</p>
       <p className="mb-5 max-w-xs text-center text-xs text-muted-foreground/40">
-        AI will analyze the full transcript to find action items, assignments, and follow-ups
+        {t("launcher.details.actions.emptyDescription")}
       </p>
       <button
         onClick={() => extraction.extract()}
         disabled={!hasTranscript || !hasLlm || isOtherStreaming}
         className="flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/10 transition-all duration-200 hover:shadow-lg hover:shadow-primary/20 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-        title={!hasTranscript ? "No transcript" : !hasLlm ? "Configure LLM" : isOtherStreaming ? "Wait for AI" : "Extract action items"}
+        title={!hasTranscript ? t("launcher.details.actions.noTranscript") : !hasLlm ? t("launcher.details.actions.configureLlm") : isOtherStreaming ? t("launcher.details.actions.waitForAi") : t("launcher.details.actions.extractTitle")}
       >
         <Sparkles className="h-4 w-4" />
-        Extract Action Items
+        {t("launcher.details.actions.emptyTitle")}
       </button>
     </div>
   );

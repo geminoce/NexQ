@@ -109,6 +109,9 @@ function formatBudgetSegmentLabel(label: string): string {
   if (/^Notes \(PDF\)/i.test(label)) {
     return label.replace(/^Notes \(PDF\)/i, t("context.tokenBudget.labels.notesPdf"));
   }
+  if (/^Notes\b/i.test(label)) {
+    return label.replace(/^Notes\b/i, t("context.tokenBudget.labels.notes"));
+  }
   if (/^Custom Instructions/i.test(label)) {
     return label.replace(/^Custom Instructions/i, t("context.tokenBudget.labels.customInstructions"));
   }

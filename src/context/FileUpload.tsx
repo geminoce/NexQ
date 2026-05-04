@@ -73,7 +73,7 @@ export function FileUpload() {
         multiple: true,
         filters: [
           {
-            name: "Context Files",
+            name: t("context.fileUpload.contextFiles"),
             extensions: ["pdf", "txt", "md", "docx"],
           },
         ],

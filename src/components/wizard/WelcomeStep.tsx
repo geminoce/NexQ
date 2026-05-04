@@ -179,7 +179,7 @@ export function WelcomeStep({ onDetectionComplete }: WelcomeStepProps) {
         {/* Ollama detection */}
         <DetectionRow
           icon={<Server className="h-4 w-4" />}
-          label="Ollama (Local LLM)"
+          label={t("wizard.welcome.ollamaLocal")}
           status={
             phaseIndex < 2
               ? "pending"
@@ -200,7 +200,7 @@ export function WelcomeStep({ onDetectionComplete }: WelcomeStepProps) {
         {/* LM Studio detection */}
         <DetectionRow
           icon={<Server className="h-4 w-4" />}
-          label="LM Studio (Local LLM)"
+          label={t("wizard.welcome.lmStudioLocal")}
           status={
             phaseIndex < 3
               ? "pending"

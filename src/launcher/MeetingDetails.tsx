@@ -11,6 +11,7 @@ import {
   getSpeakerColor,
   getModeLabel,
 } from "../lib/utils";
+import { t } from "../i18n";
 import {
   ArrowLeft,
   FileText,
@@ -44,7 +45,7 @@ export function MeetingDetails({ meetingId, onBack }: MeetingDetailsProps) {
       const data = await getMeeting(meetingId);
       setMeeting(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load meeting");
+      setError(err instanceof Error ? err.message : t("launcher.details.loadFailed"));
     } finally {
       setLoading(false);
     }
@@ -75,7 +76,7 @@ export function MeetingDetails({ meetingId, onBack }: MeetingDetailsProps) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-3">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
-        <p className="text-sm text-muted-foreground">Loading meeting...</p>
+        <p className="text-sm text-muted-foreground">{t("launcher.details.loading")}</p>
       </div>
     );
   }
@@ -83,12 +84,12 @@ export function MeetingDetails({ meetingId, onBack }: MeetingDetailsProps) {
   if (error || !meeting) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-3">
-        <p className="text-sm text-destructive">{error || "Meeting not found"}</p>
+        <p className="text-sm text-destructive">{error || t("launcher.details.notFound")}</p>
         <button
           onClick={onBack}
           className="text-sm text-primary hover:underline"
         >
-          Go back
+          {t("launcher.details.goBack")}
         </button>
       </div>
     );
@@ -96,7 +97,7 @@ export function MeetingDetails({ meetingId, onBack }: MeetingDetailsProps) {
 
   const durationDisplay = meeting.duration_seconds
     ? formatDurationLong(meeting.duration_seconds * 1000)
-    : "In progress";
+    : t("launcher.details.inProgress");
 
   return (
     <div className="flex h-full flex-col">
@@ -105,7 +106,7 @@ export function MeetingDetails({ meetingId, onBack }: MeetingDetailsProps) {
         <button
           onClick={onBack}
           className="rounded-xl p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-          aria-label="Go back"
+          aria-label={t("launcher.details.goBackAria")}
         >
           <ArrowLeft className="h-5 w-5" aria-hidden="true" />
         </button>
@@ -118,7 +119,7 @@ export function MeetingDetails({ meetingId, onBack }: MeetingDetailsProps) {
             <span className="text-muted-foreground/60">&middot;</span>
             <span>{durationDisplay}</span>
             <span className="text-muted-foreground/60">&middot;</span>
-            <span>{meeting.transcript.length} segments</span>
+            <span>{t("launcher.details.segments", { count: meeting.transcript.length })}</span>
           </div>
         </div>
       </div>
@@ -129,21 +130,21 @@ export function MeetingDetails({ meetingId, onBack }: MeetingDetailsProps) {
           active={activeTab === "transcript"}
           onClick={() => setActiveTab("transcript")}
           icon={<FileText className="h-3.5 w-3.5" />}
-          label="Transcript"
+          label={t("launcher.details.tabs.transcript")}
           count={meeting.transcript.length}
         />
         <TabButton
           active={activeTab === "ai"}
           onClick={() => setActiveTab("ai")}
           icon={<MessageSquare className="h-3.5 w-3.5" />}
-          label="AI Log"
+          label={t("launcher.details.tabs.aiLog")}
           count={meeting.ai_interactions.length}
         />
         <TabButton
           active={activeTab === "summary"}
           onClick={() => setActiveTab("summary")}
           icon={<Sparkles className="h-3.5 w-3.5" />}
-          label="Summary"
+          label={t("launcher.details.tabs.summary")}
         />
       </div>
 
@@ -213,7 +214,7 @@ function TranscriptView({ segments }: { segments: TranscriptSegment[] }) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-muted-foreground/60">
         <FileText className="mb-4 h-7 w-7" />
-        <p className="text-sm font-medium">No transcript segments</p>
+        <p className="text-sm font-medium">{t("launcher.details.transcript.empty")}</p>
       </div>
     );
   }
@@ -252,7 +253,7 @@ function AIInteractionLog({
     return (
       <div className="flex flex-col items-center justify-center py-20 text-muted-foreground/60">
         <MessageSquare className="mb-4 h-7 w-7" />
-        <p className="text-sm font-medium">No AI interactions recorded</p>
+        <p className="text-sm font-medium">{t("launcher.details.aiLog.emptyRecorded")}</p>
       </div>
     );
   }
@@ -316,9 +317,9 @@ function SummaryView({ summary }: { summary: string | null }) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-muted-foreground/60">
         <Sparkles className="mb-4 h-7 w-7" />
-        <p className="text-sm font-medium">No summary available</p>
+        <p className="text-sm font-medium">{t("launcher.details.summary.emptyTitle")}</p>
         <p className="mt-1.5 text-xs text-muted-foreground/60">
-          Summaries are generated when meetings end
+          {t("launcher.details.summary.emptyDescription")}
         </p>
       </div>
     );

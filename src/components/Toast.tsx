@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useToastStore } from "../stores/toastStore";
 import type { Toast as ToastData } from "../stores/toastStore";
 import { CheckCircle, XCircle, Info, X } from "lucide-react";
+import { t } from "../i18n";
 
 const iconMap = {
   success: CheckCircle,
@@ -87,7 +88,7 @@ function ToastItem({ toast, onDismiss }: { toast: ToastData; onDismiss: () => vo
       <button
         onClick={handleDismiss}
         className="shrink-0 rounded-lg p-1 text-muted-foreground/30 transition-all duration-150 hover:bg-accent hover:text-foreground/70 group-hover:text-muted-foreground/60"
-        aria-label="Dismiss notification"
+        aria-label={t("toast.dismissNotification")}
       >
         <X className="h-3.5 w-3.5" />
       </button>
@@ -113,7 +114,7 @@ export function ToastContainer() {
   return (
     <div
       className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2.5"
-      aria-label="Notifications"
+      aria-label={t("toast.notifications")}
     >
       {toasts.map((toast) => (
         <ToastItem

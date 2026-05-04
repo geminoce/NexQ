@@ -363,23 +363,25 @@ export function MeetingAudioSettings() {
     <div className="flex flex-col gap-4">
 
       {/* ── Quick Presets ── */}
-      <div className="flex items-center gap-2 rounded-xl border border-border/20 bg-card/40 px-4 py-2.5">
-        <span className="mr-1 shrink-0 text-meta font-semibold uppercase tracking-wider text-muted-foreground/60">
+      <div className="grid grid-cols-[auto_1fr] items-center gap-3 rounded-xl border border-border/20 bg-card/40 px-4 py-3">
+        <span className="shrink-0 text-meta font-semibold uppercase tracking-wider text-muted-foreground/60">
           {t("settings.meetingAudio.presets")}
         </span>
-        {BUILT_IN_PRESETS.map((preset) => (
-          <button
-            key={preset.name}
-            onClick={() => handlePresetSelect(preset)}
-            className={`cursor-pointer rounded-lg border px-3 py-1 text-xs font-medium transition-all duration-150 active:scale-95 ${
-              config.preset_name === preset.name
-                ? "border-primary/50 bg-primary/10 text-primary shadow-sm shadow-primary/10"
-                : "border-border/30 text-muted-foreground/70 hover:border-border/60 hover:bg-accent/40 hover:text-foreground"
-            }`}
-          >
-            {getPresetLabel(preset.name)}
-          </button>
-        ))}
+        <div className="grid grid-cols-3 gap-2">
+          {BUILT_IN_PRESETS.map((preset) => (
+            <button
+              key={preset.name}
+              onClick={() => handlePresetSelect(preset)}
+              className={`min-h-[34px] cursor-pointer rounded-lg border px-2.5 py-1 text-center text-xs font-medium leading-tight transition-all duration-150 active:scale-95 ${
+                config.preset_name === preset.name
+                  ? "border-primary/50 bg-primary/10 text-primary shadow-sm shadow-primary/10"
+                  : "border-border/30 text-muted-foreground/70 hover:border-border/60 hover:bg-accent/40 hover:text-foreground"
+              }`}
+            >
+              {getPresetLabel(preset.name)}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* ── Main two-panel: YOU | THEM ── */}

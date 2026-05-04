@@ -42,7 +42,7 @@ const PROVIDER_DISPLAY: Record<
   groq: { label: "Groq", description: t("settings.llm.providers.descriptions.groq"), requiresKey: true, isLocal: false },
   gemini: { label: "Google Gemini", description: t("settings.llm.providers.descriptions.gemini"), requiresKey: true, isLocal: false },
   openrouter: { label: "OpenRouter", description: t("settings.llm.providers.descriptions.openrouter"), requiresKey: true, isLocal: false },
-  custom: { label: "Custom", description: t("settings.llm.providers.descriptions.custom"), requiresKey: false, isLocal: false },
+  custom: { label: t("settings.llm.custom.providerLabel"), description: t("settings.llm.providers.descriptions.custom"), requiresKey: false, isLocal: false },
 };
 
 const ALL_PROVIDERS: LLMProviderType[] = [
@@ -309,7 +309,7 @@ export function LLMSettings() {
       {/* Provider Selection */}
       <div className="rounded-xl border border-border/30 bg-card/50 p-5">
         <h3 className="mb-3 text-sm font-semibold text-primary/80">{t("settings.llm.providers.title")}</h3>
-        <div className="grid grid-cols-4 gap-2.5">
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
           {ALL_PROVIDERS.map((pType) => {
             const display = PROVIDER_DISPLAY[pType];
             const isSelected = selectedProvider === pType;
@@ -320,38 +320,34 @@ export function LLMSettings() {
                 key={pType}
                 onClick={() => handleProviderChange(pType)}
                 aria-pressed={isSelected}
-                className={`relative flex flex-col items-start rounded-xl border p-3 text-left transition-all duration-150 cursor-pointer ${
+                className={`relative min-h-[86px] rounded-xl border p-3 pr-24 text-left transition-all duration-150 cursor-pointer ${
                   isSelected
                     ? "border-primary bg-primary/5 ring-1 ring-primary/20"
                     : "border-border/50 hover:border-border hover:bg-accent/50"
                 }`}
               >
-                {/* Status badge */}
-                <div className="absolute -top-1 -right-1">
-                  <div
-                    className={`h-2.5 w-2.5 rounded-full ring-2 ring-card ${
-                      isActive && badge.variant === "ready" ? DOT_STYLES["ready"] : DOT_STYLES[badge.variant]
-                    }`}
-                    title={isActive ? t("settings.llm.badges.activeTitle", { status: badge.text }) : badge.text}
-                    aria-hidden="true"
-                  />
-                </div>
-                <div className="flex w-full items-center gap-1.5">
-                  {display.isLocal ? (
-                    <Server className="h-3.5 w-3.5 text-muted-foreground" />
-                  ) : pType === "custom" ? (
-                    <Settings2 className="h-3.5 w-3.5 text-muted-foreground" />
-                  ) : (
-                    <Cloud className="h-3.5 w-3.5 text-muted-foreground" />
-                  )}
-                  <span className="text-xs font-medium truncate">{display.label}</span>
-                </div>
-                <span className="mt-0.5 text-meta text-muted-foreground line-clamp-1">
-                  {display.description}
-                </span>
-                {/* Badge label */}
-                <span className={`mt-1.5 inline-flex items-center rounded-full border px-1.5 py-0.5 text-meta font-medium ${BADGE_STYLES[badge.variant]}`}>
+                <div
+                  className={`absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full ring-2 ring-card ${
+                    isActive && badge.variant === "ready" ? DOT_STYLES["ready"] : DOT_STYLES[badge.variant]
+                  }`}
+                  title={isActive ? t("settings.llm.badges.activeTitle", { status: badge.text }) : badge.text}
+                  aria-hidden="true"
+                />
+                <span className={`absolute right-2.5 top-7 inline-flex items-center rounded-full border px-1.5 py-0.5 text-meta font-medium ${BADGE_STYLES[badge.variant]}`}>
                   {badge.text}
+                </span>
+                <div className="flex w-full items-start gap-1.5">
+                  {display.isLocal ? (
+                    <Server className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  ) : pType === "custom" ? (
+                    <Settings2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  ) : (
+                    <Cloud className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  )}
+                  <span className="min-w-0 text-xs font-medium leading-snug">{display.label}</span>
+                </div>
+                <span className="mt-1 block text-meta text-muted-foreground leading-tight">
+                  {display.description}
                 </span>
               </button>
             );

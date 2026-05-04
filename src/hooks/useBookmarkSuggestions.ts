@@ -8,6 +8,7 @@ import {
 } from "../lib/events";
 import { addMeetingBookmark } from "../lib/ipc";
 import type { Meeting, MeetingBookmark } from "../lib/types";
+import { t } from "../i18n";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -303,7 +304,7 @@ export function useBookmarkSuggestions(
           try {
             const items = parseSuggestionsJSON(contentRef.current, allSegments);
             if (items.length === 0) {
-              setError("info:No notable moments found in this meeting. You can add bookmarks manually from the Transcript tab.");
+              setError(t("launcher.details.bookmarks.noNotableMoments"));
             } else {
               setSuggestions(items);
             }
@@ -312,9 +313,9 @@ export function useBookmarkSuggestions(
             const msg = err instanceof Error ? err.message : String(err);
             if (msg.includes("No JSON array found")) {
               // LLM returned prose instead of JSON — meeting too short or nothing to bookmark
-              setError("info:This meeting doesn't have enough content to suggest bookmarks. You can add bookmarks manually from the Transcript tab.");
+              setError(t("launcher.details.bookmarks.notEnoughContent"));
             } else {
-              setError("Couldn't parse bookmark suggestions. Try again.");
+              setError(t("launcher.details.bookmarks.parseFailed"));
             }
           }
         }

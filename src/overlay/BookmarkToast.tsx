@@ -6,6 +6,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Bookmark, X } from "lucide-react";
 import { useBookmarkStore } from "../stores/bookmarkStore";
 import { formatDuration } from "../lib/utils";
+import { t } from "../i18n";
 
 // -- Custom event helper: dispatch from anywhere to show the toast ---------------
 
@@ -150,8 +151,7 @@ export function BookmarkToast() {
 
             {/* Label */}
             <span className="flex-1 text-sm font-medium text-foreground">
-              Bookmarked{" "}
-              <span className="tabular-nums text-muted-foreground">{timeLabel}</span>
+              {t("overlay.bookmarks.bookmarkedAt", { time: timeLabel })}
             </span>
 
             {/* + Note button (only when note input is hidden) */}
@@ -160,7 +160,7 @@ export function BookmarkToast() {
                 onClick={() => setShowNoteInput(true)}
                 className="shrink-0 rounded-md px-2 py-0.5 text-xs font-medium text-emerald-500 transition-colors hover:bg-emerald-500/10"
               >
-                + Note
+                {t("overlay.bookmarks.addNote")}
               </button>
             )}
 
@@ -168,7 +168,7 @@ export function BookmarkToast() {
             <button
               onClick={dismiss}
               className="shrink-0 rounded-md p-0.5 text-muted-foreground/60 transition-colors hover:bg-accent hover:text-foreground"
-              aria-label="Dismiss"
+              aria-label={t("common.dismiss")}
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -193,14 +193,14 @@ export function BookmarkToast() {
                     dismiss();
                   }
                 }}
-                placeholder="Add a note..."
+                placeholder={t("overlay.bookmarks.addNoteToastPlaceholder")}
                 className="flex-1 rounded-md border border-border/60 bg-background px-2 py-1 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20"
               />
               <button
                 onClick={saveNote}
                 className="shrink-0 rounded-md bg-emerald-500/15 px-2.5 py-1 text-xs font-medium text-emerald-500 transition-colors hover:bg-emerald-500/25"
               >
-                Save
+                {t("common.save")}
               </button>
             </div>
           )}

@@ -10,6 +10,7 @@ import { saveMeetingActionItems } from "../lib/ipc";
 import { useMeetingStore } from "../stores/meetingStore";
 import { showToast } from "../stores/toastStore";
 import type { Meeting, ActionItem } from "../lib/types";
+import { t } from "../i18n";
 
 // ---------------------------------------------------------------------------
 // Defensive JSON parsing — strips markdown fences, finds the array, and
@@ -146,7 +147,7 @@ export function useActionItemsExtraction(
             const items = parseActionItemsJSON(contentRef.current);
 
             if (items.length === 0) {
-              showToast("No action items found in this meeting", "info");
+              showToast(t("launcher.details.actions.noItemsFound"), "info");
             } else {
               // Persist to DB — Rust struct requires meeting_id on each item
               const itemsWithMeetingId = items.map((item) => ({
@@ -159,7 +160,10 @@ export function useActionItemsExtraction(
               );
 
               onItemsExtracted(items);
-              showToast(`Found ${items.length} action item${items.length !== 1 ? "s" : ""}`, "success");
+              showToast(t("launcher.details.actions.foundItems", {
+                count: items.length,
+                plural: items.length !== 1 ? "s" : "",
+              }), "success");
 
               // Refresh sidebar so counts update
               useMeetingStore.getState().loadRecentMeetings();
@@ -169,9 +173,7 @@ export function useActionItemsExtraction(
               "[actionItemsExtraction] Parse/save failed:",
               err
             );
-            setError(
-              "Couldn't parse action items from AI response. Try again."
-            );
+            setError(t("launcher.details.actions.parseFailed"));
           }
         }
 

@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { showToast } from "../stores/toastStore";
 import type { LogEntry } from "../lib/types";
+import { t } from "../i18n";
 import {
   ChevronDown,
   ChevronRight,
@@ -83,14 +84,14 @@ function TokenBudget({ entry }: { entry: LogEntry }) {
   const total = system + userTotal;
 
   const items = [
-    { label: "System", tokens: system, color: "text-muted-foreground" },
-    { label: "Transcript", tokens: Math.max(0, userTotal - rag), color: "text-success" },
-    { label: "RAG", tokens: rag, color: "text-info" },
+    { label: t("calllog.promptViewer.system"), tokens: system, color: "text-muted-foreground" },
+    { label: t("calllog.promptViewer.transcript"), tokens: Math.max(0, userTotal - rag), color: "text-success" },
+    { label: t("calllog.promptViewer.rag"), tokens: rag, color: "text-info" },
   ].filter((i) => i.tokens > 0);
 
   return (
     <div className="flex items-center flex-wrap gap-x-1.5 gap-y-0.5 px-3 py-1.5 border-b border-border/20 text-meta text-muted-foreground/60">
-      <span className="font-medium">Tokens:</span>
+      <span className="font-medium">{t("calllog.promptViewer.tokens")}</span>
       {items.map((item, i) => (
         <span key={item.label}>
           {i > 0 && <span className="mx-0.5">&middot;</span>}
@@ -127,7 +128,7 @@ function RagChunksSection({ entry }: { entry: LogEntry }) {
   };
 
   const allText = chunks.map((c) =>
-    `[${c.source}, chunk ${c.chunk_index}] (score: ${c.normalized_score.toFixed(2)})\n${c.text}`
+    `[${c.source}, ${t("calllog.promptViewer.chunk")} ${c.chunk_index}] (score: ${c.normalized_score.toFixed(2)})\n${c.text}`
   ).join("\n---\n");
 
   return (
@@ -143,10 +144,10 @@ function RagChunksSection({ entry }: { entry: LogEntry }) {
         )}
         <span className="flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-meta font-medium bg-info/10 text-info border-info/20">
           <Database className="h-2.5 w-2.5" />
-          {hasChunks ? `${chunks.length} chunks` : "0 relevant"}
+          {hasChunks ? t("calllog.promptViewer.chunks", { count: chunks.length }) : t("calllog.promptViewer.zeroRelevant")}
         </span>
         <span className="flex-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
-          RAG CHUNKS
+          {t("calllog.promptViewer.ragChunks")}
         </span>
         <SectionCopyButton text={allText} />
       </button>
@@ -157,7 +158,7 @@ function RagChunksSection({ entry }: { entry: LogEntry }) {
             <div className="flex items-start gap-1.5 rounded-md bg-secondary/20 px-2.5 py-1.5 mb-2">
               <Search className="h-3 w-3 shrink-0 mt-0.5 text-muted-foreground/50" />
               <p className="text-meta text-muted-foreground/60 break-words">
-                <span className="font-medium">Query:</span> {query.length > 200 ? query.slice(0, 200) + "..." : query}
+                <span className="font-medium">{t("calllog.promptViewer.query")}</span> {query.length > 200 ? query.slice(0, 200) + "..." : query}
               </p>
             </div>
           )}
@@ -178,7 +179,7 @@ function RagChunksSection({ entry }: { entry: LogEntry }) {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-meta font-semibold text-info/80">#{idx + 1}</span>
-                      <span className="text-meta text-muted-foreground truncate">{chunk.source} (chunk {chunk.chunk_index})</span>
+                      <span className="text-meta text-muted-foreground truncate">{chunk.source} ({t("calllog.promptViewer.chunk")} {chunk.chunk_index})</span>
                       <span className="text-meta font-mono tabular-nums text-info/70">{chunk.normalized_score.toFixed(2)}</span>
                     </div>
                     {expandedChunks.has(idx) ? (
@@ -195,14 +196,17 @@ function RagChunksSection({ entry }: { entry: LogEntry }) {
               ))}
               {filtered > 0 && (
                 <p className="text-meta text-muted-foreground/50 px-2.5 py-1">
-                  {filtered} chunk{filtered !== 1 ? "s" : ""} filtered (below threshold)
+                  {t("calllog.promptViewer.chunkFiltered", {
+                    count: filtered,
+                    plural: filtered !== 1 ? "s" : "",
+                  })}
                 </p>
               )}
             </>
           ) : (
             <div className="rounded-md bg-secondary/20 px-2.5 py-2 text-meta text-muted-foreground/50">
-              No relevant chunks found
-              {filtered > 0 && <span> &mdash; {filtered} candidates below threshold</span>}
+              {t("calllog.promptViewer.noRelevantChunks")}
+              {filtered > 0 && <span> &mdash; {t("calllog.promptViewer.candidatesBelowThreshold", { count: filtered })}</span>}
             </div>
           )}
         </div>
@@ -230,17 +234,17 @@ function StructuredView({ entry }: { entry: LogEntry }) {
 
       {entry.actualSystemPrompt && (
         <CollapsibleSection
-          title="SYSTEM PROMPT"
+          title={t("calllog.promptViewer.systemPrompt")}
           content={entry.actualSystemPrompt}
           defaultExpanded={false}
-          badge={{ label: "System", color: "gray", icon: Sparkles }}
+          badge={{ label: t("calllog.promptViewer.system"), color: "gray", icon: Sparkles }}
         />
       )}
 
       {nonRagSections.map((section, i) => (
         <CollapsibleSection
           key={i}
-          title={section.title || "USER MESSAGE"}
+          title={section.title || t("calllog.promptViewer.userMessage")}
           content={section.content}
           defaultExpanded={true}
           badge={section.badge}
@@ -252,11 +256,11 @@ function StructuredView({ entry }: { entry: LogEntry }) {
       {(entry.responseContentClean || entry.status === "streaming") && (
         <CollapsibleSection
           title={
-            entry.status === "streaming" ? "RESPONSE (streaming...)" : "RESPONSE"
+            entry.status === "streaming" ? t("calllog.promptViewer.responseStreaming") : t("calllog.promptViewer.response")
           }
           content={entry.responseContentClean}
           defaultExpanded={true}
-          badge={{ label: "Response", color: "emerald", icon: MessageSquare }}
+          badge={{ label: t("calllog.promptViewer.responseTitle"), color: "emerald", icon: MessageSquare }}
           isResponse
         />
       )}
@@ -337,7 +341,7 @@ function CollapsibleSection({
           >
             {content || (
               <span className="italic text-muted-foreground/60">
-                (empty)
+                {t("calllog.promptViewer.empty")}
               </span>
             )}
           </div>
@@ -364,12 +368,12 @@ function RawView({ entry }: { entry: LogEntry }) {
       <div>
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
-            System Message
+            {t("calllog.promptViewer.systemMessage")}
           </span>
           <SectionCopyButton text={entry.actualSystemPrompt} />
         </div>
         <pre className="max-h-60 overflow-y-auto rounded-md bg-secondary/20 p-2.5 font-mono text-xs leading-relaxed text-foreground/80 whitespace-pre-wrap break-words">
-          {entry.actualSystemPrompt || "(empty)"}
+          {entry.actualSystemPrompt || t("calllog.promptViewer.empty")}
         </pre>
       </div>
 
@@ -377,12 +381,12 @@ function RawView({ entry }: { entry: LogEntry }) {
       <div>
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
-            User Message
+            {t("calllog.promptViewer.userMessage")}
           </span>
           <SectionCopyButton text={entry.actualUserPrompt} />
         </div>
         <pre className="max-h-80 overflow-y-auto rounded-md bg-secondary/20 p-2.5 font-mono text-xs leading-relaxed text-foreground/80 whitespace-pre-wrap break-words">
-          {entry.actualUserPrompt || "(empty)"}
+          {entry.actualUserPrompt || t("calllog.promptViewer.empty")}
         </pre>
       </div>
 
@@ -391,10 +395,10 @@ function RawView({ entry }: { entry: LogEntry }) {
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
-              Response
+              {t("calllog.promptViewer.responseTitle")}
               {entry.status === "streaming" && (
                 <span className="ml-1.5 animate-pulse text-primary/60">
-                  streaming...
+                  {t("calllog.promptViewer.streaming")}
                 </span>
               )}
             </span>
@@ -429,7 +433,7 @@ function parseUserPromptSections(text: string): PromptSection[] {
         title: "",
         content,
         type: "instruction",
-        badge: { label: "Instruction", color: "gray", icon: BookOpen },
+        badge: { label: t("calllog.promptViewer.badges.instruction"), color: "gray", icon: BookOpen },
       });
     }
     contentLines = [];
@@ -479,7 +483,7 @@ function parseUserPromptSections(text: string): PromptSection[] {
           title: "",
           content: trailingInstr.join("\n").trim(),
           type: "instruction",
-          badge: { label: "Mode Instruction", color: "gray", icon: BookOpen },
+          badge: { label: t("calllog.promptViewer.badges.modeInstruction"), color: "gray", icon: BookOpen },
         });
       }
     }
@@ -494,7 +498,7 @@ function buildSection(title: string, content: string): PromptSection {
       title,
       content,
       type: "context",
-      badge: { label: "Context", color: "amber", icon: FileText },
+      badge: { label: t("calllog.promptViewer.badges.context"), color: "amber", icon: FileText },
     };
   }
   if (title.includes("Relevant Context") || title.includes("RAG")) {
@@ -504,7 +508,9 @@ function buildSection(title: string, content: string): PromptSection {
       content,
       type: "context",
       badge: {
-        label: chunkCount > 0 ? `${chunkCount} chunks` : "Document Context",
+        label: chunkCount > 0
+          ? t("calllog.promptViewer.chunks", { count: chunkCount })
+          : t("calllog.promptViewer.badges.documentContext"),
         color: "blue",
         icon: FileText,
       },
@@ -519,7 +525,9 @@ function buildSection(title: string, content: string): PromptSection {
       content,
       type: "transcript",
       badge: {
-        label: segCount > 0 ? `${segCount} segments` : "Transcript",
+        label: segCount > 0
+          ? t("calllog.promptViewer.badges.segments", { count: segCount })
+          : t("calllog.promptViewer.transcript"),
         color: "green",
         icon: MessageSquare,
       },
@@ -530,7 +538,7 @@ function buildSection(title: string, content: string): PromptSection {
       title,
       content,
       type: "question",
-      badge: { label: "Question", color: "rose", icon: HelpCircle },
+      badge: { label: t("calllog.sources.question"), color: "rose", icon: HelpCircle },
     };
   }
   if (title.includes("Detected Question")) {
@@ -540,7 +548,9 @@ function buildSection(title: string, content: string): PromptSection {
       content,
       type: "question",
       badge: {
-        label: confMatch ? `${confMatch[1]}% confidence` : "Detected",
+        label: confMatch
+          ? t("calllog.promptViewer.badges.confidence", { percent: confMatch[1] })
+          : t("calllog.promptViewer.badges.detected"),
         color: "rose",
         icon: HelpCircle,
       },
@@ -551,14 +561,14 @@ function buildSection(title: string, content: string): PromptSection {
       title,
       content,
       type: "question",
-      badge: { label: "To Shorten", color: "amber", icon: FileText },
+      badge: { label: t("calllog.promptViewer.badges.toShorten"), color: "amber", icon: FileText },
     };
   }
   return {
     title,
     content,
     type: "instruction",
-    badge: { label: title || "Section", color: "gray", icon: BookOpen },
+    badge: { label: title || t("calllog.promptViewer.badges.section"), color: "gray", icon: BookOpen },
   };
 }
 
@@ -573,7 +583,7 @@ function SectionCopyButton({ text }: { text: string }) {
       navigator.clipboard.writeText(text).then(() => {
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
-      }).catch(() => showToast("Couldn't copy — try selecting the text manually", "error"));
+      }).catch(() => showToast(t("calllog.toasts.copyManualFailed"), "error"));
     },
     [text]
   );
@@ -587,7 +597,7 @@ function SectionCopyButton({ text }: { text: string }) {
       onClick={handleCopy}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleCopy(e as unknown as React.MouseEvent); }}
       className="rounded p-0.5 text-muted-foreground/60 transition-colors hover:text-foreground cursor-pointer"
-      aria-label="Copy section"
+      aria-label={t("calllog.promptViewer.copySection")}
     >
       {copied ? (
         <Check className="h-3 w-3 text-success" />

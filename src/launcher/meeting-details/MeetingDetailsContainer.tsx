@@ -28,6 +28,7 @@ import { ActionItemsTab } from "./ActionItemsTab";
 import { BookmarksTab } from "./BookmarksTab";
 import { AudioPlayer, AudioPlayerSkeleton } from "../../components/AudioPlayer";
 import { Loader2 } from "lucide-react";
+import { t } from "../../i18n";
 
 interface MeetingDetailsProps {
   meetingId: string;
@@ -92,7 +93,7 @@ export function MeetingDetails({ meetingId, onBack }: MeetingDetailsProps) {
       if (demoMeeting) {
         setMeeting(demoMeeting);
       } else {
-        setError("Demo meeting not found");
+        setError(t("launcher.details.demoNotFound"));
       }
       setLoading(false);
       return;
@@ -102,7 +103,7 @@ export function MeetingDetails({ meetingId, onBack }: MeetingDetailsProps) {
       const data = await getMeeting(meetingId);
       setMeeting(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load meeting");
+      setError(err instanceof Error ? err.message : t("launcher.details.loadFailed"));
     } finally {
       setLoading(false);
     }
@@ -331,7 +332,7 @@ export function MeetingDetails({ meetingId, onBack }: MeetingDetailsProps) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-2">
         <Loader2 className="h-5 w-5 animate-spin text-primary" />
-        <p className="text-xs text-muted-foreground">Loading meeting data...</p>
+        <p className="text-xs text-muted-foreground">{t("launcher.details.loadingData")}</p>
       </div>
     );
   }
@@ -339,8 +340,8 @@ export function MeetingDetails({ meetingId, onBack }: MeetingDetailsProps) {
   if (error || !meeting) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-2">
-        <p className="text-xs text-red-400">{error || "Meeting not found"}</p>
-        <button onClick={onBack} className="text-xs text-primary hover:underline cursor-pointer">Go back</button>
+        <p className="text-xs text-red-400">{error || t("launcher.details.notFound")}</p>
+        <button onClick={onBack} className="text-xs text-primary hover:underline cursor-pointer">{t("launcher.details.goBack")}</button>
       </div>
     );
   }

@@ -14,6 +14,7 @@ import { useBookmarkStore } from "../stores/bookmarkStore";
 import { useTranslationStore } from "../stores/translationStore";
 import { TranscriptContextMenu } from "./TranscriptContextMenu";
 import { showBookmarkToast } from "./BookmarkToast";
+import { t } from "../i18n";
 
 // Module-level singleton: ensures only one hover tooltip is visible at a time.
 // When a new line is hovered, it dismisses the previous tooltip first.
@@ -268,7 +269,7 @@ export function TranscriptLine({ segment, searchQuery }: TranscriptLineProps) {
           className={`mt-[3px] shrink-0 text-[0.6875rem] font-semibold tracking-tight ${canRename ? "cursor-pointer hover:underline" : ""} ${isPending ? "animate-pulse" : ""}`}
           style={{ color: speakerHex }}
           onClick={startEditing}
-          title={canRename ? "Click to rename" : undefined}
+          title={canRename ? t("overlay.speakerNaming.clickToRename") : undefined}
         >
           {speakerLabel}
         </span>
@@ -300,7 +301,7 @@ export function TranscriptLine({ segment, searchQuery }: TranscriptLineProps) {
         {displayMode === "inline" && (
           <div className="mt-1 leading-[1.5]" style={{ fontSize: `${translationFontSize}px`, color: translationTextColor }}>
             {isTranslating ? (
-              <span className="text-muted-foreground/40 animate-pulse">Translating...</span>
+              <span className="text-muted-foreground/40 animate-pulse">{t("overlay.header.translating")}</span>
             ) : translation ? (
               translation.translated_text
             ) : null}
@@ -351,7 +352,7 @@ export function TranscriptLine({ segment, searchQuery }: TranscriptLineProps) {
         <button
           onClick={handleToggleBookmark}
           className="rounded p-0.5 hover:bg-accent/50 transition-colors"
-          title={isBookmarked ? "Remove bookmark" : "Bookmark this line"}
+          title={isBookmarked ? t("overlay.bookmarks.removeBookmark") : t("overlay.bookmarks.bookmarkLine")}
         >
           <BookmarkIcon className={`h-3 w-3 ${isBookmarked ? "fill-primary text-primary" : "text-muted-foreground/40"}`} />
         </button>

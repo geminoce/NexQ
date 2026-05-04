@@ -104,7 +104,7 @@ export function MeetingSetupModal({ open, onStart, onCancel }: MeetingSetupModal
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
-      aria-label="Meeting setup"
+      aria-label={t("meetingSetup.subtitle")}
     >
       <div className="w-[420px] rounded-2xl border border-border/40 bg-card shadow-2xl overflow-hidden">
 

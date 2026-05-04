@@ -185,8 +185,9 @@ export function SettingsOverlay({ isModal = false }: SettingsOverlayProps) {
 
   const currentTabLabel = TAB_LABELS[activeTab] ?? t("settings.title");
 
-  // Wider content area for two-column settings pages
-  const contentMaxW = activeTab === "ai_actions" || activeTab === "translation" ? "max-w-4xl" : "max-w-2xl";
+  // Wider content area for card/grid-heavy settings pages.
+  const wideTabs = new Set(["llm", "stt", "translation", "ai_actions", "context_strategy"]);
+  const contentMaxW = wideTabs.has(activeTab) ? "max-w-4xl" : "max-w-3xl";
 
   // ─── Modal mode: render as overlay dialog ───
   if (isModal) {

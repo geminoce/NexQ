@@ -8,6 +8,7 @@ import {
   Clock,
   Loader2,
 } from "lucide-react";
+import { t } from "../i18n";
 
 // -- Mode color coding -------------------------------------------------------
 
@@ -35,11 +36,11 @@ const MODE_COLORS: Record<
 // -- Context source badges ---------------------------------------------------
 
 const SOURCE_BADGES = [
-  { key: "includeTranscript" as const, label: "T", color: "text-success/70 bg-success/10", title: "Transcript" },
-  { key: "includeRag" as const, label: "R", color: "text-info/70 bg-info/10", title: "Document Excerpts" },
-  { key: "includeInstructions" as const, label: "I", color: "text-warning/70 bg-warning/10", title: "Instructions" },
-  { key: "includeQuestion" as const, label: "Q", color: "text-destructive/70 bg-destructive/10", title: "Question" },
-];
+  { key: "includeTranscript" as const, label: "T", color: "text-success/70 bg-success/10", titleKey: "calllog.sources.transcript" },
+  { key: "includeRag" as const, label: "R", color: "text-info/70 bg-info/10", titleKey: "calllog.sources.documentExcerpts" },
+  { key: "includeInstructions" as const, label: "I", color: "text-warning/70 bg-warning/10", titleKey: "calllog.sources.instructions" },
+  { key: "includeQuestion" as const, label: "Q", color: "text-destructive/70 bg-destructive/10", titleKey: "calllog.sources.question" },
+] as const;
 
 // -- Compact entry row -------------------------------------------------------
 
@@ -84,12 +85,12 @@ export function CallLogEntry({ entry, isSelected }: Props) {
 
       {/* Context source badges */}
       <div className="flex items-center gap-px shrink-0">
-        {SOURCE_BADGES.map(({ key, label, color, title }) =>
+        {SOURCE_BADGES.map(({ key, label, color, titleKey }) =>
           entry[key] ? (
             <span
               key={key}
               className={`rounded px-1 py-px text-meta font-bold ${color}`}
-              title={title}
+              title={t(titleKey)}
             >
               {label}
             </span>
@@ -121,7 +122,7 @@ export function CallLogEntry({ entry, isSelected }: Props) {
       {entry.temperature != null && (
         <span
           className="shrink-0 text-meta tabular-nums text-muted-foreground/50"
-          title={`Temperature: ${entry.temperature}`}
+          title={t("calllog.entry.temperature", { value: entry.temperature })}
         >
           {entry.temperature.toFixed(1)}&deg;
         </span>

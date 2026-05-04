@@ -8,6 +8,7 @@ import { save } from "@tauri-apps/plugin-dialog";
 import { useAudioPlayerStore } from "@/stores/audioPlayerStore";
 import { WaveformCanvas } from "@/components/WaveformCanvas";
 import type { WaveformData, MeetingBookmark, TopicSection } from "@/lib/types";
+import { t } from "@/i18n";
 
 // ---------------------------------------------------------------------------
 // Utility helpers
@@ -277,7 +278,7 @@ export function AudioPlayer({
       const ext = recordingPath.endsWith(".ogg") ? "ogg" : "wav";
       const savePath = await save({
         defaultPath: `meeting-recording.${ext}`,
-        filters: [{ name: "Audio", extensions: [ext] }],
+        filters: [{ name: t("audioPlayer.audioFilter"), extensions: [ext] }],
       });
       if (savePath) {
         await copyFile(recordingPath, savePath);
@@ -304,7 +305,7 @@ export function AudioPlayer({
         className="flex-shrink-0 w-[30px] h-[30px] rounded-full flex items-center justify-center
           text-white/70 hover:text-white hover:bg-indigo-500/20 active:bg-indigo-500/30
           transition-colors duration-150 focus:outline-none focus-visible:ring-1 focus-visible:ring-indigo-400"
-        aria-label={isPlaying ? "Pause" : "Play"}
+        aria-label={isPlaying ? t("audioPlayer.pause") : t("audioPlayer.play")}
       >
         {isPlaying ? <PauseIcon /> : <PlayIcon />}
       </button>
@@ -355,8 +356,8 @@ export function AudioPlayer({
           value={Math.round(volume * 100)}
           onChange={(e) => setVolume(Number(e.target.value) / 100)}
           className="w-16 h-1 accent-indigo-400 cursor-pointer opacity-60 hover:opacity-100 transition-opacity"
-          title={`Volume: ${Math.round(volume * 100)}%`}
-          aria-label="Volume"
+          title={t("audioPlayer.volumeValue", { percent: Math.round(volume * 100) })}
+          aria-label={t("audioPlayer.volume")}
         />
         <span className="text-[8px] text-muted-foreground/40 tabular-nums w-[26px]">
           {Math.round(volume * 100)}%
@@ -371,8 +372,8 @@ export function AudioPlayer({
           px-1.5 py-0.5 rounded transition-colors duration-150
           text-muted-foreground hover:text-foreground
           focus:outline-none focus-visible:ring-1 focus-visible:ring-white/20"
-        aria-label="Cycle playback speed"
-        title="Click to increase speed"
+        aria-label={t("audioPlayer.cycleSpeed")}
+        title={t("audioPlayer.increaseSpeed")}
       >
         {playbackSpeed}x
       </button>
@@ -385,8 +386,8 @@ export function AudioPlayer({
           hover:bg-white/[0.06] active:bg-white/[0.1]
           transition-colors duration-150
           focus:outline-none focus-visible:ring-1 focus-visible:ring-white/20"
-        aria-label="Download recording"
-        title="Download recording"
+        aria-label={t("audioPlayer.downloadRecording")}
+        title={t("audioPlayer.downloadRecording")}
       >
         <DownloadIcon />
       </button>

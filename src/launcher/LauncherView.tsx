@@ -266,7 +266,7 @@ export function LauncherView() {
         <button
           onClick={() => setCurrentView("settings")}
           className="rounded-lg p-2 text-muted-foreground/50 transition-all duration-150 hover:bg-secondary hover:text-foreground hover:rotate-45 active:scale-90 cursor-pointer"
-          aria-label="Settings (Ctrl+,)"
+          aria-label={`${t("settings.title")} (Ctrl+,)`}
         >
           <Settings className="h-4 w-4" aria-hidden="true" />
         </button>

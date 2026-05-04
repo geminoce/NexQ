@@ -1,6 +1,7 @@
 import type { AIInteraction } from "../../lib/types";
 import { formatRelativeTime, getModeLabel } from "../../lib/utils";
 import { MessageSquare, ChevronDown, ChevronUp } from "lucide-react";
+import { t } from "../../i18n";
 
 interface AIInteractionLogProps {
   interactions: AIInteraction[];
@@ -13,7 +14,7 @@ export function AIInteractionLog({ interactions, expandedId, onToggle }: AIInter
     return (
       <div className="flex flex-col items-center justify-center py-16">
         <MessageSquare className="mb-3 h-8 w-8 text-primary/20" />
-        <p className="text-sm font-medium text-muted-foreground/40">No AI interactions</p>
+        <p className="text-sm font-medium text-muted-foreground/40">{t("launcher.details.aiLog.empty")}</p>
       </div>
     );
   }

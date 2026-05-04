@@ -4,6 +4,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useSpeakerStore } from "../stores/speakerStore";
 import { BarChart3, Pencil, Check, X } from "lucide-react";
+import { t } from "../i18n";
 
 interface SpeakerStatsPanelProps {
   isOpen: boolean;
@@ -13,10 +14,10 @@ function formatRelativeTime(lastSpokeMs: number): string {
   if (!lastSpokeMs) return "—";
   const diffMs = Date.now() - lastSpokeMs;
   const seconds = Math.floor(diffMs / 1000);
-  if (seconds < 5) return "just now";
-  if (seconds < 60) return `${seconds}s ago`;
+  if (seconds < 5) return t("overlay.speakerStats.justNow");
+  if (seconds < 60) return t("overlay.speakerStats.secondsAgo", { count: seconds });
   const minutes = Math.floor(seconds / 60);
-  return `${minutes}m ago`;
+  return t("overlay.speakerStats.minutesAgo", { count: minutes });
 }
 
 function InlineRename({ speakerId, displayName, color }: { speakerId: string; displayName: string; color: string }) {
@@ -64,7 +65,7 @@ function InlineRename({ speakerId, displayName, color }: { speakerId: string; di
     <button
       onClick={() => { setValue(displayName); setEditing(true); }}
       className="group/rename flex items-center gap-1 shrink-0 w-24 truncate cursor-pointer"
-      title={`${displayName} — click to rename`}
+      title={t("overlay.speakerStats.renameTitle", { name: displayName })}
     >
       <span className="text-xs font-semibold truncate" style={{ color }}>{displayName}</span>
       <Pencil className="h-2.5 w-2.5 text-muted-foreground/30 opacity-0 group-hover/rename:opacity-100 transition-opacity shrink-0" />
@@ -84,15 +85,15 @@ export function SpeakerStatsPanel({ isOpen }: SpeakerStatsPanelProps) {
       <div className="flex items-center gap-1.5 mb-1.5 px-1">
         <BarChart3 className="h-3.5 w-3.5 text-muted-foreground/60" />
         <span className="text-meta font-semibold uppercase tracking-wider text-muted-foreground/60">
-          Speaker Stats
+          {t("overlay.speakerStats.title")}
         </span>
         <span className="ml-auto text-meta text-muted-foreground/40">
-          {speakers.length} speaker{speakers.length !== 1 ? "s" : ""}
+          {t("overlay.speakerStats.count", { count: speakers.length, plural: speakers.length !== 1 ? "s" : "" })}
         </span>
       </div>
 
       {speakers.length === 0 ? (
-        <p className="text-xs text-muted-foreground/50 py-1 px-1">No speakers tracked yet.</p>
+        <p className="text-xs text-muted-foreground/50 py-1 px-1">{t("overlay.speakerStats.empty")}</p>
       ) : (
         <div className="overflow-y-auto max-h-[200px] space-y-1 pr-1">
           {speakers.map((speaker) => {
@@ -117,7 +118,7 @@ export function SpeakerStatsPanel({ isOpen }: SpeakerStatsPanelProps) {
                 </span>
 
                 <span className="shrink-0 text-meta tabular-nums text-muted-foreground/50 w-14 text-right">
-                  {speaker.stats.word_count}w
+                  {speaker.stats.word_count}{t("overlay.speakerStats.wordSuffix")}
                 </span>
 
                 <span className="shrink-0 text-meta text-muted-foreground/40 w-16 text-right">

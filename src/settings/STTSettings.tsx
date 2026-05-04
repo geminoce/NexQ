@@ -616,7 +616,7 @@ export function STTSettings() {
             <span className="text-xs font-semibold text-foreground">{t("settings.stt.sections.localBuiltIn")}</span>
             <span className="ml-auto text-meta text-muted-foreground/60 font-medium uppercase tracking-wider">{t("settings.stt.sections.freeNoApiKey")}</span>
           </div>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
             {localProviders.map((p) => (
               <ProviderCard
                 key={p.value}
@@ -639,7 +639,7 @@ export function STTSettings() {
             <span className="text-xs font-semibold text-foreground">{t("settings.stt.sections.cloud")}</span>
             <span className="ml-auto text-meta text-muted-foreground/60 font-medium uppercase tracking-wider">{t("settings.stt.sections.requiresApiKey")}</span>
           </div>
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
             {cloudProviders.map((p) => (
               <ProviderCard
                 key={p.value}
@@ -877,27 +877,27 @@ function ProviderCard({
     <button
       onClick={onClick}
       aria-pressed={isSelected}
-      className={`relative flex flex-col items-start rounded-xl border p-3 text-left transition-all duration-150 ${
+      className={`relative min-h-[82px] rounded-xl border p-3 pr-24 text-left transition-all duration-150 ${
         isSelected
           ? "border-primary bg-primary/10 ring-1 ring-primary/20 shadow-sm"
           : "border-border/40 bg-card/30 hover:border-border/70 hover:bg-accent/60"
       }`}
     >
-      <div className="flex w-full items-start justify-between gap-1 mb-1">
-        <div className="flex items-center gap-1.5 min-w-0">
+      <div className="mb-1 flex w-full items-start gap-1.5">
           <ProviderIcon value={provider.value} isSelected={isSelected} />
-          <span className={`text-xs font-medium truncate ${isSelected ? "text-primary" : "text-foreground"}`}>
+          <span className={`min-w-0 text-xs font-medium leading-snug ${isSelected ? "text-primary" : "text-foreground"}`}>
             {provider.label}
           </span>
-        </div>
+      </div>
+      <span className="block text-meta text-muted-foreground/70 leading-tight">
+        {provider.batchOnly ? t("settings.stt.providerDescriptions.batchOnly") : provider.description}
+      </span>
+      <div className="absolute right-2.5 top-2.5">
         <ProviderBadge
           text={badge.text}
           variant={badge.variant}
         />
       </div>
-      <span className="text-meta text-muted-foreground/70 line-clamp-1 leading-tight">
-        {provider.batchOnly ? t("settings.stt.providerDescriptions.batchOnly") : provider.description}
-      </span>
     </button>
   );
 }

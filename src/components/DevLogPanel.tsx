@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDevLogStore } from "../stores/devLogStore";
 import { Copy, ExternalLink, Trash2, X } from "lucide-react";
+import { t } from "../i18n";
 
 // For the detached window, we import Tauri's WebviewWindow API
 async function openDetachedDevLog() {
@@ -75,7 +76,7 @@ export function DevLogPanel({
         onMouseDown={onMouseDown}
         className="h-1.5 shrink-0 cursor-ns-resize hover:bg-primary/20 transition-colors flex items-center justify-center"
         role="separator"
-        aria-label="Resize dev log panel"
+        aria-label={t("devLog.resizePanel")}
       >
         <div className="h-0.5 w-8 rounded-full bg-border/30" />
       </div>
@@ -150,23 +151,23 @@ function DevLogContent({
       {/* Header */}
       <div className="flex shrink-0 items-center justify-between border-b border-border/20 px-3 py-1.5">
         <span className="text-meta font-semibold uppercase tracking-wider text-muted-foreground/70">
-          Dev Log
+          {t("devLog.title")}
         </span>
         <div className="flex items-center gap-1">
           <span className="text-meta tabular-nums text-muted-foreground/60">
-            {entries.length} entries
+            {t("devLog.entries", { count: entries.length })}
           </span>
           <button
             onClick={handleCopyAll}
             className="rounded p-1 text-muted-foreground/60 hover:bg-accent/50 hover:text-foreground"
-            aria-label="Copy all"
+            aria-label={t("devLog.copyAll")}
           >
             <Copy className="h-3 w-3" />
           </button>
           <button
             onClick={clear}
             className="rounded p-1 text-muted-foreground/60 hover:bg-accent/50 hover:text-foreground"
-            aria-label="Clear"
+            aria-label={t("devLog.clear")}
           >
             <Trash2 className="h-3 w-3" />
           </button>
@@ -174,7 +175,7 @@ function DevLogContent({
             <button
               onClick={onDetach}
               className="rounded p-1 text-muted-foreground/60 hover:bg-accent/50 hover:text-foreground"
-              aria-label="Open in separate window"
+              aria-label={t("devLog.openSeparateWindow")}
             >
               <ExternalLink className="h-3 w-3" />
             </button>
@@ -183,7 +184,7 @@ function DevLogContent({
             <button
               onClick={onClose}
               className="rounded p-1 text-muted-foreground/60 hover:bg-accent/50 hover:text-foreground"
-              aria-label="Close (Esc)"
+              aria-label={t("devLog.closeEsc")}
             >
               <X className="h-3 w-3" />
             </button>
@@ -199,7 +200,7 @@ function DevLogContent({
       >
         {entries.length === 0 ? (
           <div className="flex h-full min-h-[60px] items-center justify-center text-muted-foreground/60">
-            Waiting for speech events...
+            {t("devLog.waitingForSpeechEvents")}
           </div>
         ) : (
           entries.map((entry) => (

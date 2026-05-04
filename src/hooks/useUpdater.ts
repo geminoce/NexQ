@@ -14,6 +14,7 @@ import {
 } from "../lib/events";
 import { load } from "@tauri-apps/plugin-store";
 import type { UnlistenFn } from "@tauri-apps/api/event";
+import { t } from "../i18n";
 
 const STORE_NAME = "nexq-settings.json";
 const SKIPPED_VERSION_KEY = "skipped_version";
@@ -65,7 +66,7 @@ export function useUpdater() {
             ? err
             : err instanceof Error
               ? err.message
-              : "Unknown error";
+              : t("errors.unknown");
         setCheckError(msg);
       }
     },
@@ -91,7 +92,7 @@ export function useUpdater() {
           ? err
           : err instanceof Error
             ? err.message
-            : "Unknown error";
+            : t("errors.unknown");
       console.error("[useUpdater] Download failed:", msg);
       useUpdaterStore.getState().setDownloadStatus("error");
     }

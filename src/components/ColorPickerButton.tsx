@@ -1,23 +1,24 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { t } from "../i18n";
 
 const PALETTE = [
-  { name: "White", value: "#e4e4e7" },
-  { name: "Warm", value: "#d6d3d1" },
-  { name: "Snow", value: "#f8fafc" },
-  { name: "Cyan", value: "#67e8f9" },
-  { name: "Sky", value: "#7dd3fc" },
-  { name: "Amber", value: "#fbbf24" },
-  { name: "Orange", value: "#fb923c" },
-  { name: "Emerald", value: "#6ee7b7" },
-  { name: "Lime", value: "#a3e635" },
-  { name: "Rose", value: "#fda4af" },
-  { name: "Pink", value: "#f9a8d4" },
-  { name: "Lavender", value: "#c4b5fd" },
-  { name: "Indigo", value: "#a5b4fc" },
-  { name: "Peach", value: "#fdba74" },
-  { name: "Teal", value: "#5eead4" },
-];
+  { nameKey: "colorPicker.palette.white", value: "#e4e4e7" },
+  { nameKey: "colorPicker.palette.warm", value: "#d6d3d1" },
+  { nameKey: "colorPicker.palette.snow", value: "#f8fafc" },
+  { nameKey: "colorPicker.palette.cyan", value: "#67e8f9" },
+  { nameKey: "colorPicker.palette.sky", value: "#7dd3fc" },
+  { nameKey: "colorPicker.palette.amber", value: "#fbbf24" },
+  { nameKey: "colorPicker.palette.orange", value: "#fb923c" },
+  { nameKey: "colorPicker.palette.emerald", value: "#6ee7b7" },
+  { nameKey: "colorPicker.palette.lime", value: "#a3e635" },
+  { nameKey: "colorPicker.palette.rose", value: "#fda4af" },
+  { nameKey: "colorPicker.palette.pink", value: "#f9a8d4" },
+  { nameKey: "colorPicker.palette.lavender", value: "#c4b5fd" },
+  { nameKey: "colorPicker.palette.indigo", value: "#a5b4fc" },
+  { nameKey: "colorPicker.palette.peach", value: "#fdba74" },
+  { nameKey: "colorPicker.palette.teal", value: "#5eead4" },
+] as const;
 
 interface ColorPickerButtonProps {
   value: string;
@@ -54,7 +55,7 @@ export function ColorPickerButton({ value, onChange, label }: ColorPickerButtonP
         ref={btnRef}
         onClick={handleOpen}
         className="flex items-center gap-1 rounded-md px-1.5 py-1 hover:bg-white/5 transition-colors cursor-pointer"
-        title={label || "Pick color"}
+        title={label || t("colorPicker.pickColor")}
       >
         <div
           className="h-3.5 w-3.5 rounded border border-white/15"
@@ -87,7 +88,7 @@ export function ColorPickerButton({ value, onChange, label }: ColorPickerButtonP
                     : "hover:brightness-110 hover:ring-1 hover:ring-white/25 hover:ring-offset-1 hover:ring-offset-[#111122]"
                 }`}
                 style={{ backgroundColor: c.value }}
-                title={c.name}
+                title={t(c.nameKey)}
               />
             ))}
           </div>
@@ -110,7 +111,7 @@ export function ColorPickerButton({ value, onChange, label }: ColorPickerButtonP
               }}
               className="w-14 bg-transparent text-[0.6rem] text-foreground/60 outline-none font-mono tracking-wider"
               maxLength={6}
-              placeholder="custom"
+              placeholder={t("colorPicker.customPlaceholder")}
             />
           </div>
         </div>,

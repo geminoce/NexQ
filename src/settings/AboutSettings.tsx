@@ -7,20 +7,21 @@ import {
 import { NEXQ_VERSION, NEXQ_BUILD_DATE, NEXQ_DEVELOPER } from "../lib/version";
 import { useUpdater } from "../hooks/useUpdater";
 import { open } from "@tauri-apps/plugin-shell";
+import { t } from "../i18n";
 
 const GITHUB_URL = "https://github.com/VahidAlizadeh/NexQ";
 
 function timeSince(ms: number): string {
   const secs = Math.floor((Date.now() - ms) / 1000);
-  if (secs < 60) return "just now";
-  if (secs < 3600) return `${Math.floor(secs / 60)} min ago`;
-  return `${Math.floor(secs / 3600)}h ago`;
+  if (secs < 60) return t("settings.about.time.justNow");
+  if (secs < 3600) return t("settings.about.time.minutesAgo", { count: Math.floor(secs / 60) });
+  return t("settings.about.time.hoursAgo", { count: Math.floor(secs / 3600) });
 }
 
 function formatBuildDate(dateStr: string): string {
   try {
     const d = new Date(dateStr);
-    return d.toLocaleDateString("en-US", {
+    return d.toLocaleDateString("ru-RU", {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -60,7 +61,7 @@ export function AboutSettings() {
               v{NEXQ_VERSION}
             </p>
             <p className="mt-2 text-sm text-muted-foreground">
-              AI Meeting Assistant &amp; Real-Time Interview Copilot
+              {t("settings.about.tagline")}
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center rounded-full bg-secondary/50 px-3 py-1 text-meta font-medium text-muted-foreground">
@@ -80,23 +81,23 @@ export function AboutSettings() {
       {/* Meta Grid (2x2) */}
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-xl border border-border/30 bg-card/50 p-4">
-          <p className="text-meta text-muted-foreground/60">Build Date</p>
+          <p className="text-meta text-muted-foreground/60">{t("settings.about.buildDate")}</p>
           <p className="mt-1 text-sm font-medium text-foreground">
             {formatBuildDate(NEXQ_BUILD_DATE)}
           </p>
         </div>
         <div className="rounded-xl border border-border/30 bg-card/50 p-4">
-          <p className="text-meta text-muted-foreground/60">Developer</p>
+          <p className="text-meta text-muted-foreground/60">{t("settings.about.developer")}</p>
           <p className="mt-1 text-sm font-medium text-foreground">
             {NEXQ_DEVELOPER}
           </p>
         </div>
         <div className="rounded-xl border border-border/30 bg-card/50 p-4">
-          <p className="text-meta text-muted-foreground/60">Architecture</p>
+          <p className="text-meta text-muted-foreground/60">{t("settings.about.architecture")}</p>
           <p className="mt-1 text-sm font-medium text-foreground">x86_64</p>
         </div>
         <div className="rounded-xl border border-border/30 bg-card/50 p-4">
-          <p className="text-meta text-muted-foreground/60">License</p>
+          <p className="text-meta text-muted-foreground/60">{t("settings.about.license")}</p>
           <p className="mt-1 text-sm font-medium text-foreground">MIT</p>
         </div>
       </div>
@@ -120,23 +121,23 @@ export function AboutSettings() {
             <div>
               <p className="text-sm font-medium text-foreground">
                 {isChecking
-                  ? "Checking for updates..."
+                  ? t("settings.about.update.checking")
                   : isAvailable
-                    ? `v${availableUpdate.version} available`
+                    ? t("settings.about.update.available", { version: availableUpdate.version })
                     : isError
-                      ? "Update check failed"
-                      : "You're up to date"}
+                      ? t("settings.about.update.failed")
+                      : t("settings.about.update.upToDate")}
               </p>
               <p className="text-meta text-muted-foreground/60">
                 {isChecking
-                  ? "Connecting to GitHub"
+                  ? t("settings.about.update.connecting")
                   : isError && checkError
                     ? checkError
                     : isAvailable && availableUpdate.date
-                      ? `Released ${timeSince(new Date(availableUpdate.date).getTime())}`
+                      ? t("settings.about.update.released", { time: timeSince(new Date(availableUpdate.date).getTime()) })
                       : lastChecked
-                        ? `Last checked ${timeSince(lastChecked)}`
-                        : "Not checked yet"}
+                        ? t("settings.about.update.lastChecked", { time: timeSince(lastChecked) })
+                        : t("settings.about.update.notChecked")}
               </p>
             </div>
           </div>
@@ -149,8 +150,8 @@ export function AboutSettings() {
               className="rounded-lg bg-primary px-4 py-2 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
             >
               {downloadStatus === "downloading"
-                ? "Downloading..."
-                : "Update Now"}
+                ? t("settings.about.update.downloading")
+                : t("settings.about.update.updateNow")}
             </button>
           ) : (
             <button
@@ -158,7 +159,7 @@ export function AboutSettings() {
               disabled={isChecking}
               className="rounded-lg border border-border/40 bg-secondary/50 px-4 py-2 text-xs font-medium text-foreground/80 transition-colors hover:bg-secondary disabled:opacity-50"
             >
-              Check for Updates
+              {t("settings.about.update.checkForUpdates")}
             </button>
           )}
         </div>
@@ -181,7 +182,7 @@ export function AboutSettings() {
         >
           <FileText className="h-4 w-4 text-muted-foreground" />
           <span className="text-meta font-medium text-muted-foreground">
-            Changelog
+            {t("settings.about.links.changelog")}
           </span>
         </button>
         <button
@@ -190,7 +191,7 @@ export function AboutSettings() {
         >
           <AlertCircle className="h-4 w-4 text-muted-foreground" />
           <span className="text-meta font-medium text-muted-foreground">
-            Report Issue
+            {t("settings.about.links.reportIssue")}
           </span>
         </button>
         <button
@@ -199,7 +200,7 @@ export function AboutSettings() {
         >
           <HelpCircle className="h-4 w-4 text-muted-foreground" />
           <span className="text-meta font-medium text-muted-foreground">
-            Documentation
+            {t("settings.about.links.documentation")}
           </span>
         </button>
       </div>
@@ -207,8 +208,7 @@ export function AboutSettings() {
       {/* Footer */}
       <div className="rounded-xl border border-border/30 bg-card/50 p-5">
         <p className="text-xs text-muted-foreground/60 leading-relaxed">
-          NexQ is an open desktop application. All processing can run locally
-          with Ollama or LM Studio, or optionally connect to cloud AI providers.
+          {t("settings.about.footer")}
         </p>
       </div>
     </div>

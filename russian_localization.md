@@ -192,9 +192,9 @@ tray.*
 1. `GeneralSettings` - готово: видимые строки и переключатели используют i18n-ключи
 2. `HotkeySettings` - готово: заголовки, таблица, подсказки, aria-label и toast-сообщения используют i18n-ключи
 3. `MeetingAudioSettings` - готово: пресеты, роли, источники, мониторинг, аудиосессии и выбор STT-провайдера используют i18n-ключи
-4. `STTSettings` - готово: основные секции, язык, подключения, модели и advanced-блоки используют i18n-ключи
+4. `STTSettings` - готово: основные секции, язык, подключения, модели и advanced-блоки используют i18n-ключи; карточки облачных STT-провайдеров расширены, чтобы названия не обрезались
 5. `LLMSettings` - готово: провайдеры, API-ключи, подключение, список моделей и OpenRouter-каталог используют i18n-ключи
-6. `TranslationSettings` - готово: провайдеры, API-ключи, языки, поведение и OPUS-MT manager используют i18n-ключи
+6. `TranslationSettings` - готово: провайдеры, API-ключи, языки, поведение и OPUS-MT manager используют i18n-ключи; badge-статусы провайдеров зафиксированы внутри карточек
 7. `ContextStrategySettings` - готово: стратегии, пресеты, статусы индекса, поиск и кастомные параметры используют i18n-ключи
 8. `ScenarioSettings` - готово: UI-строки и встроенные prompt-тексты сценариев переведены
 9. `NoisePresetSettings` - готово: компонент уже использует i18n-ключи для названий, описаний и статистики пресетов
@@ -202,6 +202,17 @@ tray.*
 11. `LocalModelManager` - готово: кнопки Activate/Download/Delete, статусы, accuracy/speed и toast-сообщения используют i18n-ключи
 12. `OpusMtModelManager` - готово: заголовок, фильтр языков, статусы, кнопки, tooltips и toast-сообщения переведены через i18n
 13. `OpenRouterModelCatalog` - готово: поиск, сортировка, фильтры, избранное, недавно использованные, карточки и пустые состояния переведены через i18n
+14. `AIActionsSettings` - готово: раздел `AI-действия`, стиль ответа, поведение AI, окно контекста, список Actions, `System Prompt`, источники контекста и overrides переведены через i18n
+15. `PromptPreviewDialog` - готово: предпросмотр промпта, `System Prompt`, `User Message`, included sections, оценка токенов и параметры переведены через i18n
+16. `AboutSettings` - готово: раздел `О программе`, статусы обновления, quick links и footer переведены через i18n
+
+Дополнительно:
+
+- `src-tauri/src/stt/local_engines/model_registry.rs` - обновлены подписи и рейтинги моделей GigaAM: v2 Russian = точность 3 / скорость 5; v3 e2e RNNT = `GigaAM v3 e2e RNNT (int8, Russian, punctuation)`, точность 5 / скорость 4.
+- `src/settings/SettingsOverlay.tsx` - для grid-heavy вкладок (`LLM`, `STT`, `Перевод`, `AI-действия`, `Стратегия контекста`) выставлена умеренная ширина content-area, чтобы UI не растягивался в обычном оконном режиме.
+- `src/settings/LLMSettings.tsx`, `src/settings/STTSettings.tsx`, `src/settings/TranslationSettings.tsx` - карточки провайдеров приведены к компактному формату; в LLM/STT статусный badge закреплён справа сверху, а название и описание читаются слева.
+- `src/settings/MeetingAudioSettings.tsx` - пресеты аудио разложены симметричной сеткой 3x2 без горизонтального скролла.
+- `src/settings/ContextStrategySettings.tsx` - быстрые пресеты не переносят названия внутри кнопок; полные подписи `Самый быстрый` и `Самый точный` сохранены в одну строку.
 
 После каждой вкладки:
 
@@ -220,7 +231,7 @@ npm run build
 Файлы:
 
 - `src/components/wizard/FirstRunWizard.tsx` - готово: навигация, счётчик шагов, aria-label, Back/Next/Skip переведены
-- `WelcomeStep.tsx` - готово: приветствие, автообнаружение аудио/LLM и итоговые сообщения переведены
+- `WelcomeStep.tsx` - готово: приветствие, автообнаружение аудио/LLM, подписи `Ollama/LM Studio (локальная LLM)` и итоговые сообщения переведены
 - `AudioSetupStep.tsx` - готово: настройка источников, smart scan, результаты, тест микрофона и подписи устройств переведены
 - `STTSetupStep.tsx` - готово: описания STT-провайдеров, рекомендации и подписи сторон переведены
 - `LLMSetupStep.tsx` - готово: локальные/облачные провайдеры, API-key блок, проверки подключения, выбор модели и подсказки переведены
@@ -233,26 +244,26 @@ npm run build
 - provider/model IDs не изменены;
 - хоткеи отображаются как есть.
 
-## Шаг 7. Перевести launcher и post-meeting UI
+## Шаг 7. Перевести launcher и post-meeting UI - готово
 
 Файлы:
 
-- `src/launcher/LauncherView.tsx`
-- `src/launcher/MeetingCard.tsx`
-- `src/launcher/RecentMeetings.tsx`
-- `src/launcher/MeetingDetails.tsx`
-- `src/launcher/meeting-details/*`
+- `src/launcher/LauncherView.tsx` - готово: поиск, фильтры, пустые состояния, удаление встреч и системные aria-label используют i18n
+- `src/launcher/MeetingCard.tsx` - готово: карточки встреч, редактирование, избранное, статусы и удаление используют i18n
+- `src/launcher/RecentMeetings.tsx` - готово: группы дат и empty state используют i18n
+- `src/launcher/MeetingDetails.tsx` - готово: legacy-view деталей встречи переведён через i18n
+- `src/launcher/meeting-details/*` - готово: вкладки, header stats, transcript controls, summary, AI log, speakers, action items, bookmarks, export menu и post-meeting translation controls переведены через i18n
 
 Перевести:
 
-- список встреч;
-- empty states;
-- поиск;
-- tabs;
-- transcript controls;
-- summary/action items/bookmarks labels;
-- export menu;
-- copy/download toasts.
+- список встреч - готово;
+- empty states - готово;
+- поиск - готово;
+- tabs - готово;
+- transcript controls - готово;
+- summary/action items/bookmarks labels - готово;
+- export menu - готово;
+- copy/download toasts - готово.
 
 Проверить:
 
@@ -261,74 +272,73 @@ npm run build
 - поиск transcript;
 - copy/export actions.
 
-## Шаг 8. Перевести overlay/live meeting UI
+## Шаг 8. Перевести overlay/live meeting UI - готово
 
 Файлы:
 
-- `src/overlay/OverlayView.tsx`
-- `src/overlay/ModeButtons.tsx`
-- `src/overlay/AskInput.tsx`
-- `src/overlay/AIResponsePanel.tsx`
-- `src/overlay/TranscriptPanel.tsx`
-- `src/overlay/TranscriptLine.tsx`
-- `src/overlay/BookmarkPanel.tsx`
-- `src/overlay/BookmarkToast.tsx`
-- `src/overlay/TranscriptContextMenu.tsx`
-- `src/overlay/SpeakerNamingBanner.tsx`
-- `src/overlay/SpeakerStatsPanel.tsx`
+- `src/overlay/OverlayView.tsx` - готово: заголовок встречи, статусы, кнопки header и системные подписи используют i18n
+- `src/overlay/ModeButtons.tsx` - готово: режимы AI-действий используют i18n-ключи
+- `src/overlay/AskInput.tsx` - готово: placeholder, aria-label и tooltips отправки/закрытия переведены
+- `src/overlay/AIResponsePanel.tsx` - готово: вкладки, пустые состояния, панель текста AI и controls используют i18n
+- `src/overlay/TranscriptPanel.tsx` - готово: заголовок, поиск, empty state, аудио-уровни и controls транскрипта используют i18n
+- `src/overlay/TranscriptLine.tsx` - готово: tooltips переименования, перевода и закладок переведены
+- `src/overlay/BookmarkPanel.tsx` - готово: список закладок, empty state, note placeholder и переход к строке переведены
+- `src/overlay/BookmarkToast.tsx` - готово: toast закладки, добавление заметки, сохранение и закрытие переведены
+- `src/overlay/TranscriptContextMenu.tsx` - готово: пункты правого клика для закладок, заметок и копирования переведены
+- `src/overlay/SpeakerNamingBanner.tsx` - готово: баннер нового говорящего, naming/merge labels, placeholder и кнопки переведены
+- `src/overlay/SpeakerStatsPanel.tsx` - готово: статистика говорящих, empty state, относительное время и word count переведены
 
 Не переводить:
 
 - сам transcript;
-- AI-generated content;
 - user-entered text;
 - speaker IDs, если они используются как data keys.
 
-Проверить:
+Проверено/проверить:
 
-- start meeting;
-- live transcript;
-- Ask input;
-- mode buttons;
-- bookmarks;
-- speaker rename;
-- overlay hide/show.
+- start meeting - UI-строки overlay вынесены в i18n;
+- live transcript - служебные подписи переведены, сам transcript не переводится;
+- Ask input - готово;
+- mode buttons - готово;
+- bookmarks - готово;
+- speaker rename - готово;
+- overlay hide/show - без изменения логики.
 
-## Шаг 9. Перевести context/RAG UI
+## Шаг 9. Перевести context/RAG UI - готово
 
 Файлы:
 
-- `src/context/ContextPanel.tsx`
-- `src/context/FileUpload.tsx`
-- `src/context/ResourceCard.tsx`
-- `src/context/TestSearchDialog.tsx`
-- `src/context/CustomInstructions.tsx`
-- `src/context/TokenBudget.tsx`
-- `src/context/RagIndexBar.tsx`
+- `src/context/ContextPanel.tsx` - готово: заголовок, статус smart search и список загруженного контекста используют i18n
+- `src/context/FileUpload.tsx` - готово: drop zone, file dialog filter, статусы обработки и кнопка выбора файлов используют i18n
+- `src/context/ResourceCard.tsx` - готово: токены, чанки, статусы индекса, re-index/remove tooltips и toast-сообщения используют i18n
+- `src/context/TestSearchDialog.tsx` - готово: заголовок, подсказки, шаблоны запросов, поиск, AI-ответ, empty/error states и copy tooltips переведены
+- `src/context/CustomInstructions.tsx` - готово: заголовок, счётчики символов/токенов и placeholder используют i18n
+- `src/context/TokenBudget.tsx` - готово: бюджет токенов, legend labels и aria-label используют i18n
+- `src/context/RagIndexBar.tsx` - готово: количество чанков, токены на запрос, rebuild/test controls используют i18n
 
 Важно:
 
-- UI перевести;
-- RAG content, file names, extracted text не переводить;
-- prompt/custom instruction content пользователя не менять.
+- UI переведён;
+- RAG content, file names, extracted text не переводились;
+- prompt/custom instruction content пользователя не менялся.
 
-Проверить:
+Проверено/проверить:
 
-- upload file;
-- indexing state;
-- search test dialog;
-- resource remove/re-index.
+- upload file - UI вынесен в i18n;
+- indexing state - статусы ResourceCard/RagIndexBar переведены;
+- search test dialog - служебный UI и шаблоны переведены;
+- resource remove/re-index - tooltips и toast-сообщения переведены.
 
-## Шаг 10. Перевести toast/error messages
+## Шаг 10. Перевести toast/error messages - готово
 
 Найти все `showToast(...)`.
 
 Категории:
 
-- success;
-- info;
-- error;
-- warning.
+- success - готово;
+- info - готово;
+- error - готово;
+- warning - готово.
 
 Перевести через ключи:
 
@@ -343,21 +353,32 @@ showToast(t("errors.copyFailed"), "error")
 t("toast.translatedSegments", { count, total })
 ```
 
-Проверить основные сценарии:
+Сделано:
 
-- start/end meeting;
-- copy transcript;
-- translation fail;
-- upload fail;
-- model download fail;
-- API key test fail.
+- `src/stores/ragStore.ts` - готово: Ollama, rebuild/clear index, pull model toasts используют i18n;
+- `src/hooks/useActionItemsExtraction.ts` - готово: action items success/info/parse error используют i18n;
+- `src/hooks/useBookmarkSuggestions.ts` - готово: bookmark suggestion info/parse error используют i18n;
+- `src/lib/export.ts` - готово: export success/failure toasts используют i18n;
+- `src/hooks/useModelDownload.ts` - готово: download failed toast использует i18n;
+- `src/hooks/useUpdater.ts` - готово: fallback unknown error использует i18n;
+- `src/calllog/CallLogPanel.tsx` - готово: copy/export toasts используют i18n;
+- `src/calllog/PromptViewer.tsx` - готово: copy failure toast использует i18n.
 
-## Шаг 11. Перевести Tauri tray menu
+Проверено/проверить основные сценарии:
+
+- start/end meeting - уже использует i18n;
+- copy transcript - уже использует i18n;
+- translation fail - уже использует i18n;
+- upload fail - backend error text оставлен как есть, UI-обёртка уже переведена;
+- model download fail - готово;
+- API key test fail - уже использует i18n.
+
+## Шаг 11. Перевести Tauri tray menu - готово
 
 Файлы:
 
-- `src-tauri/src/tray/menu.rs`
-- возможно `src-tauri/src/tray/tooltip.rs`
+- `src-tauri/src/tray/menu.rs` - готово: Start/Stop Meeting, mute, stealth, overlay, copy actions, Settings и Quit переведены на русский
+- `src-tauri/src/tray/tooltip.rs` - готово: Idle, Recording, Mic Muted, Stealth, AI Processing и Indexing tooltips переведены
 
 Так как это Rust-side UI, есть два варианта:
 
@@ -366,13 +387,13 @@ t("toast.translatedSegments", { count, total })
 
 Для текущей задачи можно сделать минимальный вариант:
 
-- `Start Meeting` -> `Начать встречу`
-- `Stop Meeting` -> `Завершить встречу`
-- `Mute Microphone` -> `Выключить микрофон`
-- `Mute System Audio` -> `Выключить системный звук`
-- `Settings` -> `Настройки`
-- `Quit NexQ` -> `Выйти из NexQ`
-- copy actions тоже перевести.
+- `Start Meeting` -> `Начать встречу` - готово
+- `Stop Meeting` -> `Завершить встречу` - готово
+- `Mute Microphone` -> `Выключить микрофон` - готово
+- `Mute System Audio` -> `Выключить системный звук` - готово
+- `Settings` -> `Настройки` - готово
+- `Quit NexQ` -> `Выйти из NexQ` - готово
+- copy actions тоже перевести - готово
 
 После изменения Rust:
 
@@ -382,7 +403,7 @@ cargo check
 cd ..
 ```
 
-## Шаг 12. Проверить hardcoded строки автоматически
+## Шаг 12. Проверить hardcoded строки автоматически - готово
 
 После первичного перевода запустить поиски:
 
@@ -400,6 +421,14 @@ rg -n "showToast\\(" src
 - internal errors;
 - imports;
 - object keys.
+
+Результат:
+
+- поиски `rg -n "\"[A-Z][^\"]{2,}\"" src`, `rg -n "placeholder=\"|aria-label=\"|title=\"" src` и `rg -n "showToast\\(" src` выполнены;
+- видимые остатки в `App.tsx`, `AudioPlayer`, `Toast`, `ColorPickerButton`, `DevLogPanel`, `UpdateDialog`, `calllog/*` и `PromptViewer` переведены на i18n-ключи;
+- прямые hardcoded `showToast("...")`, `setError("...")` и `setErrorMessage("...")` после проверки не найдены;
+- оставшиеся совпадения отфильтрованы как технические строки: enum/id, имена провайдеров и моделей, SVG/path data, console/debug logs, i18n-словари и маркеры парсинга prompt-текста;
+- `npx tsc --noEmit` проходит.
 
 ## Шаг 13. Добавить fallback для missing keys
 

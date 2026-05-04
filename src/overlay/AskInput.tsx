@@ -72,7 +72,7 @@ export function AskInput({ visible, onClose }: AskInputProps) {
         onClick={handleSubmit}
         disabled={!inputText.trim() || isStreaming}
         className="rounded-lg p-1.5 text-primary transition-colors duration-150 hover:bg-primary/10 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
-        title="Send (Enter)"
+        title={t("overlay.ai.sendQuestionShortcut")}
         aria-label={t("overlay.ai.sendQuestion")}
       >
         <Send className="h-3.5 w-3.5" />
@@ -80,7 +80,7 @@ export function AskInput({ visible, onClose }: AskInputProps) {
       <button
         onClick={onClose}
         className="rounded-lg p-1.5 text-muted-foreground/60 transition-colors duration-150 hover:bg-accent hover:text-muted-foreground"
-        title="Close (Esc)"
+        title={t("overlay.ai.closeQuestionShortcut")}
         aria-label={t("overlay.ai.closeQuestion")}
       >
         <X className="h-3.5 w-3.5" />

@@ -8,6 +8,7 @@ import {
   getScenarioExportFormat,
 } from "../../lib/export";
 import { Download, FileText, Subtitles, Braces, ChevronDown, Loader2 } from "lucide-react";
+import { t } from "../../i18n";
 
 interface ExportDropdownProps {
   meeting: Meeting;
@@ -61,19 +62,19 @@ export function ExportDropdown({ meeting }: ExportDropdownProps) {
   const baseOptions: ExportOption[] = [
     {
       label: "Markdown",
-      description: "Full transcript + summary",
+      description: t("launcher.details.export.markdownDescription"),
       icon: <FileText className="h-3.5 w-3.5" />,
       action: () => exportMeetingAsMarkdown(meeting),
     },
     {
-      label: "SRT Subtitles",
-      description: "Timed subtitle file",
+      label: t("launcher.details.export.srtLabel"),
+      description: t("launcher.details.export.srtDescription"),
       icon: <Subtitles className="h-3.5 w-3.5" />,
       action: () => exportMeetingAsSRT(meeting),
     },
     {
       label: "JSON",
-      description: "Structured data export",
+      description: t("launcher.details.export.jsonDescription"),
       icon: <Braces className="h-3.5 w-3.5" />,
       action: () => exportMeetingAsJSON(meeting),
     },
@@ -84,7 +85,9 @@ export function ExportDropdown({ meeting }: ExportDropdownProps) {
         ...baseOptions,
         {
           label: scenarioFmt.label,
-          description: `Formatted for ${meeting.ai_scenario?.replace(/_/g, " ")}`,
+          description: t("launcher.details.export.scenarioDescription", {
+            scenario: meeting.ai_scenario?.replace(/_/g, " ") ?? "",
+          }),
           icon: <Download className="h-3.5 w-3.5" />,
           action: () => exportMeetingScenario(meeting),
           variant: "scenario",
@@ -102,14 +105,14 @@ export function ExportDropdown({ meeting }: ExportDropdownProps) {
         className="flex items-center gap-1.5 rounded-lg border border-border/30 bg-secondary/30 px-3 py-1.5 text-xs font-medium text-foreground/70 transition-all duration-150 hover:bg-secondary/50 hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
         aria-haspopup="true"
         aria-expanded={isOpen}
-        aria-label="Export meeting"
+        aria-label={t("launcher.details.export.aria")}
       >
         {isLoading ? (
           <Loader2 className="h-3.5 w-3.5 animate-spin" />
         ) : (
           <Download className="h-3.5 w-3.5" />
         )}
-        Export
+        {t("launcher.details.export.button")}
         <ChevronDown
           className={`h-3 w-3 transition-transform duration-150 ${isOpen ? "rotate-180" : ""}`}
         />
@@ -119,11 +122,11 @@ export function ExportDropdown({ meeting }: ExportDropdownProps) {
         <div
           className="absolute right-0 top-full z-50 mt-1.5 w-52 overflow-hidden rounded-xl border border-border/30 bg-card shadow-xl shadow-black/20"
           role="menu"
-          aria-label="Export options"
+          aria-label={t("launcher.details.export.menuAria")}
         >
           <div className="px-3 py-2 border-b border-border/20">
             <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/40">
-              Export as
+              {t("launcher.details.export.exportAs")}
             </p>
           </div>
 

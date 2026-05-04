@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { Download, ArrowRight, X } from "lucide-react";
+import { t } from "../i18n";
 
 interface UpdateDialogProps {
   currentVersion: string;
@@ -77,7 +78,7 @@ export function UpdateDialog({
           <button
             onClick={onLater}
             className="rounded-lg p-1 text-muted-foreground/40 transition-colors hover:bg-accent hover:text-muted-foreground"
-            aria-label="Close"
+            aria-label={t("updateDialog.close")}
           >
             <X className="h-4 w-4" />
           </button>
@@ -90,7 +91,7 @@ export function UpdateDialog({
           </div>
 
           <h2 className="mt-4 text-base font-semibold text-foreground">
-            A new version is available
+            {t("updateDialog.title")}
           </h2>
 
           {/* Version badge */}
@@ -139,7 +140,7 @@ export function UpdateDialog({
             onClick={onSkip}
             className="text-xs font-medium text-muted-foreground/60 transition-colors hover:text-muted-foreground"
           >
-            Skip this version
+            {t("updateDialog.skipVersion")}
           </button>
 
           <div className="flex items-center gap-2">
@@ -147,13 +148,13 @@ export function UpdateDialog({
               onClick={onLater}
               className="rounded-lg border border-border/30 bg-secondary/30 px-4 py-2 text-xs font-medium text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground"
             >
-              Later
+              {t("updateDialog.later")}
             </button>
             <button
               onClick={onUpdate}
               className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
             >
-              Update & Restart
+              {t("updateDialog.updateAndRestart")}
             </button>
           </div>
         </div>

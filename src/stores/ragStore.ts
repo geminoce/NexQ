@@ -20,6 +20,7 @@ import {
 } from "../lib/ipc";
 import { useConfigStore } from "./configStore";
 import { showToast } from "./toastStore";
+import { t } from "../i18n";
 
 const STORE_FILE = "config.json";
 const RAG_CONFIG_KEY = "ragConfig";
@@ -207,11 +208,14 @@ export const useRagStore = create<RagState>((set) => ({
       set({ ollamaStatus: status, error: null, isCheckingConnection: false });
       if (status.connected) {
         showToast(
-          `Ollama connected — ${status.models.length} model${status.models.length !== 1 ? "s" : ""} available`,
+          t("context.ragIndex.ollamaConnected", {
+            count: status.models.length,
+            plural: status.models.length !== 1 ? "s" : "",
+          }),
           "success"
         );
       } else {
-        showToast("Ollama is not reachable", "error");
+        showToast(t("context.ragIndex.ollamaUnavailable"), "error");
       }
     } catch (e) {
       set({
@@ -219,7 +223,7 @@ export const useRagStore = create<RagState>((set) => ({
         error: e instanceof Error ? e.message : String(e),
         isCheckingConnection: false,
       });
-      showToast("Failed to connect to Ollama", "error");
+      showToast(t("context.ragIndex.ollamaConnectFailed"), "error");
     }
   },
 
@@ -227,7 +231,7 @@ export const useRagStore = create<RagState>((set) => ({
     try {
       set({ isIndexing: true, error: null });
       await ipcRebuildRagIndex();
-      showToast("Index rebuilt successfully", "success");
+      showToast(t("context.ragIndex.indexRebuilt"), "success");
       set({ indexStale: false, sourcesChangedSinceBuild: false });
     } catch (e) {
       console.error("[ragStore] Failed to rebuild index:", e);
@@ -245,7 +249,7 @@ export const useRagStore = create<RagState>((set) => ({
       set({ error: null });
       await ipcClearRagIndex();
       set({ indexStatus: null, indexStale: false, sourcesChangedSinceBuild: false });
-      showToast("Index cleared", "info");
+      showToast(t("context.ragIndex.indexCleared"), "info");
       useRagStore.getState().refreshIndexStatus();
     } catch (e) {
       console.error("[ragStore] Failed to clear index:", e);
@@ -258,18 +262,18 @@ export const useRagStore = create<RagState>((set) => ({
   pullModel: async (model: string) => {
     try {
       set({ isPullingModel: true, error: null });
-      showToast(`Pulling model "${model}"...`, "info");
+      showToast(t("context.ragIndex.pullingModel", { model }), "info");
       await ipcPullEmbeddingModel(model);
       // Success: isPullingModel will be set false by the event listener on "complete"
       // But if the IPC resolves before the event fires, set it here too
-      showToast(`Model "${model}" pulled successfully`, "success");
+      showToast(t("context.ragIndex.modelPulled", { model }), "success");
       set({ isPullingModel: false, pullProgress: null });
       // Refresh connection status to reflect newly available model
       useRagStore.getState().checkOllamaStatus();
     } catch (e) {
       console.error("[ragStore] Failed to pull model:", e);
       const msg = e instanceof Error ? e.message : String(e);
-      showToast(`Failed to pull model: ${msg}`, "error");
+      showToast(t("context.ragIndex.pullModelFailed", { error: msg }), "error");
       set({
         isPullingModel: false,
         pullProgress: null,
