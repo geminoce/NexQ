@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useConfigStore } from "../stores/configStore";
 import { showToast } from "../stores/toastStore";
 import type { HotkeyConfig } from "../lib/types";
@@ -6,19 +6,21 @@ import { RotateCcw, Keyboard } from "lucide-react";
 import { t } from "../i18n";
 
 /** Display-friendly labels for each hotkey action */
-const HOTKEY_LABELS: Record<keyof HotkeyConfig, string> = {
-  toggle_assist: t("settings.hotkeys.labels.toggleAssist"),
-  start_end_meeting: t("settings.hotkeys.labels.startEndMeeting"),
-  show_hide: t("settings.hotkeys.labels.showHide"),
-  open_settings: t("settings.hotkeys.labels.openSettings"),
-  escape: t("settings.hotkeys.labels.escape"),
-  mode_assist: t("settings.hotkeys.labels.modeAssist"),
-  mode_say: t("settings.hotkeys.labels.modeSay"),
-  mode_shorten: t("settings.hotkeys.labels.modeShorten"),
-  mode_followup: t("settings.hotkeys.labels.modeFollowup"),
-  mode_recap: t("settings.hotkeys.labels.modeRecap"),
-  mode_ask: t("settings.hotkeys.labels.modeAsk"),
-};
+function getHotkeyLabels(): Record<keyof HotkeyConfig, string> {
+  return {
+    toggle_assist: t("settings.hotkeys.labels.toggleAssist"),
+    start_end_meeting: t("settings.hotkeys.labels.startEndMeeting"),
+    show_hide: t("settings.hotkeys.labels.showHide"),
+    open_settings: t("settings.hotkeys.labels.openSettings"),
+    escape: t("settings.hotkeys.labels.escape"),
+    mode_assist: t("settings.hotkeys.labels.modeAssist"),
+    mode_say: t("settings.hotkeys.labels.modeSay"),
+    mode_shorten: t("settings.hotkeys.labels.modeShorten"),
+    mode_followup: t("settings.hotkeys.labels.modeFollowup"),
+    mode_recap: t("settings.hotkeys.labels.modeRecap"),
+    mode_ask: t("settings.hotkeys.labels.modeAsk"),
+  };
+}
 
 const DEFAULT_HOTKEYS: HotkeyConfig = {
   toggle_assist: "Space",
@@ -60,8 +62,10 @@ function keyEventToString(e: KeyboardEvent): string | null {
 }
 
 export function HotkeySettings() {
+  const uiLanguage = useConfigStore((s) => s.uiLanguage);
   const hotkeys = useConfigStore((s) => s.hotkeys);
   const setHotkeys = useConfigStore((s) => s.setHotkeys);
+  const hotkeyLabels = useMemo(() => getHotkeyLabels(), [uiLanguage]);
 
   const [editingKey, setEditingKey] = useState<keyof HotkeyConfig | null>(null);
   const [conflict, setConflict] = useState<string | null>(null);
@@ -89,7 +93,7 @@ export function HotkeySettings() {
         setConflict(
           t("settings.hotkeys.conflict", {
             combo,
-            action: HOTKEY_LABELS[conflictingAction[0]],
+            action: hotkeyLabels[conflictingAction[0]],
           })
         );
         // Still set it -- user was warned, and they can fix the other one
@@ -100,7 +104,7 @@ export function HotkeySettings() {
       const updated: HotkeyConfig = { ...hotkeys, [editingKey]: combo };
       setHotkeys(updated);
       setEditingKey(null);
-      showToast(t("settings.hotkeys.updated", { action: HOTKEY_LABELS[editingKey], combo }), "success");
+      showToast(t("settings.hotkeys.updated", { action: hotkeyLabels[editingKey], combo }), "success");
     };
 
     listenerRef.current = handler;
@@ -110,7 +114,7 @@ export function HotkeySettings() {
       window.removeEventListener("keydown", handler, { capture: true });
       listenerRef.current = null;
     };
-  }, [editingKey, hotkeys, setHotkeys]);
+  }, [editingKey, hotkeys, hotkeyLabels, setHotkeys]);
 
   const handleRowClick = useCallback((action: keyof HotkeyConfig) => {
     setConflict(null);
@@ -176,7 +180,7 @@ export function HotkeySettings() {
             </tr>
           </thead>
           <tbody>
-            {(Object.keys(HOTKEY_LABELS) as (keyof HotkeyConfig)[]).map(
+            {(Object.keys(hotkeyLabels) as (keyof HotkeyConfig)[]).map(
               (action, idx, arr) => {
                 const isEditing = editingKey === action;
                 const binding = hotkeys[action] || DEFAULT_HOTKEYS[action];
@@ -192,7 +196,7 @@ export function HotkeySettings() {
                     }}
                     tabIndex={0}
                     role="button"
-                    aria-label={t("settings.hotkeys.changeAria", { action: HOTKEY_LABELS[action], binding })}
+                    aria-label={t("settings.hotkeys.changeAria", { action: hotkeyLabels[action], binding })}
                     className={`cursor-pointer transition-colors duration-100 ${
                       isEditing
                         ? "bg-primary/10"
@@ -200,7 +204,7 @@ export function HotkeySettings() {
                     } ${idx < arr.length - 1 ? "border-b border-border/20" : ""}`}
                   >
                     <td className="px-4 py-2.5 text-foreground/80">
-                      {HOTKEY_LABELS[action]}
+                      {hotkeyLabels[action]}
                     </td>
                     <td className="px-4 py-2.5">
                       {isEditing ? (

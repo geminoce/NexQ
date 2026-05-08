@@ -606,10 +606,10 @@ export function STTSettings() {
   return (
     <div className="space-y-6">
       {/* Provider Selection — grouped: Local then Cloud */}
-      <div className="rounded-xl border border-border/30 bg-card/50 overflow-hidden">
+      <div className="rounded-xl border border-border/30 bg-card/50 p-5">
         {/* Local Providers */}
-        <div className="px-5 pt-4 pb-3 border-b border-border/20 bg-muted/10">
-          <div className="flex items-center gap-2 mb-3">
+        <div className="mb-5">
+          <div className="mb-3 flex items-center gap-2">
             <div className="flex h-5 w-5 items-center justify-center rounded bg-success/10">
               <HardDrive className="h-3 w-3 text-success" />
             </div>
@@ -631,8 +631,8 @@ export function STTSettings() {
         </div>
 
         {/* Cloud Providers */}
-        <div className="px-5 pt-4 pb-4">
-          <div className="flex items-center gap-2 mb-3">
+        <div className="border-t border-border/20 pt-5">
+          <div className="mb-3 flex items-center gap-2">
             <div className="flex h-5 w-5 items-center justify-center rounded bg-info/10">
               <Cloud className="h-3 w-3 text-info" />
             </div>
@@ -877,42 +877,54 @@ function ProviderCard({
     <button
       onClick={onClick}
       aria-pressed={isSelected}
-      className={`relative min-h-[82px] rounded-xl border p-3 pr-24 text-left transition-all duration-150 ${
+      className={`relative min-h-[86px] rounded-xl border p-3 pr-24 text-left transition-all duration-150 cursor-pointer ${
         isSelected
-          ? "border-primary bg-primary/10 ring-1 ring-primary/20 shadow-sm"
-          : "border-border/40 bg-card/30 hover:border-border/70 hover:bg-accent/60"
+          ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+          : "border-border/50 hover:border-border hover:bg-accent/50"
       }`}
     >
-      <div className="mb-1 flex w-full items-start gap-1.5">
-          <ProviderIcon value={provider.value} isSelected={isSelected} />
-          <span className={`min-w-0 text-xs font-medium leading-snug ${isSelected ? "text-primary" : "text-foreground"}`}>
-            {provider.label}
-          </span>
-      </div>
-      <span className="block text-meta text-muted-foreground/70 leading-tight">
-        {provider.batchOnly ? t("settings.stt.providerDescriptions.batchOnly") : provider.description}
-      </span>
-      <div className="absolute right-2.5 top-2.5">
+      <div
+        className={`absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full ring-2 ring-card ${STT_DOT_STYLES[badge.variant]}`}
+        title={isActive ? t("settings.llm.badges.activeTitle", { status: badge.text }) : badge.text}
+        aria-hidden="true"
+      />
+      <div className="absolute right-2.5 top-7">
         <ProviderBadge
           text={badge.text}
           variant={badge.variant}
         />
       </div>
+      <div className="flex w-full items-start gap-1.5">
+        <ProviderIcon value={provider.value} />
+        <span className="min-w-0 text-xs font-medium leading-snug">
+          {provider.label}
+        </span>
+      </div>
+      <span className="mt-1 block text-meta text-muted-foreground leading-tight">
+        {provider.batchOnly ? t("settings.stt.providerDescriptions.batchOnly") : provider.description}
+      </span>
     </button>
   );
 }
 
 // ── Provider Badge ──
 
+const STT_BADGE_STYLES: Record<BadgeVariant, string> = {
+  ready: "bg-success/10 text-success border-success/20",
+  warning: "bg-warning/10 text-warning border-warning/20",
+  error: "bg-destructive/10 text-destructive border-destructive/20",
+};
+
+const STT_DOT_STYLES: Record<BadgeVariant, string> = {
+  ready: "bg-success",
+  warning: "bg-warning",
+  error: "bg-destructive",
+};
+
 function ProviderBadge({ text, variant }: { text: string; variant: BadgeVariant }) {
-  const styles: Record<BadgeVariant, string> = {
-    ready: "bg-success/20 text-success border-success/20",
-    warning: "bg-warning/20 text-warning border-warning/20",
-    error: "bg-destructive/20 text-destructive border-destructive/20",
-  };
   return (
     <span
-      className={`inline-flex shrink-0 items-center rounded-full border px-1.5 py-0.5 text-[8px] font-semibold tracking-wide ${styles[variant]}`}
+      className={`inline-flex shrink-0 items-center rounded-full border px-1.5 py-0.5 text-meta font-medium ${STT_BADGE_STYLES[variant]}`}
     >
       {text}
     </span>
@@ -921,8 +933,8 @@ function ProviderBadge({ text, variant }: { text: string; variant: BadgeVariant 
 
 // ── Provider icon helper ──
 
-function ProviderIcon({ value, isSelected }: { value: STTProviderType; isSelected?: boolean }) {
-  const cls = `h-3.5 w-3.5 shrink-0 ${isSelected ? "text-primary" : "text-muted-foreground"}`;
+function ProviderIcon({ value }: { value: STTProviderType }) {
+  const cls = "mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground";
   switch (value) {
     case "web_speech":
       return <Globe className={cls} />;

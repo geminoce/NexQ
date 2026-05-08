@@ -1504,6 +1504,12 @@ export const en = {
         light: "Light",
         system: "System",
       },
+      uiLanguage: "UI Language",
+      uiLanguageDescription: "Choose the language used by the app interface",
+      languages: {
+        en: "English",
+        ru: "Russian",
+      },
       behavior: "Behavior",
       autoSummary: "Auto-Summary",
       autoSummaryDescription: "Generate meeting summary when meeting ends",

@@ -13,6 +13,7 @@ import type {
   AudioMode,
   AIScenario,
 } from "../lib/types";
+import { setActiveLanguage, type UiLanguage } from "../i18n";
 
 const DEFAULT_DEEPGRAM_CONFIG: DeepgramConfig = {
   model: "nova-3",
@@ -98,6 +99,7 @@ async function persistValue(key: string, value: unknown): Promise<void> {
 interface ConfigState {
   // Appearance
   theme: ThemeMode;
+  uiLanguage: UiLanguage;
 
   // Providers
   sttProvider: STTProviderType;
@@ -195,6 +197,7 @@ interface ConfigState {
 
   // Actions
   setTheme: (theme: ThemeMode) => void;
+  setUiLanguage: (language: UiLanguage) => void;
   setContextStrategy: (strategy: ContextStrategy) => void;
   setSTTProvider: (provider: STTProviderType) => void;
   setSTTLanguage: (language: string) => void;
@@ -248,6 +251,7 @@ interface ConfigState {
 
 export const useConfigStore = create<ConfigState>((set) => ({
   theme: "dark",
+  uiLanguage: "en",
   sttProvider: "windows_native",
   sttLanguage: "en-US",
   llmProvider: "ollama",
@@ -319,6 +323,11 @@ export const useConfigStore = create<ConfigState>((set) => ({
   setTheme: (theme) => {
     set({ theme });
     persistValue("theme", theme);
+  },
+  setUiLanguage: (language) => {
+    setActiveLanguage(language);
+    set({ uiLanguage: language });
+    persistValue("uiLanguage", language);
   },
   setSTTProvider: (provider) => {
     set({ sttProvider: provider });
@@ -661,6 +670,10 @@ export const useConfigStore = create<ConfigState>((set) => ({
       const store = await getStore();
 
       const theme = await store.get<ThemeMode>("theme");
+      const uiLanguage = await store.get<UiLanguage>("uiLanguage");
+      const resolvedUiLanguage = uiLanguage ?? "en";
+      setActiveLanguage(resolvedUiLanguage);
+      set({ uiLanguage: resolvedUiLanguage });
       const sttProvider = await store.get<STTProviderType>("sttProvider");
       const sttLanguage = await store.get<string>("sttLanguage");
       const llmProvider = await store.get<LLMProviderType>("llmProvider");
@@ -806,6 +819,7 @@ export const useConfigStore = create<ConfigState>((set) => ({
         ...state,
         _loaded: true,
         ...(theme != null && { theme }),
+        uiLanguage: resolvedUiLanguage,
         ...(sttProvider != null && { sttProvider }),
         ...(sttLanguage != null && { sttLanguage }),
         ...(llmProvider != null && { llmProvider }),
@@ -884,6 +898,12 @@ export const useConfigStore = create<ConfigState>((set) => ({
       });
       store.onKeyChange<STTProviderType>("sttProvider", (val) => {
         if (val != null) set({ sttProvider: val });
+      });
+      store.onKeyChange<UiLanguage>("uiLanguage", (val) => {
+        if (val != null) {
+          setActiveLanguage(val);
+          set({ uiLanguage: val });
+        }
       });
       store.onKeyChange<string>("sttLanguage", (val) => {
         if (val != null) set({ sttLanguage: val });

@@ -36,6 +36,7 @@ function App() {
   const loadRecentMeetings = useMeetingStore((s) => s.loadRecentMeetings);
   const firstRunCompleted = useConfigStore((s) => s.firstRunCompleted);
   const configLoaded = useConfigStore((s) => s._loaded);
+  useConfigStore((s) => s.uiLanguage);
   const loadConfig = useConfigStore((s) => s.loadConfig);
 
   // Wire up theme and global shortcuts

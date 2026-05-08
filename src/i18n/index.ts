@@ -7,7 +7,21 @@ const dictionaries = {
   ru,
 } as const;
 
-const activeLanguage: keyof typeof dictionaries = "ru";
+export type UiLanguage = keyof typeof dictionaries;
+
+let activeLanguage: UiLanguage = "en";
+const warnedMissingKeys = new Set<string>();
+
+export function setActiveLanguage(language: UiLanguage): void {
+  activeLanguage = language;
+}
+
+function warnMissingKey(message: string, key: string): void {
+  const isDev = (import.meta as ImportMeta & { env?: { DEV?: boolean } }).env?.DEV === true;
+  if (!isDev || warnedMissingKeys.has(key)) return;
+  warnedMissingKeys.add(key);
+  console.warn(message);
+}
 
 function readPath(source: unknown, key: string): unknown {
   return key.split(".").reduce<unknown>((current, segment) => {
@@ -32,12 +46,12 @@ export function t(key: TranslationKey, params?: TranslationParams): string {
   const fallback = readPath(dictionaries.en, key);
 
   if (typeof localized === "string") return interpolate(localized, params);
-  if (typeof fallback === "string") return interpolate(fallback, params);
-
-  if (typeof console !== "undefined") {
-    console.warn(`[i18n] Missing translation key: ${key}`);
+  if (typeof fallback === "string") {
+    warnMissingKey(`[i18n] Missing ${activeLanguage} translation key, using en fallback: ${key}`, `${activeLanguage}:${key}`);
+    return interpolate(fallback, params);
   }
 
+  warnMissingKey(`[i18n] Missing translation key: ${key}`, `missing:${key}`);
   return key;
 }
 

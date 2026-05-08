@@ -46,48 +46,42 @@ interface TabGroup {
   items: TabItem[];
 }
 
-const TAB_GROUPS: TabGroup[] = [
-  {
-    label: t("settings.groups.meeting"),
-    items: [
-      { id: "meeting_audio", label: t("settings.tabs.meetingAudio"), icon: <Headphones className="h-4 w-4" /> },
-    ],
-  },
-  {
-    label: t("settings.groups.providers"),
-    items: [
-      { id: "llm", label: t("settings.tabs.llm"), icon: <Brain className="h-4 w-4" /> },
-      { id: "stt", label: t("settings.tabs.stt"), icon: <Mic className="h-4 w-4" /> },
-      { id: "translation", label: t("settings.tabs.translation"), icon: <Globe className="h-4 w-4" /> },
-    ],
-  },
-  {
-    label: t("settings.groups.intelligence"),
-    items: [
-      { id: "ai_actions", label: t("settings.tabs.aiActions"), icon: <Sparkles className="h-4 w-4" /> },
-      { id: "context_strategy", label: t("settings.tabs.contextStrategy"), icon: <Database className="h-4 w-4" /> },
-      { id: "scenarios", label: t("settings.tabs.scenarios"), icon: <Theater className="h-4 w-4" /> },
-      { id: "noise_presets", label: t("settings.tabs.noisePresets"), icon: <Volume2 className="h-4 w-4" /> },
-      { id: "confidence", label: t("settings.tabs.confidence"), icon: <BarChart2 className="h-4 w-4" /> },
-    ],
-  },
-  {
-    label: t("settings.groups.system"),
-    items: [
-      { id: "hotkeys", label: t("settings.tabs.hotkeys"), icon: <Keyboard className="h-4 w-4" /> },
-      { id: "general", label: t("settings.tabs.general"), icon: <SlidersHorizontal className="h-4 w-4" /> },
-      { id: "about", label: t("settings.tabs.about"), icon: <Info className="h-4 w-4" /> },
-    ],
-  },
-];
-
-// Flat list for modal tabs (same order)
-const ALL_TABS: TabItem[] = TAB_GROUPS.flatMap((g) => g.items);
-
-// Tab labels for header display
-const TAB_LABELS: Record<SettingsTab, string> = Object.fromEntries(
-  ALL_TABS.map((t) => [t.id, t.label])
-) as Record<SettingsTab, string>;
+function buildTabGroups(): TabGroup[] {
+  return [
+    {
+      label: t("settings.groups.meeting"),
+      items: [
+        { id: "meeting_audio", label: t("settings.tabs.meetingAudio"), icon: <Headphones className="h-4 w-4" /> },
+      ],
+    },
+    {
+      label: t("settings.groups.providers"),
+      items: [
+        { id: "llm", label: t("settings.tabs.llm"), icon: <Brain className="h-4 w-4" /> },
+        { id: "stt", label: t("settings.tabs.stt"), icon: <Mic className="h-4 w-4" /> },
+        { id: "translation", label: t("settings.tabs.translation"), icon: <Globe className="h-4 w-4" /> },
+      ],
+    },
+    {
+      label: t("settings.groups.intelligence"),
+      items: [
+        { id: "ai_actions", label: t("settings.tabs.aiActions"), icon: <Sparkles className="h-4 w-4" /> },
+        { id: "context_strategy", label: t("settings.tabs.contextStrategy"), icon: <Database className="h-4 w-4" /> },
+        { id: "scenarios", label: t("settings.tabs.scenarios"), icon: <Theater className="h-4 w-4" /> },
+        { id: "noise_presets", label: t("settings.tabs.noisePresets"), icon: <Volume2 className="h-4 w-4" /> },
+        { id: "confidence", label: t("settings.tabs.confidence"), icon: <BarChart2 className="h-4 w-4" /> },
+      ],
+    },
+    {
+      label: t("settings.groups.system"),
+      items: [
+        { id: "hotkeys", label: t("settings.tabs.hotkeys"), icon: <Keyboard className="h-4 w-4" /> },
+        { id: "general", label: t("settings.tabs.general"), icon: <SlidersHorizontal className="h-4 w-4" /> },
+        { id: "about", label: t("settings.tabs.about"), icon: <Info className="h-4 w-4" /> },
+      ],
+    },
+  ];
+}
 
 interface SettingsOverlayProps {
   isModal?: boolean;
@@ -97,6 +91,7 @@ export function SettingsOverlay({ isModal = false }: SettingsOverlayProps) {
   const setSettingsOpen = useMeetingStore((s) => s.setSettingsOpen);
   const setCurrentView = useMeetingStore((s) => s.setCurrentView);
   const previousView = useMeetingStore((s) => s.previousView);
+  useConfigStore((s) => s.uiLanguage);
   const [activeTab, setActiveTab] = useState<SettingsTab>("meeting_audio");
   const [isVisible, setIsVisible] = useState(false);
   const backdropRef = useRef<HTMLDivElement>(null);
@@ -183,7 +178,12 @@ export function SettingsOverlay({ isModal = false }: SettingsOverlayProps) {
     }
   }, [isModal, handleCloseModal, setCurrentView]);
 
-  const currentTabLabel = TAB_LABELS[activeTab] ?? t("settings.title");
+  const tabGroups = buildTabGroups();
+  const allTabs = tabGroups.flatMap((g) => g.items);
+  const tabLabels = Object.fromEntries(
+    allTabs.map((tab) => [tab.id, tab.label])
+  ) as Record<SettingsTab, string>;
+  const currentTabLabel = tabLabels[activeTab] ?? t("settings.title");
 
   // Wider content area for card/grid-heavy settings pages.
   const wideTabs = new Set(["llm", "stt", "translation", "ai_actions", "context_strategy"]);
@@ -237,7 +237,7 @@ export function SettingsOverlay({ isModal = false }: SettingsOverlayProps) {
 
           {/* Tab Navigation (horizontal, uses flat list) */}
           <div className="flex border-b border-border/30 px-2 overflow-x-auto" role="tablist" aria-label={t("settings.navigation")}>
-            {ALL_TABS.map((tab) => (
+            {allTabs.map((tab) => (
               <button
                 key={tab.id}
                 role="tab"
@@ -288,7 +288,7 @@ export function SettingsOverlay({ isModal = false }: SettingsOverlayProps) {
 
         {/* Grouped Navigation */}
         <nav className="flex-1 overflow-y-auto px-3 pt-3 pb-1" role="tablist" aria-label={t("settings.navigation")}>
-          {TAB_GROUPS.map((group, gi) => (
+          {tabGroups.map((group, gi) => (
             <div key={group.label} className={gi > 0 ? "mt-4" : ""}>
               {/* Group label */}
               <div className="mb-1 px-3 flex items-center gap-2">

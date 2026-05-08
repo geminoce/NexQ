@@ -1,12 +1,15 @@
 import { useCallback } from "react";
 import { useConfigStore } from "../stores/configStore";
-import { FolderOpen, Sun, Moon, Monitor } from "lucide-react";
+import { FolderOpen, Globe, Sun, Moon, Monitor } from "lucide-react";
 import type { ThemeMode } from "../lib/types";
+import type { UiLanguage } from "../i18n";
 import { t } from "../i18n";
 
 export function GeneralSettings() {
   const theme = useConfigStore((s) => s.theme);
   const setTheme = useConfigStore((s) => s.setTheme);
+  const uiLanguage = useConfigStore((s) => s.uiLanguage);
+  const setUiLanguage = useConfigStore((s) => s.setUiLanguage);
   const autoSummary = useConfigStore((s) => s.autoSummary);
   const setAutoSummary = useConfigStore((s) => s.setAutoSummary);
   const startOnLogin = useConfigStore((s) => s.startOnLogin);
@@ -34,9 +37,41 @@ export function GeneralSettings() {
       icon: <Monitor className="h-3.5 w-3.5" />,
     },
   ];
+  const languageOptions: { value: UiLanguage; label: string }[] = [
+    { value: "en", label: t("settings.general.languages.en") },
+    { value: "ru", label: t("settings.general.languages.ru") },
+  ];
 
   return (
     <div className="space-y-6">
+      {/* UI Language */}
+      <div className="rounded-xl border border-border/30 bg-card/50 p-5">
+        <div className="flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <label className="text-sm font-medium text-foreground">{t("settings.general.uiLanguage")}</label>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {t("settings.general.uiLanguageDescription")}
+            </p>
+          </div>
+          <div className="flex rounded-lg border border-border/50 bg-secondary/30 p-0.5">
+            {languageOptions.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setUiLanguage(opt.value)}
+                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-150 cursor-pointer ${
+                  uiLanguage === opt.value
+                    ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/50 active:scale-95"
+                }`}
+              >
+                <Globe className="h-3.5 w-3.5" />
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* Theme Toggle */}
       <div className="rounded-xl border border-border/30 bg-card/50 p-5">
         <div className="flex items-center justify-between">
