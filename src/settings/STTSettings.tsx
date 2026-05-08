@@ -33,14 +33,14 @@ import {
   Cpu,
 } from "lucide-react";
 import { LocalModelManager } from "./LocalModelManager";
-import { t } from "../i18n";
+import { t, type TranslationKey } from "../i18n";
 
 // ── Provider definitions ──
 
 interface ProviderOption {
   value: STTProviderType;
   label: string;
-  description: string;
+  descriptionKey: TranslationKey;
   requiresApiKey: boolean;
   isLocal: boolean;
   credentialKey: string;
@@ -57,7 +57,7 @@ const PROVIDER_OPTIONS: ProviderOption[] = [
   {
     value: "web_speech",
     label: "Web Speech",
-    description: t("settings.stt.providerDescriptions.webSpeech"),
+    descriptionKey: "settings.stt.providerDescriptions.webSpeech",
     requiresApiKey: false,
     isLocal: true,
     credentialKey: "",
@@ -66,7 +66,7 @@ const PROVIDER_OPTIONS: ProviderOption[] = [
   {
     value: "windows_native",
     label: "Windows Speech",
-    description: t("settings.stt.providerDescriptions.windowsSpeech"),
+    descriptionKey: "settings.stt.providerDescriptions.windowsSpeech",
     requiresApiKey: false,
     isLocal: true,
     credentialKey: "",
@@ -75,7 +75,7 @@ const PROVIDER_OPTIONS: ProviderOption[] = [
   {
     value: "sherpa_onnx",
     label: "Sherpa-ONNX",
-    description: t("settings.stt.providerDescriptions.sherpaOnnx"),
+    descriptionKey: "settings.stt.providerDescriptions.sherpaOnnx",
     requiresApiKey: false,
     isLocal: true,
     credentialKey: "",
@@ -84,7 +84,7 @@ const PROVIDER_OPTIONS: ProviderOption[] = [
   {
     value: "ort_streaming",
     label: "ORT Streaming",
-    description: t("settings.stt.providerDescriptions.ortStreaming"),
+    descriptionKey: "settings.stt.providerDescriptions.ortStreaming",
     requiresApiKey: false,
     isLocal: true,
     credentialKey: "",
@@ -93,7 +93,7 @@ const PROVIDER_OPTIONS: ProviderOption[] = [
   {
     value: "whisper_cpp",
     label: "Whisper.cpp",
-    description: t("settings.stt.providerDescriptions.whisperCpp"),
+    descriptionKey: "settings.stt.providerDescriptions.whisperCpp",
     requiresApiKey: false,
     isLocal: true,
     credentialKey: "",
@@ -103,7 +103,7 @@ const PROVIDER_OPTIONS: ProviderOption[] = [
   {
     value: "parakeet_tdt",
     label: "Parakeet TDT",
-    description: t("settings.stt.providerDescriptions.parakeetTdt"),
+    descriptionKey: "settings.stt.providerDescriptions.parakeetTdt",
     requiresApiKey: false,
     isLocal: true,
     credentialKey: "",
@@ -112,7 +112,7 @@ const PROVIDER_OPTIONS: ProviderOption[] = [
   {
     value: "gigaam_russian",
     label: "GigaAM Russian",
-    description: t("settings.stt.providerDescriptions.gigaamRussian"),
+    descriptionKey: "settings.stt.providerDescriptions.gigaamRussian",
     requiresApiKey: false,
     isLocal: true,
     credentialKey: "",
@@ -121,7 +121,7 @@ const PROVIDER_OPTIONS: ProviderOption[] = [
   {
     value: "deepgram",
     label: "Deepgram",
-    description: t("settings.stt.providerDescriptions.deepgram"),
+    descriptionKey: "settings.stt.providerDescriptions.deepgram",
     requiresApiKey: true,
     isLocal: false,
     credentialKey: "deepgram",
@@ -129,7 +129,7 @@ const PROVIDER_OPTIONS: ProviderOption[] = [
   {
     value: "whisper_api",
     label: "Whisper API",
-    description: t("settings.stt.providerDescriptions.whisperApi"),
+    descriptionKey: "settings.stt.providerDescriptions.whisperApi",
     requiresApiKey: true,
     isLocal: false,
     credentialKey: "whisper_api",
@@ -137,7 +137,7 @@ const PROVIDER_OPTIONS: ProviderOption[] = [
   {
     value: "azure_speech",
     label: "Azure Speech",
-    description: t("settings.stt.providerDescriptions.azureSpeech"),
+    descriptionKey: "settings.stt.providerDescriptions.azureSpeech",
     requiresApiKey: true,
     isLocal: false,
     credentialKey: "azure_speech",
@@ -146,7 +146,7 @@ const PROVIDER_OPTIONS: ProviderOption[] = [
   {
     value: "groq_whisper",
     label: "Groq Whisper",
-    description: t("settings.stt.providerDescriptions.groqWhisper"),
+    descriptionKey: "settings.stt.providerDescriptions.groqWhisper",
     requiresApiKey: true,
     isLocal: false,
     credentialKey: "groq_whisper",
@@ -154,24 +154,24 @@ const PROVIDER_OPTIONS: ProviderOption[] = [
 ];
 
 const LANGUAGES = [
-  { value: "en-US", label: t("settings.stt.languages.enUS") },
-  { value: "en-GB", label: t("settings.stt.languages.enGB") },
-  { value: "es-ES", label: t("settings.stt.languages.esES") },
-  { value: "fr-FR", label: t("settings.stt.languages.frFR") },
-  { value: "de-DE", label: t("settings.stt.languages.deDE") },
-  { value: "it-IT", label: t("settings.stt.languages.itIT") },
-  { value: "pt-BR", label: t("settings.stt.languages.ptBR") },
-  { value: "ja-JP", label: t("settings.stt.languages.jaJP") },
-  { value: "zh-CN", label: t("settings.stt.languages.zhCN") },
-  { value: "ko-KR", label: t("settings.stt.languages.koKR") },
-  { value: "nl-NL", label: t("settings.stt.languages.nlNL") },
-  { value: "hi-IN", label: t("settings.stt.languages.hiIN") },
-  { value: "ru-RU", label: t("settings.stt.languages.ruRU") },
-  { value: "ar-SA", label: t("settings.stt.languages.arSA") },
-  { value: "tr-TR", label: t("settings.stt.languages.trTR") },
-  { value: "pl-PL", label: t("settings.stt.languages.plPL") },
-  { value: "sv-SE", label: t("settings.stt.languages.svSE") },
-];
+  { value: "en-US", labelKey: "settings.stt.languages.enUS" },
+  { value: "en-GB", labelKey: "settings.stt.languages.enGB" },
+  { value: "es-ES", labelKey: "settings.stt.languages.esES" },
+  { value: "fr-FR", labelKey: "settings.stt.languages.frFR" },
+  { value: "de-DE", labelKey: "settings.stt.languages.deDE" },
+  { value: "it-IT", labelKey: "settings.stt.languages.itIT" },
+  { value: "pt-BR", labelKey: "settings.stt.languages.ptBR" },
+  { value: "ja-JP", labelKey: "settings.stt.languages.jaJP" },
+  { value: "zh-CN", labelKey: "settings.stt.languages.zhCN" },
+  { value: "ko-KR", labelKey: "settings.stt.languages.koKR" },
+  { value: "nl-NL", labelKey: "settings.stt.languages.nlNL" },
+  { value: "hi-IN", labelKey: "settings.stt.languages.hiIN" },
+  { value: "ru-RU", labelKey: "settings.stt.languages.ruRU" },
+  { value: "ar-SA", labelKey: "settings.stt.languages.arSA" },
+  { value: "tr-TR", labelKey: "settings.stt.languages.trTR" },
+  { value: "pl-PL", labelKey: "settings.stt.languages.plPL" },
+  { value: "sv-SE", labelKey: "settings.stt.languages.svSE" },
+] satisfies Array<{ value: string; labelKey: TranslationKey }>;
 
 // ── Deepgram Models ──
 
@@ -815,7 +815,7 @@ export function STTSettings() {
         >
           {LANGUAGES.map((lang) => (
             <option key={lang.value} value={lang.value}>
-              {lang.label}
+              {t(lang.labelKey)}
             </option>
           ))}
         </select>
@@ -901,7 +901,7 @@ function ProviderCard({
         </span>
       </div>
       <span className="mt-1 block text-meta text-muted-foreground leading-tight">
-        {provider.batchOnly ? t("settings.stt.providerDescriptions.batchOnly") : provider.description}
+        {provider.batchOnly ? t("settings.stt.providerDescriptions.batchOnly") : t(provider.descriptionKey)}
       </span>
     </button>
   );

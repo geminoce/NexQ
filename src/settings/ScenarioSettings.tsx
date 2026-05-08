@@ -18,15 +18,17 @@ import {
 import { t } from "../i18n";
 
 // ── Prompt field metadata ──
-const PROMPT_FIELDS: {
+function getPromptFields(): {
   key: keyof Pick<ScenarioTemplate, "system_prompt" | "summary_prompt" | "question_detection_prompt">;
   label: string;
   description: string;
-}[] = [
-  { key: "system_prompt", label: t("settings.scenarios.fields.systemPrompt.label"), description: t("settings.scenarios.fields.systemPrompt.description") },
-  { key: "summary_prompt", label: t("settings.scenarios.fields.summaryPrompt.label"), description: t("settings.scenarios.fields.summaryPrompt.description") },
-  { key: "question_detection_prompt", label: t("settings.scenarios.fields.questionDetection.label"), description: t("settings.scenarios.fields.questionDetection.description") },
-];
+}[] {
+  return [
+    { key: "system_prompt", label: t("settings.scenarios.fields.systemPrompt.label"), description: t("settings.scenarios.fields.systemPrompt.description") },
+    { key: "summary_prompt", label: t("settings.scenarios.fields.summaryPrompt.label"), description: t("settings.scenarios.fields.summaryPrompt.description") },
+    { key: "question_detection_prompt", label: t("settings.scenarios.fields.questionDetection.label"), description: t("settings.scenarios.fields.questionDetection.description") },
+  ];
+}
 
 // ── Collapsible Prompt Card ──
 function PromptCard({
@@ -432,7 +434,7 @@ export function ScenarioSettings() {
         <h3 className="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
           {t("settings.scenarios.promptsTitle")}
         </h3>
-        {PROMPT_FIELDS.map((field) => (
+        {getPromptFields().map((field) => (
           <PromptCard
             key={field.key}
             label={field.label}

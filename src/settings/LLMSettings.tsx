@@ -27,27 +27,32 @@ import {
   Settings2,
   Zap,
 } from "lucide-react";
-import { t } from "../i18n";
+import { t, type TranslationKey } from "../i18n";
 
 type ConnectionStatus = "idle" | "testing" | "success" | "error";
 
 const PROVIDER_DISPLAY: Record<
   LLMProviderType,
-  { label: string; description: string; requiresKey: boolean; isLocal: boolean }
+  { label: string; labelKey?: TranslationKey; descriptionKey: TranslationKey; requiresKey: boolean; isLocal: boolean }
 > = {
-  ollama: { label: "Ollama", description: t("settings.llm.providers.descriptions.ollama"), requiresKey: false, isLocal: true },
-  lm_studio: { label: "LM Studio", description: t("settings.llm.providers.descriptions.lmStudio"), requiresKey: false, isLocal: true },
-  openai: { label: "OpenAI", description: t("settings.llm.providers.descriptions.openai"), requiresKey: true, isLocal: false },
-  anthropic: { label: "Anthropic", description: t("settings.llm.providers.descriptions.anthropic"), requiresKey: true, isLocal: false },
-  groq: { label: "Groq", description: t("settings.llm.providers.descriptions.groq"), requiresKey: true, isLocal: false },
-  gemini: { label: "Google Gemini", description: t("settings.llm.providers.descriptions.gemini"), requiresKey: true, isLocal: false },
-  openrouter: { label: "OpenRouter", description: t("settings.llm.providers.descriptions.openrouter"), requiresKey: true, isLocal: false },
-  custom: { label: t("settings.llm.custom.providerLabel"), description: t("settings.llm.providers.descriptions.custom"), requiresKey: false, isLocal: false },
+  ollama: { label: "Ollama", descriptionKey: "settings.llm.providers.descriptions.ollama", requiresKey: false, isLocal: true },
+  lm_studio: { label: "LM Studio", descriptionKey: "settings.llm.providers.descriptions.lmStudio", requiresKey: false, isLocal: true },
+  openai: { label: "OpenAI", descriptionKey: "settings.llm.providers.descriptions.openai", requiresKey: true, isLocal: false },
+  anthropic: { label: "Anthropic", descriptionKey: "settings.llm.providers.descriptions.anthropic", requiresKey: true, isLocal: false },
+  groq: { label: "Groq", descriptionKey: "settings.llm.providers.descriptions.groq", requiresKey: true, isLocal: false },
+  gemini: { label: "Google Gemini", descriptionKey: "settings.llm.providers.descriptions.gemini", requiresKey: true, isLocal: false },
+  openrouter: { label: "OpenRouter", descriptionKey: "settings.llm.providers.descriptions.openrouter", requiresKey: true, isLocal: false },
+  custom: { label: "Custom", labelKey: "settings.llm.custom.providerLabel", descriptionKey: "settings.llm.providers.descriptions.custom", requiresKey: false, isLocal: false },
 };
 
 const ALL_PROVIDERS: LLMProviderType[] = [
   "ollama", "lm_studio", "openai", "anthropic", "groq", "gemini", "openrouter", "custom",
 ];
+
+function getProviderLabel(providerType: LLMProviderType): string {
+  const info = PROVIDER_DISPLAY[providerType];
+  return info.labelKey ? t(info.labelKey) : info.label;
+}
 
 // Filter out known embedding-only models
 const EMBEDDING_ONLY_PATTERNS = [
@@ -294,7 +299,7 @@ export function LLMSettings() {
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-foreground">
             {t("settings.llm.active.label", {
-              provider: PROVIDER_DISPLAY[llmProvider]?.label || llmProvider,
+              provider: getProviderLabel(llmProvider) || llmProvider,
               model: llmModel ? ` / ${llmModel}` : t("settings.llm.active.noModelSelected"),
             })}
           </p>
@@ -344,10 +349,10 @@ export function LLMSettings() {
                   ) : (
                     <Cloud className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                   )}
-                  <span className="min-w-0 text-xs font-medium leading-snug">{display.label}</span>
+                  <span className="min-w-0 text-xs font-medium leading-snug">{getProviderLabel(pType)}</span>
                 </div>
                 <span className="mt-1 block text-meta text-muted-foreground leading-tight">
-                  {display.description}
+                  {t(display.descriptionKey)}
                 </span>
               </button>
             );
@@ -367,7 +372,7 @@ export function LLMSettings() {
                 onChange={(e) => setApiKeyValue(e.target.value)}
                 onBlur={handleSaveApiKey}
                 placeholder={t("settings.llm.apiKey.placeholder", {
-                  provider: PROVIDER_DISPLAY[selectedProvider]?.label || selectedProvider,
+                  provider: getProviderLabel(selectedProvider) || selectedProvider,
                 })}
                 maxLength={256}
                 className="w-full rounded-lg border border-border/50 bg-background px-3.5 py-2.5 pr-10 text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20"
@@ -533,7 +538,7 @@ export function LLMSettings() {
           className="w-full rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm font-medium text-primary transition-all duration-150 hover:bg-primary/10 hover:-translate-y-px active:translate-y-px active:scale-[0.99] cursor-pointer"
         >
           {t("settings.llm.actions.setActiveProvider", {
-            provider: PROVIDER_DISPLAY[selectedProvider]?.label || selectedProvider,
+            provider: getProviderLabel(selectedProvider) || selectedProvider,
           })}
         </button>
       )}

@@ -27,77 +27,89 @@ const BUILT_IN_MODES = [
   "AskQuestion",
 ];
 
-const ACTION_DESCRIPTIONS: Record<string, string> = {
-  Assist: t("settings.aiActions.actions.descriptions.Assist"),
-  WhatToSay: t("settings.aiActions.actions.descriptions.WhatToSay"),
-  Shorten: t("settings.aiActions.actions.descriptions.Shorten"),
-  FollowUp: t("settings.aiActions.actions.descriptions.FollowUp"),
-  Recap: t("settings.aiActions.actions.descriptions.Recap"),
-  AskQuestion: t("settings.aiActions.actions.descriptions.AskQuestion"),
-};
+function getActionDescriptions(): Record<string, string> {
+  return {
+    Assist: t("settings.aiActions.actions.descriptions.Assist"),
+    WhatToSay: t("settings.aiActions.actions.descriptions.WhatToSay"),
+    Shorten: t("settings.aiActions.actions.descriptions.Shorten"),
+    FollowUp: t("settings.aiActions.actions.descriptions.FollowUp"),
+    Recap: t("settings.aiActions.actions.descriptions.Recap"),
+    AskQuestion: t("settings.aiActions.actions.descriptions.AskQuestion"),
+  };
+}
 
-const ACTION_NAMES: Record<string, string> = {
-  Assist: t("settings.aiActions.actions.names.Assist"),
-  WhatToSay: t("settings.aiActions.actions.names.WhatToSay"),
-  Shorten: t("settings.aiActions.actions.names.Shorten"),
-  FollowUp: t("settings.aiActions.actions.names.FollowUp"),
-  Recap: t("settings.aiActions.actions.names.Recap"),
-  AskQuestion: t("settings.aiActions.actions.names.AskQuestion"),
-};
+function getActionNames(): Record<string, string> {
+  return {
+    Assist: t("settings.aiActions.actions.names.Assist"),
+    WhatToSay: t("settings.aiActions.actions.names.WhatToSay"),
+    Shorten: t("settings.aiActions.actions.names.Shorten"),
+    FollowUp: t("settings.aiActions.actions.names.FollowUp"),
+    Recap: t("settings.aiActions.actions.names.Recap"),
+    AskQuestion: t("settings.aiActions.actions.names.AskQuestion"),
+  };
+}
 
-const TONE_OPTIONS = [
-  { label: t("settings.aiActions.responseStyle.tones.professional"), value: "Professional" },
-  { label: t("settings.aiActions.responseStyle.tones.casual"), value: "Casual" },
-  { label: t("settings.aiActions.responseStyle.tones.formal"), value: "Formal" },
-  { label: t("settings.aiActions.responseStyle.tones.friendly"), value: "Friendly" },
-  { label: t("settings.aiActions.responseStyle.tones.direct"), value: "Direct" },
-];
+function getToneOptions() {
+  return [
+    { label: t("settings.aiActions.responseStyle.tones.professional"), value: "Professional" },
+    { label: t("settings.aiActions.responseStyle.tones.casual"), value: "Casual" },
+    { label: t("settings.aiActions.responseStyle.tones.formal"), value: "Formal" },
+    { label: t("settings.aiActions.responseStyle.tones.friendly"), value: "Friendly" },
+    { label: t("settings.aiActions.responseStyle.tones.direct"), value: "Direct" },
+  ];
+}
 
-const FORMAT_OPTIONS = [
-  { label: t("settings.aiActions.responseStyle.formats.bullets"), value: "bullets" },
-  { label: t("settings.aiActions.responseStyle.formats.paragraphs"), value: "paragraphs" },
-  { label: t("settings.aiActions.responseStyle.formats.numbered"), value: "numbered" },
-  { label: t("settings.aiActions.responseStyle.formats.oneliner"), value: "oneliner" },
-];
+function getFormatOptions() {
+  return [
+    { label: t("settings.aiActions.responseStyle.formats.bullets"), value: "bullets" },
+    { label: t("settings.aiActions.responseStyle.formats.paragraphs"), value: "paragraphs" },
+    { label: t("settings.aiActions.responseStyle.formats.numbered"), value: "numbered" },
+    { label: t("settings.aiActions.responseStyle.formats.oneliner"), value: "oneliner" },
+  ];
+}
 
-const LENGTH_OPTIONS = [
-  { label: t("settings.aiActions.responseStyle.lengths.brief"), value: "brief" },
-  { label: t("settings.aiActions.responseStyle.lengths.standard"), value: "standard" },
-  { label: t("settings.aiActions.responseStyle.lengths.detailed"), value: "detailed" },
-];
+function getLengthOptions() {
+  return [
+    { label: t("settings.aiActions.responseStyle.lengths.brief"), value: "brief" },
+    { label: t("settings.aiActions.responseStyle.lengths.standard"), value: "standard" },
+    { label: t("settings.aiActions.responseStyle.lengths.detailed"), value: "detailed" },
+  ];
+}
 
 
 /** Help content for each setting — shown via HelpButton/HelpPanel toggle */
-const HELP: Record<string, { title: string; body: string }> = {
-  tone: {
-    title: t("settings.aiActions.help.tone.title"),
-    body: t("settings.aiActions.help.tone.body"),
-  },
-  format: {
-    title: t("settings.aiActions.help.format.title"),
-    body: t("settings.aiActions.help.format.body"),
-  },
-  length: {
-    title: t("settings.aiActions.help.length.title"),
-    body: t("settings.aiActions.help.length.body"),
-  },
-  instructions: {
-    title: t("settings.aiActions.help.instructions.title"),
-    body: t("settings.aiActions.help.instructions.body"),
-  },
-  autoTrigger: {
-    title: t("settings.aiActions.help.autoTrigger.title"),
-    body: t("settings.aiActions.help.autoTrigger.body"),
-  },
-  temperature: {
-    title: t("settings.aiActions.help.temperature.title"),
-    body: t("settings.aiActions.help.temperature.body"),
-  },
-  transcriptWindow: {
-    title: t("settings.aiActions.help.transcriptWindow.title"),
-    body: t("settings.aiActions.help.transcriptWindow.body"),
-  },
-};
+function getHelp(): Record<string, { title: string; body: string }> {
+  return {
+    tone: {
+      title: t("settings.aiActions.help.tone.title"),
+      body: t("settings.aiActions.help.tone.body"),
+    },
+    format: {
+      title: t("settings.aiActions.help.format.title"),
+      body: t("settings.aiActions.help.format.body"),
+    },
+    length: {
+      title: t("settings.aiActions.help.length.title"),
+      body: t("settings.aiActions.help.length.body"),
+    },
+    instructions: {
+      title: t("settings.aiActions.help.instructions.title"),
+      body: t("settings.aiActions.help.instructions.body"),
+    },
+    autoTrigger: {
+      title: t("settings.aiActions.help.autoTrigger.title"),
+      body: t("settings.aiActions.help.autoTrigger.body"),
+    },
+    temperature: {
+      title: t("settings.aiActions.help.temperature.title"),
+      body: t("settings.aiActions.help.temperature.body"),
+    },
+    transcriptWindow: {
+      title: t("settings.aiActions.help.transcriptWindow.title"),
+      body: t("settings.aiActions.help.transcriptWindow.body"),
+    },
+  };
+}
 
 // ─── Helpers ─────────────────────────────────────────────
 
@@ -170,7 +182,7 @@ function HelpButton({
 
 /** Expandable help panel — matches ContextStrategySettings pattern */
 function HelpPanel({ id }: { id: string }) {
-  const content = HELP[id];
+  const content = getHelp()[id];
   if (!content) return null;
   return (
     <div className="mt-2 rounded-lg border border-primary/20 bg-primary/5 px-3.5 py-3 space-y-1">
@@ -233,6 +245,10 @@ export function AIActionsSettings() {
   const [newActionName, setNewActionName] = useState("");
   const [newActionPrompt, setNewActionPrompt] = useState("");
   const [openHelp, setOpenHelp] = useState<string | null>(null);
+  const toneOptions = getToneOptions();
+  const formatOptions = getFormatOptions();
+  const lengthOptions = getLengthOptions();
+  const actionDescriptions = getActionDescriptions();
 
   useEffect(() => {
     loadConfigs();
@@ -343,7 +359,7 @@ export function AIActionsSettings() {
     const parts: string[] = [];
     const p = configs.instructionPresets;
     if (p.tone) {
-      const toneLabel = TONE_OPTIONS.find((opt) => opt.value === p.tone)?.label ?? p.tone;
+      const toneLabel = toneOptions.find((opt) => opt.value === p.tone)?.label ?? p.tone;
       parts.push(t("settings.aiActions.responseStyle.summary.tone", { tone: toneLabel }));
     }
     if (p.format) {
@@ -370,7 +386,7 @@ export function AIActionsSettings() {
       );
     }
     return parts.join(" ");
-  }, [configs.instructionPresets]);
+  }, [configs.instructionPresets, toneOptions]);
 
   const globalWindowMin = secsToMin(configs.globalDefaults.transcriptWindowSeconds);
 
@@ -395,7 +411,7 @@ export function AIActionsSettings() {
               </label>
               {openHelp === "tone" && <HelpPanel id="tone" />}
               <div className="mt-2 flex flex-wrap gap-1.5">
-                {TONE_OPTIONS.map((opt) => (
+                {toneOptions.map((opt) => (
                   <button
                     key={opt.value}
                     onClick={() => handlePresetToggle("tone", opt.value)}
@@ -419,7 +435,7 @@ export function AIActionsSettings() {
               </label>
               {openHelp === "format" && <HelpPanel id="format" />}
               <div className="mt-2 flex flex-wrap gap-1.5">
-                {FORMAT_OPTIONS.map((opt) => (
+                {formatOptions.map((opt) => (
                   <button
                     key={opt.value}
                     onClick={() => handlePresetToggle("format", opt.value)}
@@ -443,7 +459,7 @@ export function AIActionsSettings() {
               </label>
               {openHelp === "length" && <HelpPanel id="length" />}
               <div className="mt-2 flex flex-wrap gap-1.5">
-                {LENGTH_OPTIONS.map((opt) => (
+                {lengthOptions.map((opt) => (
                   <button
                     key={opt.value}
                     onClick={() => handlePresetToggle("length", opt.value)}
@@ -635,7 +651,7 @@ export function AIActionsSettings() {
               <ActionCard
                 key={action.mode}
                 action={action}
-                description={ACTION_DESCRIPTIONS[action.mode]}
+                description={actionDescriptions[action.mode]}
                 isExpanded={!!expandedActions[action.mode]}
                 isOverrideExpanded={!!expandedOverrides[action.mode]}
                 onToggleExpand={() => toggleExpanded(action.mode)}
@@ -786,7 +802,7 @@ function ActionCard({
         ? 0
         : secsToMin(action.transcriptWindowSeconds)
       : null;
-  const displayName = ACTION_NAMES[action.mode] ?? action.name;
+  const displayName = getActionNames()[action.mode] ?? action.name;
 
   return (
     <div>

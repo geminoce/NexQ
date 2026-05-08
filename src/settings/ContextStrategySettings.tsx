@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, type ComponentType } from "react";
 import { useConfigStore } from "../stores/configStore";
 import { useRagStore } from "../stores/ragStore";
 import { useRagEvents } from "../hooks/useRagEvents";
@@ -23,16 +23,16 @@ import {
   Target,
   Gauge,
 } from "lucide-react";
-import { t } from "../i18n";
+import { t, type TranslationKey } from "../i18n";
 
 // ─── Preset Definitions ───────────────────────────────────────────────────────
 const PRESETS = [
   {
     id: "fastest",
-    label: t("settings.contextStrategy.presets.fastest.label"),
+    labelKey: "settings.contextStrategy.presets.fastest.label",
     ms: "~10ms",
     icon: Zap,
-    description: t("settings.contextStrategy.presets.fastest.description"),
+    descriptionKey: "settings.contextStrategy.presets.fastest.description",
     config: {
       search_mode: "keyword",
       top_k: 3,
@@ -46,10 +46,10 @@ const PRESETS = [
   },
   {
     id: "faster",
-    label: t("settings.contextStrategy.presets.faster.label"),
+    labelKey: "settings.contextStrategy.presets.faster.label",
     ms: "~80ms",
     icon: Gauge,
-    description: t("settings.contextStrategy.presets.faster.description"),
+    descriptionKey: "settings.contextStrategy.presets.faster.description",
     config: {
       search_mode: "hybrid",
       top_k: 3,
@@ -63,10 +63,10 @@ const PRESETS = [
   },
   {
     id: "default",
-    label: t("settings.contextStrategy.presets.default.label"),
+    labelKey: "settings.contextStrategy.presets.default.label",
     ms: "~200ms",
     icon: Target,
-    description: t("settings.contextStrategy.presets.default.description"),
+    descriptionKey: "settings.contextStrategy.presets.default.description",
     config: {
       search_mode: "hybrid",
       top_k: 5,
@@ -80,10 +80,10 @@ const PRESETS = [
   },
   {
     id: "accurate",
-    label: t("settings.contextStrategy.presets.accurate.label"),
+    labelKey: "settings.contextStrategy.presets.accurate.label",
     ms: "~350ms",
     icon: Target,
-    description: t("settings.contextStrategy.presets.accurate.description"),
+    descriptionKey: "settings.contextStrategy.presets.accurate.description",
     config: {
       search_mode: "hybrid",
       top_k: 10,
@@ -97,10 +97,10 @@ const PRESETS = [
   },
   {
     id: "most_accurate",
-    label: t("settings.contextStrategy.presets.mostAccurate.label"),
+    labelKey: "settings.contextStrategy.presets.mostAccurate.label",
     ms: "~600ms",
     icon: Target,
-    description: t("settings.contextStrategy.presets.mostAccurate.description"),
+    descriptionKey: "settings.contextStrategy.presets.mostAccurate.description",
     config: {
       search_mode: "hybrid",
       top_k: 15,
@@ -112,7 +112,23 @@ const PRESETS = [
       similarity_threshold: 0.2,
     },
   },
-] as const;
+] as const satisfies ReadonlyArray<{
+  id: string;
+  labelKey: TranslationKey;
+  ms: string;
+  icon: ComponentType<{ className?: string }>;
+  descriptionKey: TranslationKey;
+  config: Partial<RagConfig> & {
+    search_mode: RagConfig["search_mode"];
+    top_k: number;
+    chunk_size: number;
+    chunk_overlap: number;
+    embedding_model: string;
+    semantic_weight: number;
+    batch_size: number;
+    similarity_threshold: number;
+  };
+}>;
 
 const PRESET_KEYS: (keyof RagConfig)[] = [
   "search_mode", "top_k", "chunk_size", "chunk_overlap",
@@ -130,40 +146,42 @@ function getActivePresetId(config: RagConfig): string | null {
 }
 
 // ─── Help Content ─────────────────────────────────────────────────────────────
-const HELP: Record<string, { title: string; body: string }> = {
-  embedding_model: {
-    title: t("settings.contextStrategy.help.embeddingModel.title"),
-    body: t("settings.contextStrategy.help.embeddingModel.body"),
-  },
-  top_k: {
-    title: t("settings.contextStrategy.help.topK.title"),
-    body: t("settings.contextStrategy.help.topK.body"),
-  },
-  search_mode: {
-    title: t("settings.contextStrategy.help.searchMode.title"),
-    body: t("settings.contextStrategy.help.searchMode.body"),
-  },
-  chunk_size: {
-    title: t("settings.contextStrategy.help.chunkSize.title"),
-    body: t("settings.contextStrategy.help.chunkSize.body"),
-  },
-  chunk_overlap: {
-    title: t("settings.contextStrategy.help.chunkOverlap.title"),
-    body: t("settings.contextStrategy.help.chunkOverlap.body"),
-  },
-  similarity_threshold: {
-    title: t("settings.contextStrategy.help.similarityThreshold.title"),
-    body: t("settings.contextStrategy.help.similarityThreshold.body"),
-  },
-  semantic_weight: {
-    title: t("settings.contextStrategy.help.semanticWeight.title"),
-    body: t("settings.contextStrategy.help.semanticWeight.body"),
-  },
-  batch_size: {
-    title: t("settings.contextStrategy.help.batchSize.title"),
-    body: t("settings.contextStrategy.help.batchSize.body"),
-  },
-};
+function getHelp(): Record<string, { title: string; body: string }> {
+  return {
+    embedding_model: {
+      title: t("settings.contextStrategy.help.embeddingModel.title"),
+      body: t("settings.contextStrategy.help.embeddingModel.body"),
+    },
+    top_k: {
+      title: t("settings.contextStrategy.help.topK.title"),
+      body: t("settings.contextStrategy.help.topK.body"),
+    },
+    search_mode: {
+      title: t("settings.contextStrategy.help.searchMode.title"),
+      body: t("settings.contextStrategy.help.searchMode.body"),
+    },
+    chunk_size: {
+      title: t("settings.contextStrategy.help.chunkSize.title"),
+      body: t("settings.contextStrategy.help.chunkSize.body"),
+    },
+    chunk_overlap: {
+      title: t("settings.contextStrategy.help.chunkOverlap.title"),
+      body: t("settings.contextStrategy.help.chunkOverlap.body"),
+    },
+    similarity_threshold: {
+      title: t("settings.contextStrategy.help.similarityThreshold.title"),
+      body: t("settings.contextStrategy.help.similarityThreshold.body"),
+    },
+    semantic_weight: {
+      title: t("settings.contextStrategy.help.semanticWeight.title"),
+      body: t("settings.contextStrategy.help.semanticWeight.body"),
+    },
+    batch_size: {
+      title: t("settings.contextStrategy.help.batchSize.title"),
+      body: t("settings.contextStrategy.help.batchSize.body"),
+    },
+  };
+}
 
 // ─── Default Config ───────────────────────────────────────────────────────────
 const DEFAULT_RAG_CONFIG: RagConfig = {
@@ -223,7 +241,7 @@ function HelpButton({
 }
 
 function HelpPanel({ id }: { id: string }) {
-  const content = HELP[id];
+  const content = getHelp()[id];
   if (!content) return null;
   return (
     <div className="mt-2 rounded-lg border border-primary/20 bg-primary/5 px-3.5 py-3 space-y-1">
@@ -463,7 +481,7 @@ export function ContextStrategySettings() {
                   <button
                     key={preset.id}
                     onClick={() => applyPreset(preset)}
-                    title={preset.description}
+                    title={t(preset.descriptionKey)}
                     className={`flex flex-col items-center gap-1 rounded-lg border px-2 py-2.5 text-center transition-all ${
                       isActive
                         ? "border-primary bg-primary/10 ring-1 ring-primary/20"
@@ -471,7 +489,7 @@ export function ContextStrategySettings() {
                     }`}
                   >
                     <span className={`flex min-h-[32px] items-center justify-center whitespace-nowrap text-xs font-semibold leading-tight ${isActive ? "text-primary" : "text-foreground"}`}>
-                      {preset.label}
+                      {t(preset.labelKey)}
                     </span>
                     <span className={`rounded-full px-1.5 py-0.5 text-meta font-medium font-mono ${
                       isActive ? "bg-primary/20 text-primary" : "bg-muted/50 text-muted-foreground"
